@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: meta-sphere
+  data:
+    redis:
+      host: 172.16.2.10
+      port: 6379
+      password: c1$4T&9pW#z2Q@7vL
+      database: 5
+  datasource:
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 10
+      idle-timeout: 300000
+      auto-commit: true
+      pool-name: DatebookHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+mybatis-flex:
+  datasource:
+    master:
+      url: jdbc:mysql://127.0.0.1:3306/meta-sphere?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      username: root
+      password: 123456
+jwt:
+  secret: K4lgrcqOP576NhrtYJhuQD8DdMYfZtb58hWdJaTjPbk=
+  access-token-validity: 7200000 #2h
+  refresh-token-validity: 604800000 # 7d
+
+logging:
+  level:
+    web: debug # Web 模块日志级别
+    org.springframework.web: DEBUG  # Spring Web 框架日志
+    org.springframework.boot.web.servlet: DEBUG  # Servlet 容器日志
+    org.springframework.security: DEBUG
