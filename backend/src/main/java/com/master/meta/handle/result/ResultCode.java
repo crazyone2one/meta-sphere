@@ -26,6 +26,6 @@ public enum ResultCode implements IResultCode {
 
     @Override
     public String getMessage() {
-        return message;
+       return getTranslationMessage(this.message);
     }
 }

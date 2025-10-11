@@ -1,6 +1,7 @@
 package com.master.meta.service.impl;
 
 import com.master.meta.controller.AuthController;
+import com.master.meta.handle.exception.RefreshTokenExpiredException;
 import com.master.meta.handle.security.JwtProperties;
 import com.master.meta.handle.security.JwtTokenProvider;
 import com.master.meta.service.AuthenticationService;
@@ -41,7 +42,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         securityContext.setAuthentication(authenticate);
         String accessToken = jwtTokenProvider.generateToken(request.username(), "access_token");
         String refreshToken = jwtTokenProvider.generateToken(request.username(), "refresh_token");
-        redisService.store(request.username(), refreshToken, jwtProperties.getRefreshTokenValidity());
+        redisService.store(request.username(), refreshToken, jwtProperties.getRefreshTokenValidity() / 1000);
         return new AuthController.AuthenticationResponse(accessToken, refreshToken);
     }
 
@@ -50,7 +51,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String refreshToken = request.get("refreshToken");
         String username = jwtTokenProvider.extractUsername(refreshToken);
         if (!validateRefreshToken(username, refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new RefreshTokenExpiredException("REFRESH_TOKEN_EXPIRED");
         }
         String accessToken = jwtTokenProvider.generateToken(username, "access_token");
         return new AuthController.AuthenticationResponse(accessToken, refreshToken);

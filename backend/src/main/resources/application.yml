@@ -17,6 +17,9 @@ spring:
       max-lifetime: 1800000
       connection-timeout: 30000
       connection-test-query: SELECT 1
+  messages:
+    basename: i18n/commons,i18n/api,i18n/bug,i18n/case,i18n/plan,i18n/project,i18n/system
+    default-locale: zh_CN
 
 mybatis-flex:
   datasource:

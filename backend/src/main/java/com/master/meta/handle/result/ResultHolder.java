@@ -9,7 +9,7 @@ import lombok.Data;
 public class ResultHolder {
     private int code = ResultCode.SUCCESS.getCode();
     // 描述信息，一般是错误信息
-    private String message;
+    private String message = ResultCode.SUCCESS.getMessage();
     // 详细描述信息, 如有异常，这里是详细日志
     private Object messageDetail;
     // 返回数据
