@@ -50,7 +50,7 @@ jwt:
 
 logging:
   level:
-    web: debug # Web 模块日志级别
-    org.springframework.web: DEBUG  # Spring Web 框架日志
-    org.springframework.boot.web.servlet: DEBUG  # Servlet 容器日志
-    org.springframework.security: DEBUG
+    web: info # Web 模块日志级别
+    org.springframework.web: info  # Spring Web 框架日志
+    org.springframework.boot.web.servlet: info  # Servlet 容器日志
+    org.springframework.security: info

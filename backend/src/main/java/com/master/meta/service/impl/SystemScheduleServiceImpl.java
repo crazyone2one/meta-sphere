@@ -1,13 +1,16 @@
 package com.master.meta.service.impl;
 
 import com.master.meta.constants.ApplicationNumScope;
+import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.ScheduleConfig;
+import com.master.meta.dto.ScheduleDTO;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.schedule.ScheduleManager;
 import com.master.meta.mapper.SystemScheduleMapper;
 import com.master.meta.service.SystemScheduleService;
 import com.master.meta.uid.NumGenerator;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import org.apache.commons.collections4.CollectionUtils;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.master.meta.entity.table.SystemProjectTableDef.SYSTEM_PROJECT;
 import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDULE;
 
 /**
@@ -89,6 +93,27 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     @Override
     public SystemSchedule getByResourceId(String resourceId) {
         return queryChain().where(SYSTEM_SCHEDULE.RESOURCE_ID.eq(resourceId)).one();
+    }
+
+    @Override
+    public void removeJob(String key, String job) {
+        scheduleManager.removeJob(new JobKey(key, job), new TriggerKey(key, job));
+    }
+
+    @Override
+    public Page<ScheduleDTO> getSchedulePage(BasePageRequest request) {
+        QueryChain<SystemSchedule> systemScheduleQueryChain = queryChain()
+                .select(SYSTEM_SCHEDULE.ID, SYSTEM_SCHEDULE.NAME, SYSTEM_SCHEDULE.ENABLE, SYSTEM_SCHEDULE.VALUE)
+                .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME,SYSTEM_SCHEDULE.NUM)
+                .select(SYSTEM_PROJECT.NAME.as("projectName"))
+                .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
+                .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
+                .from(SYSTEM_SCHEDULE)
+                .leftJoin(SYSTEM_PROJECT).on(SYSTEM_PROJECT.ID.eq(SYSTEM_SCHEDULE.PROJECT_ID))
+                .leftJoin("QRTZ_TRIGGERS").on("QRTZ_TRIGGERS.TRIGGER_NAME = system_schedule.resource_id");
+        return systemScheduleQueryChain
+                .where(SYSTEM_SCHEDULE.NAME.like(request.getKeyword()).or(SYSTEM_SCHEDULE.NUM.like(request.getKeyword())))
+                .pageAs(new Page<>(request.getPage(), request.getPageSize()), ScheduleDTO.class);
     }
 
     private Long getNextNum(String projectId) {

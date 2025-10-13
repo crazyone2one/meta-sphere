@@ -48,4 +48,10 @@ class MetaSphereApplicationTests {
         }
     }
 
+    @Test
+    void testRemoveJob() {
+        SystemSchedule schedule = scheduleService.getById("79905916361000193");
+        scheduleService.removeJob("test-resource-id", schedule.getJob());
+    }
+
 }

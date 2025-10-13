@@ -1,7 +1,9 @@
 package com.master.meta.controller;
 
+import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.BaseScheduleConfigRequest;
 import com.master.meta.dto.ScheduleConfig;
+import com.master.meta.dto.ScheduleDTO;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.service.SystemScheduleService;
 import com.mybatisflex.core.paginate.Page;
@@ -94,13 +96,13 @@ public class SystemScheduleController {
     /**
      * 分页查询定时任务。
      *
-     * @param page 分页对象
+     * @param request 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
+    @PostMapping("page")
     @Operation(description = "分页查询定时任务")
-    public Page<SystemSchedule> page(@Parameter(description = "分页信息") Page<SystemSchedule> page) {
-        return systemScheduleService.page(page);
+    public Page<ScheduleDTO> page(@Validated @RequestBody BasePageRequest request) {
+        return systemScheduleService.getSchedulePage(request);
     }
 
     @PostMapping(value = "/schedule-config")
@@ -122,8 +124,8 @@ public class SystemScheduleController {
         @SuppressWarnings("unchecked")
         Class<? extends Job> jobClass = (Class<? extends Job>) targetClass;
         return systemScheduleService.scheduleConfig(scheduleConfig,
-                (JobKey) getJobKey.invoke(null, schedule.getId()),
-                (TriggerKey) getTriggerKey.invoke(null, schedule.getId()),
+                (JobKey) getJobKey.invoke(null, schedule.getResourceId()),
+                (TriggerKey) getTriggerKey.invoke(null, schedule.getResourceId()),
                 jobClass,
                 "admin");
     }

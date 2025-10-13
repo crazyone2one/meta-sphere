@@ -1,6 +1,9 @@
 package com.master.meta.service;
 
+import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.ScheduleConfig;
+import com.master.meta.dto.ScheduleDTO;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 import com.master.meta.entity.SystemSchedule;
 import org.quartz.Job;
@@ -21,4 +24,8 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
     String scheduleConfig(ScheduleConfig scheduleConfig, JobKey jobKey, TriggerKey triggerKey, Class<? extends Job> clazz, String operator);
 
     SystemSchedule getByResourceId(String resourceId);
+
+    void removeJob(String key, String job);
+
+    Page<ScheduleDTO> getSchedulePage(BasePageRequest request);
 }
