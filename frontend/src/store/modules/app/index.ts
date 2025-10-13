@@ -45,6 +45,12 @@ const useAppStore = defineStore('app', () => {
             loading: false
         };
     }
+    const setMenuCollapse = (value: boolean) => {
+      appState.value = {
+          ...appState.value,
+          menuCollapse: value
+      };
+    }
     return {
         appState,
         currentOrgId,
@@ -53,7 +59,8 @@ const useAppStore = defineStore('app', () => {
         setCurrentOrgId,
         setCurrentProjectId,
         showLoading,
-        hideLoading
+        hideLoading,
+        setMenuCollapse
     }
 }, {
     persist: {

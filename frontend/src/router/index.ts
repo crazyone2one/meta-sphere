@@ -2,11 +2,21 @@ import {createRouter, createWebHashHistory, type RouteRecordRaw} from 'vue-route
 
 const mainRoutes: RouteRecordRaw[] = [
     {
-        name: 'dashboard',
+        name: 'Dashboard',
         path: '/dashboard',
         component: () => import('/@/views/dashboard/index.vue'),
         meta: {
-            title: 'Dashboard'
+            title: 'Dashboard',
+            icon: 'i-ant-design:dashboard-outlined'
+        }
+    },
+    {
+        name: 'Schedule',
+        path: '/schedule',
+        component: () => import('/@/views/schedule/index.vue'),
+        meta: {
+            title: 'Schedule',
+            icon: 'i-ant-design:schedule-outlined'
         }
     },
 ]
