@@ -4,12 +4,15 @@ import com.master.meta.constants.ApplicationNumScope;
 import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.ScheduleConfig;
 import com.master.meta.dto.ScheduleDTO;
+import com.master.meta.dto.SelectOptionDTO;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.schedule.ScheduleManager;
 import com.master.meta.mapper.SystemScheduleMapper;
 import com.master.meta.service.SystemScheduleService;
 import com.master.meta.uid.NumGenerator;
+import com.master.meta.utils.ScheduleFileUtil;
+import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
@@ -20,6 +23,7 @@ import org.quartz.*;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.master.meta.entity.table.SystemProjectTableDef.SYSTEM_PROJECT;
 import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDULE;
@@ -41,6 +45,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     @Override
     public void addSchedule(SystemSchedule schedule) {
         schedule.setNum(getNextNum(schedule.getProjectId()));
+        schedule.setCreateUser(SessionUtils.getUserName());
         mapper.insertSelective(schedule);
     }
 
@@ -104,7 +109,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     public Page<ScheduleDTO> getSchedulePage(BasePageRequest request) {
         QueryChain<SystemSchedule> systemScheduleQueryChain = queryChain()
                 .select(SYSTEM_SCHEDULE.ID, SYSTEM_SCHEDULE.NAME, SYSTEM_SCHEDULE.ENABLE, SYSTEM_SCHEDULE.VALUE)
-                .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME,SYSTEM_SCHEDULE.NUM)
+                .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME, SYSTEM_SCHEDULE.NUM)
                 .select(SYSTEM_PROJECT.NAME.as("projectName"))
                 .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
@@ -113,7 +118,24 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .leftJoin("QRTZ_TRIGGERS").on("QRTZ_TRIGGERS.TRIGGER_NAME = system_schedule.resource_id");
         return systemScheduleQueryChain
                 .where(SYSTEM_SCHEDULE.NAME.like(request.getKeyword()).or(SYSTEM_SCHEDULE.NUM.like(request.getKeyword())))
+                .and(SYSTEM_SCHEDULE.PROJECT_ID.eq(request.getProjectId()))
                 .pageAs(new Page<>(request.getPage(), request.getPageSize()), ScheduleDTO.class);
+    }
+
+    @Override
+    public List<SelectOptionDTO> getScheduleNameList() {
+        List<String> allJobNames = ScheduleFileUtil.getClassesInPackage("com.master.meta.schedule");
+        List<String> existJobNames = queryChain().select(SYSTEM_SCHEDULE.JOB).listAs(String.class);
+        return allJobNames.stream()
+                .map(jobName -> {
+                    SelectOptionDTO option = new SelectOptionDTO();
+                    option.setLabel(jobName);
+                    option.setValue(jobName);
+                    if (existJobNames.contains(jobName)) {
+                        option.setDisabled(true);
+                    }
+                    return option;
+                }).toList();
     }
 
     private Long getNextNum(String projectId) {

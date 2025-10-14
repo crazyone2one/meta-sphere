@@ -17,5 +17,5 @@ export const authApi = {
         method.meta = {authRole: 'logout'};
         return method;
     },
-    getUserInfo: () => get<UserState>('/system-user/get-user-info'),
+    getUserInfo: () => get<UserState>('/system-user/get-user-info', {}, {cacheFor: 0}),
 }

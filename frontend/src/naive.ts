@@ -4,8 +4,7 @@ import {
     NA,
     NAvatar,
     NBadge,
-    NBreadcrumb,
-    NBreadcrumbItem,
+    NModal,
     NButton,
     NCard,
     NConfigProvider,
@@ -35,7 +34,7 @@ import {
     NTabPane,
     NTabs,
     NText,
-    NTooltip, NSelect, NNotificationProvider
+    NTooltip, NSelect, NNotificationProvider, NDataTable
 } from 'naive-ui'
 
 export default create({
@@ -50,8 +49,6 @@ export default create({
         NAvatar,
         NButton,
         NBadge,
-        NBreadcrumb,
-        NBreadcrumbItem,
         NTabs,
         NTabPane,
         NDropdown,
@@ -73,6 +70,6 @@ export default create({
         NConfigProvider,
         NDialogProvider,
         NMessageProvider,
-        NLoadingBarProvider, NSelect, NNotificationProvider
+        NLoadingBarProvider, NSelect, NNotificationProvider, NDataTable, NModal
     ]
 })

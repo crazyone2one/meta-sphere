@@ -1,10 +1,10 @@
 <script setup lang="ts">
-
+import ProjectSelect from "/@/layouts/header/components/ProjectSelect.vue";
 </script>
 
 <template>
   <n-layout-header style="height: 64px; padding: 24px" bordered>
-    颐和园路
+    <project-select/>
   </n-layout-header>
 </template>
 

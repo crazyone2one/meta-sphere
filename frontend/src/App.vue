@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
 import ProviderView from "/@/components/ProviderView.vue";
 import BaseView from "/@/components/BaseView.vue";
 </script>

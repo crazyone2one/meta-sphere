@@ -63,7 +63,7 @@ watchEffect(() => menus.value && matchExpanded(menus.value))
       :collapsed-width="64"
       collapse-mode="width"
       :width="240"
-      :collapsed="appStore.appState.menuCollapse"
+      :collapsed="appStore.getMenuCollapse"
       show-trigger
       @collapse="appStore.setMenuCollapse(true)"
       @expand="appStore.setMenuCollapse(false)"

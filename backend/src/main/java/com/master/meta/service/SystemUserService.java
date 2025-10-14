@@ -1,5 +1,6 @@
 package com.master.meta.service;
 
+import com.master.meta.dto.UserInfoDTO;
 import com.mybatisflex.core.service.IService;
 import com.master.meta.entity.SystemUser;
 
@@ -11,5 +12,5 @@ import com.master.meta.entity.SystemUser;
  */
 public interface SystemUserService extends IService<SystemUser> {
 
-    SystemUser getUserInfo();
+    UserInfoDTO getUserInfo();
 }

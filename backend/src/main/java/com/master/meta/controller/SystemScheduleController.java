@@ -1,9 +1,6 @@
 package com.master.meta.controller;
 
-import com.master.meta.dto.BasePageRequest;
-import com.master.meta.dto.BaseScheduleConfigRequest;
-import com.master.meta.dto.ScheduleConfig;
-import com.master.meta.dto.ScheduleDTO;
+import com.master.meta.dto.*;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.service.SystemScheduleService;
 import com.mybatisflex.core.paginate.Page;
@@ -79,6 +76,12 @@ public class SystemScheduleController {
     @Operation(description = "查询所有定时任务")
     public List<SystemSchedule> list() {
         return systemScheduleService.list();
+    }
+
+    @GetMapping("/schedule-name-list")
+    @Operation(description = "查询所有定时任务")
+    public List<SelectOptionDTO> scheduleNameList() {
+        return systemScheduleService.getScheduleNameList();
     }
 
     /**

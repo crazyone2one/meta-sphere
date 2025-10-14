@@ -10,4 +10,5 @@ import lombok.Data;
 public class BaseCondition {
     @Schema(description = "关键字")
     private String keyword;
+    private String projectId;
 }

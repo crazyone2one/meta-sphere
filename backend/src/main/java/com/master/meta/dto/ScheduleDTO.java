@@ -6,7 +6,9 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 /**
  * @author Created by 11's papa on 2025/10/13
@@ -49,8 +51,26 @@ public class ScheduleDTO implements Serializable {
     @Schema(description = "上次完成时间")
     private Long lastTime;
 
+    @Schema(description = "上次完成时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime getLastTimeAsLocalDateTime() {
+        if (lastTime != null && lastTime > 0) {
+            return Instant.ofEpochMilli(lastTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        }
+        return null;
+    }
+
     @Schema(description = "下次执行时间")
     private Long nextTime;
+
+    @Schema(description = "下次执行时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    public LocalDateTime getNextTimeAsLocalDateTime() {
+        if (nextTime != null && nextTime > 0) {
+            return Instant.ofEpochMilli(nextTime).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        }
+        return null;
+    }
 
     @Schema(description = "任务状态")
     private boolean enable;

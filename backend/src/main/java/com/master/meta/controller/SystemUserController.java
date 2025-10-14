@@ -1,21 +1,14 @@
 package com.master.meta.controller;
 
-import com.mybatisflex.core.paginate.Page;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.master.meta.dto.UserInfoDTO;
 import com.master.meta.entity.SystemUser;
 import com.master.meta.service.SystemUserService;
-import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -94,7 +87,7 @@ public class SystemUserController {
 
     @GetMapping("get-user-info")
     @Operation(description = "获取用户信息")
-    public SystemUser getInfo() {
+    public UserInfoDTO getInfo() {
         return systemUserService.getUserInfo();
     }
 

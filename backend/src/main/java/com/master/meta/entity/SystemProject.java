@@ -1,5 +1,7 @@
 package com.master.meta.entity;
 
+import com.master.meta.handle.validation.Created;
+import com.master.meta.handle.validation.Updated;
 import com.mybatisflex.annotation.Column;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
@@ -7,8 +9,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import java.io.Serial;
+import java.util.List;
 
+import com.mybatisflex.core.handler.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,25 +41,25 @@ public class SystemProject implements Serializable {
      * 项目ID
      */
     @Id
-    @Schema(description = "项目ID")
+    @Schema(description = "项目ID", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{project.id.not_blank}", groups = {Updated.class})
+    @Size(min = 1, max = 50, message = "{project.id.length_range}", groups = {Created.class, Updated.class})
     private String id;
 
     /**
      * 项目编号
      */
     @Schema(description = "项目编号")
-    private Long num;
+    private String num;
 
-    /**
-     * 组织ID
-     */
-    @Schema(description = "组织ID")
+    @Schema(description = "组织ID", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{project.organization_id.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 50, message = "{project.organization_id.length_range}", groups = {Created.class, Updated.class})
     private String organizationId;
 
-    /**
-     * 项目名称
-     */
-    @Schema(description = "项目名称")
+    @Schema(description = "项目名称", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{project.name.not_blank}", groups = {Created.class})
+    @Size(min = 1, max = 255, message = "{project.name.length_range}", groups = {Created.class, Updated.class})
     private String name;
 
     /**
@@ -116,6 +122,7 @@ public class SystemProject implements Serializable {
      * 模块设置
      */
     @Schema(description = "模块设置")
-    private String moduleSetting;
+    @Column(typeHandler = JacksonTypeHandler.class)
+    private List<String> moduleSetting;
 
 }
