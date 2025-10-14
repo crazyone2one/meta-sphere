@@ -33,4 +33,6 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
     Page<ScheduleDTO> getSchedulePage(BasePageRequest request);
 
     List<SelectOptionDTO> getScheduleNameList();
+
+    boolean updateSchedule(SystemSchedule systemSchedule);
 }

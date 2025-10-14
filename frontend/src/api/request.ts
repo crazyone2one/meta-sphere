@@ -5,6 +5,7 @@ import {clearToken, getToken, setToken} from "/@/utils/auth.ts";
 import useAppStore from "/@/store/modules/app";
 import {createServerTokenAuthentication} from "alova/client";
 import {authApi} from "/@/api/modules/auth/index.ts";
+import router from "/@/router";
 
 const RESULT_CODE_MAP: Record<number, { type: 'success' | 'error' | 'warning' | 'info', message: string }> = {
     100200: {type: 'success', message: '操作成功'},
@@ -34,7 +35,6 @@ const {onAuthRequired, onResponseRefreshToken} = createServerTokenAuthentication
                 } = await authApi.refreshToken({"refreshToken": getToken().refreshToken});
                 setToken(accessToken, refreshToken)
             } catch (error: any) {
-                console.log(error)
                 // 检查是否是refresh token过期的特定错误
                 if (error.message === 'REFRESH_TOKEN_EXPIRED') {
                     // 显示明确的过期提示
@@ -42,7 +42,8 @@ const {onAuthRequired, onResponseRefreshToken} = createServerTokenAuthentication
                 }
                 // 清除token并跳转到登录页
                 clearToken();
-                location.href = '/login';
+                // location.href = '/login';
+                await router.push('/login')
                 // 并抛出错误
                 throw error;
             }
@@ -54,7 +55,7 @@ const {onAuthRequired, onResponseRefreshToken} = createServerTokenAuthentication
     },
     assignToken: method => {
         const token = getToken();
-        if (token && (!method.meta?.authRole || true)) {
+        if (token && (!method.meta?.authRole || method.meta?.authRole !== 'refreshToken')) {
             method.config.headers.Authorization = `Bearer ${token.accessToken}`;
         }
     }

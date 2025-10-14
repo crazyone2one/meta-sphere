@@ -1,6 +1,8 @@
 package com.master.meta.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.mybatisflex.annotation.Column;
+import com.mybatisflex.core.handler.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -9,6 +11,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Map;
 
 /**
  * @author Created by 11's papa on 2025/10/13
@@ -85,6 +88,6 @@ public class ScheduleDTO implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime createTime;
 
-    @Schema(description = "资源num")
-    private String resourceNum;
+    @Column(typeHandler = JacksonTypeHandler.class)
+    private Map<String, String> runConfig;
 }

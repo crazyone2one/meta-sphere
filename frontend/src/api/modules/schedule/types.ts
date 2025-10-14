@@ -9,11 +9,17 @@ export interface IScheduleInfo {
     lastTime?: number;
     nextTime?: number;
     createUser?: string
+    runConfig?: IScheduleConfig;
+}
+
+export interface IScheduleConfig {
+    resourceId: string
+    cron: string
+    enable: boolean
+    runConfig: IRunConfig
 }
 
 export interface IRunConfig {
-    runMode: 'SERIAL' | 'PARALLEL'
-
     [key: string]: any;
 }
 
@@ -26,5 +32,9 @@ export interface ICreateTask {
     projectId: string;
     job: string;
     type: string
-    runConfig?: IRunConfig;
+    runConfig?: IScheduleConfig;
+}
+export interface IUpdateTask {
+    value: string;
+    id: string;
 }

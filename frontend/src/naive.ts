@@ -34,7 +34,7 @@ import {
     NTabPane,
     NTabs,
     NText,
-    NTooltip, NSelect, NNotificationProvider, NDataTable
+    NTooltip, NSelect, NNotificationProvider, NDataTable, NDivider, NGrid, NFormItemGi, NScrollbar
 } from 'naive-ui'
 
 export default create({
@@ -70,6 +70,7 @@ export default create({
         NConfigProvider,
         NDialogProvider,
         NMessageProvider,
-        NLoadingBarProvider, NSelect, NNotificationProvider, NDataTable, NModal
+        NLoadingBarProvider, NSelect, NDivider,
+        NNotificationProvider, NDataTable, NModal,NGrid,NFormItemGi,NScrollbar
     ]
 })

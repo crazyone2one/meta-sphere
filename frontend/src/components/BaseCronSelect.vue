@@ -15,7 +15,7 @@ const options = [
 ]
 const emit = defineEmits<{
   (
-      e: 'change',
+      e: 'changeCron',
       value: string
   ): void;
 }>();
@@ -29,7 +29,7 @@ const emit = defineEmits<{
       placeholder='可直接输入表达式'
       :options="options"
       :size="size"
-      @update:value="emit('change', $event)"
+      @update:value="emit('changeCron', $event)"
       :fallback-option="(val:string)=>({label: `${val}`,value: val})"
   />
 </template>

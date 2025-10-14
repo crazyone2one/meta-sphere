@@ -6,6 +6,7 @@ import com.master.meta.dto.ScheduleConfig;
 import com.master.meta.dto.ScheduleDTO;
 import com.master.meta.dto.SelectOptionDTO;
 import com.master.meta.entity.SystemSchedule;
+import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.schedule.ScheduleManager;
 import com.master.meta.mapper.SystemScheduleMapper;
@@ -21,9 +22,9 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.master.meta.entity.table.SystemProjectTableDef.SYSTEM_PROJECT;
 import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDULE;
@@ -43,6 +44,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void addSchedule(SystemSchedule schedule) {
         schedule.setNum(getNextNum(schedule.getProjectId()));
         schedule.setCreateUser(SessionUtils.getUserName());
@@ -50,6 +52,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void addOrUpdateCronJob(SystemSchedule request, JobKey jobKey, TriggerKey triggerKey, Class<? extends Job> clazz) {
         Boolean enable = request.getEnable();
         String cronExpression = request.getValue();
@@ -70,6 +73,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String scheduleConfig(ScheduleConfig scheduleConfig, JobKey jobKey, TriggerKey triggerKey, Class<? extends Job> clazz, String operator) {
         SystemSchedule schedule;
         QueryChain<SystemSchedule> scheduleQueryChain = queryChain()
@@ -109,7 +113,8 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     public Page<ScheduleDTO> getSchedulePage(BasePageRequest request) {
         QueryChain<SystemSchedule> systemScheduleQueryChain = queryChain()
                 .select(SYSTEM_SCHEDULE.ID, SYSTEM_SCHEDULE.NAME, SYSTEM_SCHEDULE.ENABLE, SYSTEM_SCHEDULE.VALUE)
-                .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME, SYSTEM_SCHEDULE.NUM)
+                .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME, SYSTEM_SCHEDULE.NUM, SYSTEM_SCHEDULE.PROJECT_ID)
+                .select(SYSTEM_SCHEDULE.RESOURCE_ID, SYSTEM_SCHEDULE.CONFIG.as("runConfig"))
                 .select(SYSTEM_PROJECT.NAME.as("projectName"))
                 .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
@@ -136,6 +141,33 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                     }
                     return option;
                 }).toList();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateSchedule(SystemSchedule systemSchedule) {
+        SystemSchedule schedule = checkScheduleExit(systemSchedule.getId());
+        schedule.setValue(systemSchedule.getValue());
+        mapper.update(schedule);
+        try {
+            Class<?> jobClass = Class.forName(schedule.getJob());
+            if (Job.class.isAssignableFrom(jobClass)) {
+                @SuppressWarnings("unchecked")
+                Class<? extends Job> jobClassCast = (Class<? extends Job>) jobClass;
+                addOrUpdateCronJob(schedule, new JobKey(schedule.getResourceId(), schedule.getJob()),
+                        new TriggerKey(schedule.getResourceId(), schedule.getJob()), jobClassCast);
+            } else {
+                throw new CustomException("指定的类不是有效的Job类: " + schedule.getJob());
+            }
+        } catch (ClassNotFoundException e) {
+            throw new CustomException("找不到定时任务类: " + schedule.getJob());
+        }
+        return true;
+    }
+
+    private SystemSchedule checkScheduleExit(String id) {
+        return queryChain().where(SYSTEM_SCHEDULE.ID.eq(id)).oneOpt()
+                .orElseThrow(() -> new CustomException(Translator.get("schedule_not_exist")));
     }
 
     private Long getNextNum(String projectId) {

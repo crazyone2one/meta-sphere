@@ -64,7 +64,7 @@ public class SystemScheduleController {
     @PutMapping("update")
     @Operation(description = "根据主键更新定时任务")
     public boolean update(@RequestBody @Parameter(description = "定时任务主键") SystemSchedule systemSchedule) {
-        return systemScheduleService.updateById(systemSchedule);
+        return systemScheduleService.updateSchedule(systemSchedule);
     }
 
     /**

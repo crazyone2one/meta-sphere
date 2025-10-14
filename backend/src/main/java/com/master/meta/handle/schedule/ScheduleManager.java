@@ -1,7 +1,9 @@
 package com.master.meta.handle.schedule;
 
+import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.handle.exception.CustomException;
+import com.mybatisflex.core.query.QueryChain;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.stereotype.Component;
@@ -45,6 +47,7 @@ public class ScheduleManager {
             throw new CustomException("定时任务配置异常: " + e.getMessage());
         }
     }
+
     /**
      * 修改定时任务的Cron表达式时间
      *
@@ -72,6 +75,7 @@ public class ScheduleManager {
             throw new RuntimeException(e);
         }
     }
+
     public void removeJob(JobKey jobKey, TriggerKey triggerKey) {
         try {
             log.info("RemoveJob: {},{}", jobKey.getName(), jobKey.getGroup());
@@ -121,6 +125,9 @@ public class ScheduleManager {
         jobDataMap.put("userId", userId);
         jobDataMap.put("config", schedule.getConfig());
         jobDataMap.put("projectId", schedule.getProjectId());
+        SystemProject systemProject = QueryChain.of(SystemProject.class).where(SystemProject::getId).eq(schedule.getProjectId()).one();
+        jobDataMap.put("projectNum", systemProject.getNum());
+        jobDataMap.put("projectName", systemProject.getName());
         return jobDataMap;
     }
 }

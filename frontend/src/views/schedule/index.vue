@@ -9,11 +9,14 @@ import BasePagination from "/@/components/BasePagination.vue";
 import BaseCronSelect from "/@/components/BaseCronSelect.vue";
 import ScheduleModal from "/@/views/schedule/components/ScheduleModal.vue";
 import {useAppStore} from "/@/store";
+import ScheduleConfig from "/@/views/schedule/components/ScheduleConfig.vue";
 
 const scheduleModalRef = ref<InstanceType<typeof ScheduleModal>>();
+const scheduleConfigRef = ref<InstanceType<typeof ScheduleConfig>>();
 const appStore = useAppStore();
 const keyword = ref('');
 const showScheduleModalVisible = ref(false);
+const showScheduleConfigVisible = ref(false);
 const columns: DataTableColumns<IScheduleInfo> = [
   {
     type: 'selection', fixed: 'left'
@@ -29,7 +32,10 @@ const columns: DataTableColumns<IScheduleInfo> = [
   {
     title: '运行规则', key: 'value', width: 180,
     render(record) {
-      return h(BaseCronSelect, {modelValue: record.value, size: 'small'});
+      return h(BaseCronSelect, {
+        modelValue: record.value, size: 'small',
+        onChangeCron: (v) => handleChangeCron(v, record),
+      });
     }
   },
   {title: '操作人', key: 'createUser', width: 100},
@@ -39,12 +45,14 @@ const columns: DataTableColumns<IScheduleInfo> = [
   {
     title: '操作', key: 'actions', fixed: 'right', width: 200,
     render: (record) => {
-      const actions = [
+      return [
         h(NButton, {size: 'small', text: true, type: 'primary', class: '!mr-[12px]'}, {default: () => '详情'}),
-        h(NButton, {size: 'small', text: true, type: 'primary', class: '!mr-[12px]'}, {default: () => '修改配置'}),
+        h(NButton, {
+          size: 'small', text: true, type: 'primary', class: '!mr-[12px]',
+          onClick: () => handleScheduleConfig(record)
+        }, {default: () => '修改配置'}),
         h(NButton, {size: 'small', text: true, type: 'error'}, {default: () => '删除'})
-      ]
-      return actions;
+      ];
     }
   },
 ]
@@ -68,11 +76,39 @@ const {page, pageSize, total, data, send: fetchData} = usePagination((page, page
 const handleAdd = () => {
   showScheduleModalVisible.value = true;
 }
-const handleClose = (search: boolean) => {
-  showScheduleModalVisible.value = false;
+const handleClose = (search: boolean, type: string) => {
+  if ('config' === type) {
+    showScheduleConfigVisible.value = false;
+  } else {
+    showScheduleModalVisible.value = false;
+  }
   if (search) {
     fetchData();
   }
+}
+const handleChangeCron = async (value: string, record: IScheduleInfo) => {
+  record.value = value;
+  const param = {
+    id: record.id,
+    value: value,
+  }
+  await scheduleApi.updateSchedule(param).then(() => {
+    window.$message.success('修改成功');
+    fetchData();
+  })
+}
+const currentTask = ref<IScheduleInfo>({
+  enable: false,
+  id: "",
+  name: "",
+  num: 0,
+  projectName: "",
+  resourceId: "",
+  value: ""
+});
+const handleScheduleConfig = (record: IScheduleInfo) => {
+  currentTask.value = record;
+  showScheduleConfigVisible.value = true;
 }
 onMounted(() => {
   fetchData();
@@ -99,6 +135,8 @@ onMounted(() => {
   </n-card>
   <schedule-modal ref="scheduleModalRef" v-model:show-modal="showScheduleModalVisible"
                   @close="handleClose"/>
+  <schedule-config ref="scheduleConfigRef" v-model:show-modal="showScheduleConfigVisible"
+                   :task="currentTask" @close="handleClose"/>
 </template>
 
 <style scoped>

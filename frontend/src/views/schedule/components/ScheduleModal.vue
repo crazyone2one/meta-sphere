@@ -10,7 +10,7 @@ const showModal = defineModel<boolean>('showModal', {type: Boolean, default: fal
 const formRef = ref<FormInst | null>(null)
 const appStore = useAppStore()
 const emit = defineEmits<{
-  (e: 'close', shouldSearch: boolean): void;
+  (e: 'close', shouldSearch: boolean, type: string): void;
 }>();
 const uuid = computed(() => {
   return crypto.randomUUID()
@@ -47,7 +47,7 @@ const handleSubmit = () => {
   })
 }
 const handleClose = (search: boolean) => {
-  emit('close', search)
+  emit('close', search, 'modal')
   formRef.value?.restoreValidation()
 }
 watch(() => showModal.value, (value) => {
@@ -92,7 +92,7 @@ watch(() => showModal.value, (value) => {
     </div>
     <template #action>
       <n-space>
-        <n-button :disabled="loading" @click="handleClose">取消</n-button>
+        <n-button :disabled="loading" @click="handleClose(false)">取消</n-button>
         <n-button type="primary" :disabled="loading" @click="handleSubmit">确定</n-button>
       </n-space>
     </template>
