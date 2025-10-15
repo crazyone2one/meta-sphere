@@ -60,10 +60,7 @@ public class SystemSchedule implements Serializable {
     @Schema(description = "Schedule Job Class Name")
     private String job;
 
-    /**
-     * 资源类型 API_IMPORT,API_SCENARIO,UI_SCENARIO,LOAD_TEST,TEST_PLAN,CLEAN_REPORT,BUG_SYNC
-     */
-    @Schema(description = "资源类型 API_IMPORT,API_SCENARIO,UI_SCENARIO,LOAD_TEST,TEST_PLAN,CLEAN_REPORT,BUG_SYNC")
+    @Schema(description = "文件类型：CDDY、CDSS")
     private String resourceType;
 
     /**

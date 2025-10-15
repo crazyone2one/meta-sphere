@@ -32,6 +32,7 @@ export interface ICreateTask {
     projectId: string;
     job: string;
     type: string
+    resourceType: string
     runConfig?: IScheduleConfig;
 }
 export interface IUpdateTask {

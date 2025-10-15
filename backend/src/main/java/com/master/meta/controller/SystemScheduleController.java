@@ -104,7 +104,7 @@ public class SystemScheduleController {
      */
     @PostMapping("page")
     @Operation(description = "分页查询定时任务")
-    public Page<ScheduleDTO> page(@Validated @RequestBody BasePageRequest request) {
+    public Page<ScheduleDTO> page(@Validated @RequestBody ScheduleRequest request) {
         return systemScheduleService.getSchedulePage(request);
     }
 
