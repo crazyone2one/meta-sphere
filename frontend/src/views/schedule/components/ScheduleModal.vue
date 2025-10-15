@@ -20,6 +20,12 @@ const rules = {
   name: [
     {required: true, message: '请输入名称'},
   ],
+  job: [
+    {required: true, message: '请选择对应的job'},
+  ],
+  value: [
+    {required: true, message: '请选择或者录入对应的cron'},
+  ],
 };
 const {form: model, loading, send: submit} = useForm((formData) => scheduleApi.saveSchedule(formData), {
   initialForm: {
@@ -52,6 +58,7 @@ const handleClose = (search: boolean) => {
 }
 watch(() => showModal.value, (value) => {
   if (value) {
+    jobOptions.value = []
     scheduleApi.getScheduleNameList().then(res => {
       res.map(item => {
         jobOptions.value.push({
