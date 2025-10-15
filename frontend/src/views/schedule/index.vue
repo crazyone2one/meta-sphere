@@ -26,7 +26,7 @@ const columns: DataTableColumns<IScheduleInfo> = [
   {
     title: '状态', key: 'enable', width: 80,
     render(record) {
-      return h(NSwitch, {value: record.enable, size: 'small'}, {})
+      return h(NSwitch, {value: record.enable, size: 'small', onUpdateValue: (v) => handleStatusChange(v, record)}, {})
     }
   },
   {
@@ -109,6 +109,13 @@ const currentTask = ref<IScheduleInfo>({
 const handleScheduleConfig = (record: IScheduleInfo) => {
   currentTask.value = record;
   showScheduleConfigVisible.value = true;
+}
+
+const handleStatusChange =async (v: boolean, record: IScheduleInfo) => {
+  console.log(v)
+  await scheduleApi.changeScheduleStatus(record.id);
+  window.$message.success('修改成功');
+  await fetchData();
 }
 onMounted(() => {
   fetchData();

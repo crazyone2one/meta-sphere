@@ -17,6 +17,7 @@ import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +36,7 @@ import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDUL
  * @author 11's papa
  * @since 2025-10-11
  */
+@Slf4j
 @Service
 public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper, SystemSchedule> implements SystemScheduleService {
     private final ScheduleManager scheduleManager;
@@ -150,19 +152,38 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
         schedule.setValue(systemSchedule.getValue());
         mapper.update(schedule);
         try {
-            Class<?> jobClass = Class.forName(schedule.getJob());
-            if (Job.class.isAssignableFrom(jobClass)) {
-                @SuppressWarnings("unchecked")
-                Class<? extends Job> jobClassCast = (Class<? extends Job>) jobClass;
-                addOrUpdateCronJob(schedule, new JobKey(schedule.getResourceId(), schedule.getJob()),
-                        new TriggerKey(schedule.getResourceId(), schedule.getJob()), jobClassCast);
-            } else {
-                throw new CustomException("指定的类不是有效的Job类: " + schedule.getJob());
-            }
+            extracted4UpdateJob(schedule);
         } catch (ClassNotFoundException e) {
             throw new CustomException("找不到定时任务类: " + schedule.getJob());
         }
         return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void enable(String id) {
+        SystemSchedule schedule = checkScheduleExit(id);
+        schedule.setEnable(!schedule.getEnable());
+        mapper.update(schedule);
+        try {
+            extracted4UpdateJob(schedule);
+        } catch (ClassNotFoundException e) {
+            log.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    protected void extracted4UpdateJob(SystemSchedule schedule) throws ClassNotFoundException {
+        Class<?> jobClass = Class.forName(schedule.getJob());
+        if (Job.class.isAssignableFrom(jobClass)) {
+            @SuppressWarnings("unchecked")
+            Class<? extends Job> jobClassCast = (Class<? extends Job>) jobClass;
+            addOrUpdateCronJob(schedule, new JobKey(schedule.getResourceId(), schedule.getJob()),
+                    new TriggerKey(schedule.getResourceId(), schedule.getJob()), jobClassCast);
+        } else {
+            throw new CustomException("指定的类不是有效的Job类: " + schedule.getJob());
+        }
     }
 
     private SystemSchedule checkScheduleExit(String id) {

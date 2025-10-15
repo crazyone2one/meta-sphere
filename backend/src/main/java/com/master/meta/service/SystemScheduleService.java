@@ -35,4 +35,6 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
     List<SelectOptionDTO> getScheduleNameList();
 
     boolean updateSchedule(SystemSchedule systemSchedule);
+
+    void enable(String id);
 }
