@@ -31,8 +31,8 @@ import {
     NPopover,
     NResult,
     NSpace,
-    NTabPane,
-    NTabs,
+    NRadioGroup,
+    NRadio,
     NText,
     NTooltip, NSelect, NNotificationProvider, NDataTable, NDivider, NGrid, NFormItemGi, NScrollbar
 } from 'naive-ui'
@@ -49,8 +49,8 @@ export default create({
         NAvatar,
         NButton,
         NBadge,
-        NTabs,
-        NTabPane,
+        NRadio,
+        NRadioGroup,
         NDropdown,
         NMenu,
         NResult,

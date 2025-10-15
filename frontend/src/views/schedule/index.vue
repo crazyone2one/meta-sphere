@@ -15,14 +15,15 @@ const scheduleModalRef = ref<InstanceType<typeof ScheduleModal>>();
 const scheduleConfigRef = ref<InstanceType<typeof ScheduleConfig>>();
 const appStore = useAppStore();
 const keyword = ref('');
+const resourceType = ref<string>('CDDY');
 const showScheduleModalVisible = ref(false);
 const showScheduleConfigVisible = ref(false);
 const columns: DataTableColumns<IScheduleInfo> = [
   {
     type: 'selection', fixed: 'left'
   },
-  {title: '任务 ID', key: 'num', width: 150, ellipsis: {tooltip: true}},
-  {title: '任务名称', key: 'name', width: 160},
+  {title: '任务 ID', key: 'num', width: 100, ellipsis: {tooltip: true}},
+  {title: '任务名称', key: 'name', width: 200},
   {
     title: '状态', key: 'enable', width: 80,
     render(record) {
@@ -64,14 +65,19 @@ const currentProjectId = computed(() => {
   return appStore.currentProjectId
 })
 const {page, pageSize, total, data, send: fetchData} = usePagination((page, pageSize) => {
-  const param: ITableQueryParams = {page, pageSize, keyword: keyword.value, projectId: currentProjectId.value}
+  const param: ITableQueryParams = {
+    page, pageSize,
+    keyword: keyword.value,
+    projectId: currentProjectId.value,
+    resourceType: resourceType.value
+  }
   return scheduleApi.getScheduleList(param);
 }, {
   initialData: {total: 0, data: []},
   immediate: false,
   data: resp => resp.records,
   total: resp => resp.totalRow,
-  watchingStates: [keyword, currentProjectId]
+  watchingStates: [keyword, currentProjectId, resourceType]
 })
 const handleAdd = () => {
   showScheduleModalVisible.value = true;
@@ -111,7 +117,7 @@ const handleScheduleConfig = (record: IScheduleInfo) => {
   showScheduleConfigVisible.value = true;
 }
 
-const handleStatusChange =async (v: boolean, record: IScheduleInfo) => {
+const handleStatusChange = async (v: boolean, record: IScheduleInfo) => {
   console.log(v)
   await scheduleApi.changeScheduleStatus(record.id);
   window.$message.success('修改成功');
@@ -132,7 +138,16 @@ onMounted(() => {
       </n-button>
     </template>
     <template #header-extra>
-      <n-input v-model:value="keyword" clearable placeholder="通过 ID/名称搜索"/>
+      <n-space>
+        <n-radio-group v-model:value="resourceType" name="radiogroup">
+          <n-space>
+            <n-radio key="CDDY" value="CDDY">CDDY</n-radio>
+            <n-radio key="CDSS" value="CDSS">CDSS</n-radio>
+          </n-space>
+        </n-radio-group>
+        <n-input v-model:value="keyword" clearable placeholder="通过 ID/名称搜索"/>
+      </n-space>
+
     </template>
     <n-data-table :columns="columns"
                   :data="data"

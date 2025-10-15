@@ -36,12 +36,17 @@ const {form: model, loading, send: submit} = useForm((formData) => scheduleApi.s
     key: uuid.value,
     projectId: appStore.currentProjectId,
     job: '',
-    type: 'CRON'
+    type: 'CRON',
+    resourceType: 'CDDY'
   },
   immediate: false,
   resetAfterSubmiting: true
 })
 const jobOptions = ref<SelectOption[]>([])
+const resourceTypeOptions = ref<SelectOption[]>([
+  {label: "CDDY", value: "CDDY"},
+  {label: "CDSS", value: "CDSS"},
+]);
 const handleSubmit = () => {
   formRef.value?.validate(error => {
     if (!error) {
@@ -87,10 +92,10 @@ watch(() => showModal.value, (value) => {
           require-mark-placement="right-hanging"
       >
         <n-form-item label="name" path="name">
-          <n-input v-model:value="model.name" placeholder="Input" clearable/>
+          <n-input v-model:value="model.name" placeholder="输入任务名称" clearable/>
         </n-form-item>
         <n-form-item label="cron表达式" path="value">
-          <base-cron-select v-model:model-value="model.value"/>
+          <base-cron-select v-model:model-value="model.value" placeholder="xxxxx"/>
         </n-form-item>
         <n-form-item label="job" path="job">
           <n-select v-model:value="model.job" :options="jobOptions"/>
@@ -98,10 +103,16 @@ watch(() => showModal.value, (value) => {
       </n-form>
     </div>
     <template #action>
-      <n-space>
-        <n-button :disabled="loading" @click="handleClose(false)">取消</n-button>
-        <n-button type="primary" :disabled="loading" @click="handleSubmit">确定</n-button>
-      </n-space>
+      <div class="flex items-center justify-between">
+        <div class="flex flex-row items-center justify-center mr-3">
+          <n-select v-model:value="model.resourceType" :options="resourceTypeOptions" class="w-[90px]"/>
+        </div>
+        <n-space>
+          <n-button :disabled="loading" @click="handleClose(false)">取消</n-button>
+          <n-button type="primary" :disabled="loading" @click="handleSubmit">确定</n-button>
+        </n-space>
+      </div>
+
     </template>
   </n-modal>
 </template>

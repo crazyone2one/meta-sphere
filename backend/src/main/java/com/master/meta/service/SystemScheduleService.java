@@ -1,8 +1,8 @@
 package com.master.meta.service;
 
-import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.ScheduleConfig;
 import com.master.meta.dto.ScheduleDTO;
+import com.master.meta.dto.ScheduleRequest;
 import com.master.meta.dto.SelectOptionDTO;
 import com.master.meta.entity.SystemSchedule;
 import com.mybatisflex.core.paginate.Page;
@@ -30,7 +30,7 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
 
     void removeJob(String key, String job);
 
-    Page<ScheduleDTO> getSchedulePage(BasePageRequest request);
+    Page<ScheduleDTO> getSchedulePage(ScheduleRequest request);
 
     List<SelectOptionDTO> getScheduleNameList();
 
