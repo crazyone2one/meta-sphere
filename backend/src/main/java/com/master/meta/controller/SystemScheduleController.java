@@ -132,4 +132,10 @@ public class SystemScheduleController {
                 jobClass,
                 "admin");
     }
+
+    @GetMapping("/status/switch/{id}")
+    @Operation(summary = "定时任务开启关闭")
+    public void enableOrg(@PathVariable String id) {
+        systemScheduleService.enable(id);
+    }
 }
