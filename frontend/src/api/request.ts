@@ -6,6 +6,7 @@ import useAppStore from "/@/store/modules/app";
 import {createServerTokenAuthentication} from "alova/client";
 import {authApi} from "/@/api/modules/auth/index.ts";
 import router from "/@/router";
+import type {LocationQueryRaw} from "vue-router";
 
 const RESULT_CODE_MAP: Record<number, { type: 'success' | 'error' | 'warning' | 'info', message: string }> = {
     100200: {type: 'success', message: '操作成功'},
@@ -21,32 +22,16 @@ const RESULT_CODE_MAP: Record<number, { type: 'success' | 'error' | 'warning' | 
 };
 const {onAuthRequired, onResponseRefreshToken} = createServerTokenAuthentication({
     refreshTokenOnSuccess: {
-        isExpired: (response, method) => {
+        isExpired: async (response, method) => {
+            const res = await response.clone().json()
             const isExpired = method.meta && method.meta.isExpired;
-            return response.status === 401 && !isExpired;
+            return (response.status === 401 || res.code === 100401) && !isExpired;
         },
         handler: async (_response, method) => {
             method.meta = method.meta || {};
             method.meta.isExpired = true;
-            try {
-                const {
-                    accessToken,
-                    refreshToken
-                } = await authApi.refreshToken({"refreshToken": getToken().refreshToken});
-                setToken(accessToken, refreshToken)
-            } catch (error: any) {
-                // 检查是否是refresh token过期的特定错误
-                if (error.message === 'REFRESH_TOKEN_EXPIRED') {
-                    // 显示明确的过期提示
-                    window.$message?.error('登录已过期，请重新登录');
-                }
-                // 清除token并跳转到登录页
-                clearToken();
-                // location.href = '/login';
-                await router.push('/login')
-                // 并抛出错误
-                throw error;
-            }
+            const {accessToken, refreshToken} = await authApi.refreshToken({"refreshToken": getToken().refreshToken});
+            setToken(accessToken, refreshToken)
         },
     },
     logout: () => {
@@ -61,14 +46,28 @@ const {onAuthRequired, onResponseRefreshToken} = createServerTokenAuthentication
     }
 });
 
-const handleError = (method: any, data: any) => {
-    if (data.code !== 100200 && data.message && !method.meta?.ignoreMessage) {
-        showResultMessage(data.code, data.message);
-    }
-};
 // 提取消息显示逻辑到独立函数
 const showResultMessage = (code: number, message: string) => {
-    if (!window.$message) return;
+    if (code === 100411) {
+        window.$dialog.error({
+            title: '登录已过期，请重新登录',
+            closable: false,
+            maskClosable: false,
+            positiveText: 'ok',
+            onPositiveClick: async () => {
+                // 清除token并跳转到登录页
+                clearToken();
+                // location.href = '/login';
+                await router.replace({
+                    name: 'login',
+                    query: {
+                        redirect: router.currentRoute.value.name,
+                        ...router.currentRoute.value.query,
+                    } as LocationQueryRaw,
+                });
+            }
+        })
+    }
     const codeInfo = RESULT_CODE_MAP[code];
     if (codeInfo) {
         window.$message[codeInfo.type](codeInfo.message);
@@ -94,50 +93,40 @@ export const instance = createAlova({
     responded: onResponseRefreshToken({
         // 成功响应处理
         onSuccess: async (response, method) => {
+            const {status} = response
             const appStore = useAppStore();
             appStore.hideLoading()
-            if (method.meta?.isBlob) {
-                return response.blob();
-            }
-            // 解析 JSON 数据
-            let data: any;
-            try {
-                data = await response.json();
-            } catch (parseError) {
-                // JSON 解析失败处理
-                throw new Error('服务器响应格式错误');
-            }
-
-            // 检查 HTTP 状态码
-            if (response.status < 200 || response.status >= 300) {
-                // HTTP 错误处理
-                handleError(method, data);
-                throw new Error(`HTTP Error: ${response.status}`);
-            }
-
-            // 根据后端返回的状态码显示对应提示
-            if (data.code !== 100200 && data.message && !method.meta?.ignoreMessage) {
-                showResultMessage(data.code, data.message);
-            }
-
-            if (data.code === 100200) {
-                // 成功响应，返回数据部分
-                return data.data !== undefined ? data.data : data;
+            if (status === 200) {
+                // 返回blob数据
+                if (method.meta?.isBlob) {
+                    return response.blob();
+                }
+                // 解析 JSON 数据
+                let data: any;
+                try {
+                    data = await response.json();
+                } catch (parseError) {
+                    // JSON 解析失败处理
+                    throw new Error('服务器响应格式错误');
+                }
+                if (data.code === 100200) {
+                    // 成功响应，返回数据部分
+                    return data.data !== undefined ? data.data : data;
+                } else {
+                    showResultMessage(data.code, data.message);
+                }
             } else {
-                // 业务错误处理
-                throw new Error(data.message || '请求失败');
+                // HTTP 错误处理
+                const data = await response.json();
+                showResultMessage(data.code, data.message);
             }
         },
         // 错误响应处理
         onError: (error, method) => {
             const appStore = useAppStore();
             appStore.hideLoading()
-            // 显示错误提示
-            if (!method.meta?.ignoreMessage && window.$message) {
-                window.$message.error(error.message || '网络请求失败');
-            }
-            console.error('API Error:', error);
-            throw new Error(error.message || '网络请求失败');
+            const tip = `[${method.type}] - [${method.url}] - ${error.message}`
+            window.$message?.warning(tip)
         }
     }),
 });
