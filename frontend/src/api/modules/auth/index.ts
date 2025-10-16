@@ -8,7 +8,7 @@ export const authApi = {
         return method;
     },
     refreshToken: (data: { refreshToken: string }) => {
-        const method = post<AuthenticationResponse>('/auth/refreshToken', data,);
+        const method = post<AuthenticationResponse>('/auth/refresh-token', data,);
         method.meta = {authRole: 'refreshToken'};
         return method
     },
