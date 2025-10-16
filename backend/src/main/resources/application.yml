@@ -6,7 +6,7 @@ spring:
       host: 172.16.2.10
       port: 6379
       password: c1$4T&9pW#z2Q@7vL
-      database: 5
+      database: 6
   datasource:
     hikari:
       maximum-pool-size: 100
@@ -43,13 +43,14 @@ mybatis-flex:
       url: jdbc:mysql://127.0.0.1:3306/meta-sphere?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
       username: root
       password: 123456
+#      password: 3eCrAw8Ba6Tg
     ds-slave1:
       url: jdbc:mysql://172.16.2.10:3306/ruoyi-vue-pro?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
       username: root
       password: 3eCrAw8Ba6Tg
 jwt:
   secret: K4lgrcqOP576NhrtYJhuQD8DdMYfZtb58hWdJaTjPbk=
-  access-token-validity: 7200000 #2h
+  access-token-validity: 43200000 #2h
   refresh-token-validity: 604800000 # 7d
 
 logging:
