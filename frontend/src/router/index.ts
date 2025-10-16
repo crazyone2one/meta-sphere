@@ -1,4 +1,5 @@
 import {createRouter, createWebHashHistory, type RouteRecordRaw} from 'vue-router'
+import createRouteGuard from "/@/router/guard";
 
 const mainRoutes: RouteRecordRaw[] = [
     {
@@ -54,4 +55,5 @@ router.afterEach(to => {
     to.meta.title != null && items.unshift(to.meta.title as string)
     document.title = items.join(' · ')
 })
+createRouteGuard(router);
 export default router
