@@ -135,13 +135,11 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
         List<String> allJobNames = ScheduleFileUtil.getClassesInPackage("com.master.meta.schedule");
         List<String> existJobNames = queryChain().select(SYSTEM_SCHEDULE.JOB).listAs(String.class);
         return allJobNames.stream()
+                .filter(jobName -> !existJobNames.contains(jobName)) // 包含时跳过
                 .map(jobName -> {
                     SelectOptionDTO option = new SelectOptionDTO();
                     option.setLabel(jobName);
                     option.setValue(jobName);
-                    if (existJobNames.contains(jobName)) {
-                        option.setDisabled(true);
-                    }
                     return option;
                 }).toList();
     }
