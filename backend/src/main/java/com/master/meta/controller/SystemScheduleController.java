@@ -114,7 +114,7 @@ public class SystemScheduleController {
         SystemSchedule schedule = systemScheduleService.getByResourceId(request.getResourceId());
         ScheduleConfig scheduleConfig = ScheduleConfig.builder()
                 .resourceId(schedule.getResourceId())
-                .key(schedule.getId())
+                .key(schedule.getKey())
                 .projectId(schedule.getProjectId())
                 .name(schedule.getName())
                 .enable(request.isEnable())
