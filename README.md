@@ -26,10 +26,8 @@ The following guides illustrate how to use some features concretely:
 * [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
 
 ### Maven Parent overrides
-
-Due to Maven's design, elements are inherited from the parent POM to the project POM.
-While most of the inheritance is fine, it also inherits unwanted elements like `<license>` and `<developers>` from the
-parent.
-To prevent this, the project POM contains empty overrides for these elements.
-If you manually switch to a different parent and actually want the inheritance, you need to remove those overrides.
+~~~
+docker build -t metasphere:v1 .
+docker run -d -p 18081:8080 --name metasphere -v /home/app/files/ftp:/app/files metasphere:v1
+~~~
 
