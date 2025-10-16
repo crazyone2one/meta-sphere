@@ -2,7 +2,6 @@
 import {NSpin} from 'naive-ui';
 import {useAppStore} from "/@/store";
 const appStore = useAppStore();
-console.log(appStore.loading)
 </script>
 
 <template>
