@@ -60,7 +60,7 @@ public class RestControllerExceptionHandler {
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ResultHolder> handleJwtException(JwtException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ResultHolder.error(100401, ex.getMessage(), getStackTraceAsString(ex)));
+                .body(ResultHolder.error(100411, ex.getMessage(), getStackTraceAsString(ex)));
     }
 
     @ExceptionHandler({Exception.class})
