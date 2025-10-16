@@ -1,7 +1,8 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ size?: 'tiny' | 'small' | 'medium' | 'large' }>(), {
-  size: 'medium'
-})
+const {size = 'medium', placeholder = '可直接输入cron表达式'} = defineProps<{
+  size?: 'tiny' | 'small' | 'medium' | 'large',
+  placeholder?: string
+}>()
 const cron = defineModel<string>('modelValue', {
   required: true,
 });
@@ -26,7 +27,7 @@ const emit = defineEmits<{
       v-model:value="cron"
       tag
       filterable
-      placeholder='可直接输入表达式'
+      :placeholder='placeholder'
       :options="options"
       :size="size"
       @update:value="emit('changeCron', $event)"
