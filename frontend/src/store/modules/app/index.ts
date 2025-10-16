@@ -40,10 +40,15 @@ const useAppStore = defineStore('app', {
             this.menuCollapse = collapse;
         },
         showLoading(tip = '') {
-            this.loadingTip = tip || '加载中...'
+            this.loading = true;
+            this.loadingTip = tip || '你不知道你有多幸运...'
         },
         hideLoading() {
             this.loading = false
+        },
+        // 重置用户信息
+        resetInfo() {
+            this.$reset();
         },
         async initProjectList() {
             try {
