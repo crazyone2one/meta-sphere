@@ -24,3 +24,10 @@ export interface IPageResponse<T> {
     totalRow: number;
     records: T[];
 }
+
+export interface IResponse<T> {
+    code: number;
+    message: string;
+    messageDetail: string;
+    data: T;
+}
