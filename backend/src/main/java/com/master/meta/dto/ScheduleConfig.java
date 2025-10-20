@@ -27,7 +27,7 @@ public class ScheduleConfig {
 
     private String resourceType;
 
-    private Map<String, String> config;
+    private Map<String, Object> config;
     public SystemSchedule genCronSchedule(SystemSchedule schedule) {
         if (schedule == null) {
             schedule = new SystemSchedule();

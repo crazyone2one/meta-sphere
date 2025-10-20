@@ -47,6 +47,7 @@ public class ScheduleDTO implements Serializable {
 
     @Schema(description = "类型")
     private String resourceType;
+    private String sensorType;
 
     @Schema(description = "运行规则（cron表达式）")
     private String value;
@@ -89,5 +90,5 @@ public class ScheduleDTO implements Serializable {
     private LocalDateTime createTime;
 
     @Column(typeHandler = JacksonTypeHandler.class)
-    private Map<String, String> runConfig;
+    private Map<String, Object> runConfig;
 }

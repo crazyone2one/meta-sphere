@@ -49,6 +49,31 @@ public class SensorUtil {
             return sensorList;
         }
     }
+    public List<Row> getCDSSSensorFromRedis(String projectNum, String key, String tableName, Boolean deleted) {
+        String sensorListInRedis = redisService.getSensor(projectNum, key);
+        if (sensorListInRedis != null) {
+            return JSON.parseArray(sensorListInRedis, Row.class);
+        } else {
+            List<Row> sensorList = getCDSSList(tableName, deleted);
+            redisService.storeSensor(projectNum, key, sensorList, 60 * 60 * 24 * 7);
+            return sensorList;
+        }
+    }
+
+    private List<Row> getCDSSList(String tableName, Boolean deleted) {
+        List<Row> rows;
+        try {
+            DataSourceKey.use("ds-slave1");
+            Map<String, Object> map = new LinkedHashMap<>();
+            if (deleted) {
+                map.put("is_delete", "0");
+            }
+            rows = Db.selectListByMap(tableName, map);
+        } finally {
+            DataSourceKey.clear();
+        }
+        return rows;
+    }
 
     public void generateFile(String filePath, String content, String type) {
         FileWriter fw = null;

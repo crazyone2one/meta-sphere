@@ -8,6 +8,6 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class ScheduleRequest extends BasePageRequest {
+public class SchedulePageRequest extends BasePageRequest {
     private String resourceType;
 }

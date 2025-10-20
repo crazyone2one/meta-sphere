@@ -1,10 +1,7 @@
 package com.master.meta.service.impl;
 
 import com.master.meta.constants.ApplicationNumScope;
-import com.master.meta.dto.ScheduleConfig;
-import com.master.meta.dto.ScheduleDTO;
-import com.master.meta.dto.ScheduleRequest;
-import com.master.meta.dto.SelectOptionDTO;
+import com.master.meta.dto.*;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
@@ -112,11 +109,12 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
-    public Page<ScheduleDTO> getSchedulePage(ScheduleRequest request) {
+    public Page<ScheduleDTO> getSchedulePage(SchedulePageRequest request) {
         QueryChain<SystemSchedule> systemScheduleQueryChain = queryChain()
                 .select(SYSTEM_SCHEDULE.ID, SYSTEM_SCHEDULE.NAME, SYSTEM_SCHEDULE.ENABLE, SYSTEM_SCHEDULE.VALUE)
                 .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME, SYSTEM_SCHEDULE.NUM, SYSTEM_SCHEDULE.PROJECT_ID)
                 .select(SYSTEM_SCHEDULE.RESOURCE_ID, SYSTEM_SCHEDULE.CONFIG.as("runConfig"))
+                .select(SYSTEM_SCHEDULE.RESOURCE_TYPE, SYSTEM_SCHEDULE.SENSOR_TYPE)
                 .select(SYSTEM_PROJECT.NAME.as("projectName"))
                 .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
@@ -131,9 +129,10 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
-    public List<SelectOptionDTO> getScheduleNameList() {
+    public List<SelectOptionDTO> getScheduleNameList(String projectId) {
         List<String> allJobNames = ScheduleFileUtil.getClassesInPackage("com.master.meta.schedule");
-        List<String> existJobNames = queryChain().select(SYSTEM_SCHEDULE.JOB).listAs(String.class);
+        List<String> existJobNames = queryChain().select(SYSTEM_SCHEDULE.JOB)
+                .where(SYSTEM_SCHEDULE.PROJECT_ID.eq(projectId)).listAs(String.class);
         return allJobNames.stream()
                 .filter(jobName -> !existJobNames.contains(jobName)) // 包含时跳过
                 .map(jobName -> {
@@ -146,16 +145,8 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateSchedule(SystemSchedule systemSchedule) {
-        SystemSchedule schedule = checkScheduleExit(systemSchedule.getId());
-        schedule.setValue(systemSchedule.getValue());
-        mapper.update(schedule);
-        try {
-            extracted4UpdateJob(schedule);
-        } catch (ClassNotFoundException e) {
-            throw new CustomException("找不到定时任务类: " + schedule.getJob());
-        }
-        return true;
+    public int updateSchedule(SystemSchedule systemSchedule) {
+        return mapper.insertOrUpdateSelective(systemSchedule);
     }
 
     @Override
@@ -169,6 +160,19 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
         } catch (ClassNotFoundException e) {
             log.error(e.getMessage());
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateCron(ScheduleCronRequest request) {
+        SystemSchedule schedule = checkScheduleExit(request.getId());
+        schedule.setValue(request.getCron());
+        mapper.update(schedule);
+        try {
+            extracted4UpdateJob(schedule);
+        } catch (ClassNotFoundException e) {
+            throw new CustomException("找不到定时任务类: " + schedule.getJob());
         }
     }
 

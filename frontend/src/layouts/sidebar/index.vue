@@ -34,6 +34,18 @@ const menus = computed(() => [
     label: 'Schedule',
     name: 'Schedule',
     icon: 'i-ant-design:schedule-outlined',
+  },
+  {
+    label: 'Template',
+    name: 'Template',
+    icon: "i-ant-design:slack-outlined",
+    children: [
+      {
+        label: 'DynamicForm',
+        name: 'DynamicForm',
+        icon: 'i-ant-design:table-outlined',
+      }
+    ]
   }
 ])
 const options = computed(() => (menus.value ? mapping(menus.value) : []))

@@ -1,5 +1,7 @@
 package com.master.meta.handle.schedule;
 
+import com.master.meta.dto.ScheduleConfigDTO;
+import com.master.meta.utils.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
@@ -17,6 +19,7 @@ public abstract class BaseScheduleJob implements Job {
     protected String projectName;
     protected String userId;
     protected String expression;
+    protected ScheduleConfigDTO config;
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
@@ -27,6 +30,7 @@ public abstract class BaseScheduleJob implements Job {
         this.projectId = jobDataMap.getString("projectId");
         this.projectNum = jobDataMap.getString("projectNum");
         this.projectName = jobDataMap.getString("projectName");
+        this.config = JSON.objectToType(ScheduleConfigDTO.class).apply(jobDataMap.get("config"));
         businessExecute(context);
     }
 

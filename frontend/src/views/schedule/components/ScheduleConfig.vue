@@ -1,37 +1,30 @@
 <script setup lang="ts">
 import type {IScheduleInfo} from "/@/api/modules/schedule/types.ts";
 import BaseCronSelect from "/@/components/BaseCronSelect.vue";
-import {watch} from "vue";
+import {reactive, ref, watch} from "vue";
 import {useForm} from "alova/client";
 import {scheduleApi} from "/@/api/modules/schedule";
+import DynamicFormDrawer from "/@/components/dynamic-form-drawer/index.vue";
+import {NCode} from "naive-ui";
 
 const emit = defineEmits<{
   (e: 'close', shouldSearch: boolean, type: string): void;
 }>();
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false});
 const props = defineProps<{ task: IScheduleInfo }>()
+const showDynamicFormModalVisible = ref(false);
+const dynamicFormDrawerRef = ref<InstanceType<typeof DynamicFormDrawer>>();
+let customConfig = reactive({})
 const handleClose = (search: boolean) => {
   emit('close', search, 'config')
 }
 
 const addConfigItem = () => {
-  const newKey = `param${Object.keys(model.value.runConfig).length + 1}`;
-  model.value.runConfig[newKey] = '';
-
+  showDynamicFormModalVisible.value = true;
 };
-const updateConfigKey = (oldKey: string | number, newKey: string) => {
-  if (oldKey === newKey || !newKey) return;
-  const {[oldKey]: value, ...rest} = model.value.runConfig;
-  model.value.runConfig = {...rest, [newKey]: value};
-};
-const removeConfigItem = (key: string | number) => {
-  if (Object.keys(model.value.runConfig).length <= 1) {
-    // 防止删除所有配置项
-    return;
-  }
-  const {[key]: removed, ...rest} = model.value.runConfig;
-  model.value.runConfig = rest;
-};
+const handleCloseDynamicFormModal = () => {
+  showDynamicFormModalVisible.value = false;
+}
 const {form: model, send: submit, loading} = useForm((formData) => scheduleApi.runScheduleConfig(formData), {
   immediate: false,
   initialForm: {
@@ -46,6 +39,22 @@ const handleSubmit = () => {
     handleClose(true);
     window.$message.success('修改成功');
   })
+}
+
+const handleSubmitConfig = (value: Record<string, any>): void => {
+  // 清空现有配置
+  Object.keys(model.value.runConfig).forEach(key => {
+    delete model.value.runConfig[key];
+  });
+  // 添加新配置
+  Object.keys(value).forEach(key => {
+    model.value.runConfig[key] = value[key];
+  });
+  model.value.runConfig['customConfig'] = customConfig;
+  handleCloseDynamicFormModal()
+}
+const handleCustomConfig = (config: Record<string, any>) => {
+  customConfig = {...config};
 }
 watch(() => props.task, (newValue) => {
   model.value.resourceId = newValue.resourceId;
@@ -71,27 +80,7 @@ watch(() => props.task, (newValue) => {
           <base-cron-select v-model:model-value="model.cron" size="small"/>
         </n-form-item>
         <n-divider title-placement="left">运行配置</n-divider>
-        <n-scrollbar style="max-height: 240px">
-          <n-form-item v-for="(_value, key) in model.runConfig" :key="key">
-            <n-grid :cols="12" :x-gap="12">
-              <n-form-item-gi :span="5">
-                <n-input :value="String(key)" @update:value="(newKey) => updateConfigKey(key, newKey)"/>
-              </n-form-item-gi>
-              <n-form-item-gi :span="5">
-                <n-input v-model:value="model.runConfig[key]"
-                         placeholder="参数值"
-                         clearable
-                />
-              </n-form-item-gi>
-              <n-form-item-gi :span="2">
-                <n-button text type="warning" @click="removeConfigItem(key)">
-                  删除
-                </n-button>
-              </n-form-item-gi>
-            </n-grid>
-          </n-form-item>
-        </n-scrollbar>
-
+        <n-code :code="JSON.stringify(model.runConfig, null, 2)" language="json"/>
         <n-form-item>
           <n-button secondary type="info" size="tiny" @click="addConfigItem">
             添加参数
@@ -106,6 +95,12 @@ watch(() => props.task, (newValue) => {
       </n-space>
     </template>
   </n-modal>
+  <dynamic-form-drawer ref="dynamicFormDrawerRef"
+                       v-model:show-modal="showDynamicFormModalVisible" :config="model.runConfig"
+                       :resourceType="task.resourceType==='CDSS'"
+                       @close="handleCloseDynamicFormModal"
+                       @update="handleSubmitConfig"
+                       @update-config="handleCustomConfig"/>
 </template>
 
 <style scoped>

@@ -54,13 +54,14 @@ public class ScheduleManager {
      * @param triggerKey 触发器的唯一标识，包含触发器名称和组名
      * @param cron       新的Cron表达式，定义任务执行的时间规则
      */
-    public void modifyCronJobTime(TriggerKey triggerKey, String cron) {
+    public void modifyCronJobTime(TriggerKey triggerKey, String cron, JobDataMap jobDataMap) {
         log.info("modifyCronJobTime: {},{}", triggerKey.getName(), triggerKey.getGroup());
         try {
             CronTrigger trigger = (CronTrigger) scheduler.getTrigger(triggerKey);
             if (trigger == null) {
                 return;
             }
+            trigger.getJobDataMap().putAll(jobDataMap);
             String oldTime = trigger.getCronExpression();
             if (!oldTime.equalsIgnoreCase(cron)) {
                 /* 方式一 ：调用 rescheduleJob 开始 */
@@ -112,7 +113,7 @@ public class ScheduleManager {
             throws SchedulerException {
         log.info("AddOrUpdateCronJob: {},{}", jobKey.getName(), triggerKey.getGroup());
         if (scheduler.checkExists(triggerKey)) {
-            modifyCronJobTime(triggerKey, cron);
+            modifyCronJobTime(triggerKey, cron, jobDataMap);
         } else {
             addCronJob(jobKey, triggerKey, jobClass, cron, jobDataMap);
         }
