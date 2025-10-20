@@ -80,6 +80,7 @@ public class SystemSchedule implements Serializable {
      */
     @Schema(description = "创建人")
     private String createUser;
+    private String sensorType;
 
     /**
      * 创建时间
@@ -112,12 +113,13 @@ public class SystemSchedule implements Serializable {
      */
     @Schema(description = "配置")
     @Column(typeHandler = JacksonTypeHandler.class)
-    private Map<String, String> config;
+    private Map<String, Object> config;
 
     /**
      * 业务ID
      */
     @Schema(description = "业务ID")
     private Long num;
-
+    @Schema(description = "是否删除")
+    private Boolean deleted;
 }

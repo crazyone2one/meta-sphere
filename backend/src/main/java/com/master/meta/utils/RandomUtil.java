@@ -20,4 +20,7 @@ public class RandomUtil {
     public static String doubleTypeString(int min, int max) {
         return String.format("%.2f%n", min + ((max - min) * new Random().nextDouble()));
     }
+    public static String generateRandomDoubleString(double min, double max) {
+        return String.format("%.2f", min + ((max - min) * new Random().nextDouble()));
+    }
 }

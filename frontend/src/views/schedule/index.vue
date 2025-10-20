@@ -93,12 +93,11 @@ const handleClose = (search: boolean, type: string) => {
   }
 }
 const handleChangeCron = async (value: string, record: IScheduleInfo) => {
-  record.value = value;
   const param = {
     id: record.id,
-    value: value,
+    cron: value,
   }
-  await scheduleApi.updateSchedule(param).then(() => {
+  await scheduleApi.updateScheduleCron(param).then(() => {
     window.$message.success('修改成功');
     fetchData();
   })

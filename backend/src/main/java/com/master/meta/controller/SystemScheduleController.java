@@ -63,8 +63,14 @@ public class SystemScheduleController {
      */
     @PutMapping("update")
     @Operation(description = "根据主键更新定时任务")
-    public boolean update(@RequestBody @Parameter(description = "定时任务主键") SystemSchedule systemSchedule) {
+    public int update(@RequestBody @Parameter(description = "定时任务主键") SystemSchedule systemSchedule) {
         return systemScheduleService.updateSchedule(systemSchedule);
+    }
+
+    @PostMapping("/schedule/update-cron")
+    @Operation(summary = "系统-任务中心-后台任务更新cron表达式")
+    public void updateValue(@Validated @RequestBody ScheduleCronRequest request) {
+        systemScheduleService.updateCron(request);
     }
 
     /**
@@ -78,10 +84,10 @@ public class SystemScheduleController {
         return systemScheduleService.list();
     }
 
-    @GetMapping("/schedule-name-list")
+    @GetMapping("/schedule-name-list/{projectId}")
     @Operation(description = "查询所有定时任务")
-    public List<SelectOptionDTO> scheduleNameList() {
-        return systemScheduleService.getScheduleNameList();
+    public List<SelectOptionDTO> scheduleNameList(@PathVariable @Parameter(description = "项目id") String projectId) {
+        return systemScheduleService.getScheduleNameList(projectId);
     }
 
     /**
@@ -104,7 +110,7 @@ public class SystemScheduleController {
      */
     @PostMapping("page")
     @Operation(description = "分页查询定时任务")
-    public Page<ScheduleDTO> page(@Validated @RequestBody ScheduleRequest request) {
+    public Page<ScheduleDTO> page(@Validated @RequestBody SchedulePageRequest request) {
         return systemScheduleService.getSchedulePage(request);
     }
 

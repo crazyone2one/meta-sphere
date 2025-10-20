@@ -20,6 +20,22 @@ const mainRoutes: RouteRecordRaw[] = [
             icon: 'i-ant-design:schedule-outlined'
         }
     },
+    {
+        name: 'Template',
+        path: '/template',
+        component: null,
+        children: [
+            {
+                name: 'DynamicForm',
+                path: '/dynamic-form',
+                component: () => import('/@/views/template/dynamic-form/index.vue'),
+                meta: {
+                    title: 'Dynamic Form',
+                    icon: 'i-ant-design:table-outlined'
+                }
+            }
+        ]
+    },
 ]
 const routes: RouteRecordRaw[] = [
     {

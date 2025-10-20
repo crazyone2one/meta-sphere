@@ -27,5 +27,5 @@ public class BaseScheduleConfigRequest {
     private String cron;
 
     @Schema(description = "运行配置")
-    private Map<String, String> runConfig = new HashMap<>();
+    private Map<String, Object> runConfig = new HashMap<>();
 }

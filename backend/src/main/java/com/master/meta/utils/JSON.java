@@ -136,4 +136,53 @@ public class JSON {
             return Collections.emptyMap();
         }
     };
+
+    public static Map<String, Object> parseObjectToMap(Object object) {
+        try {
+            return objectMapper.convertValue(object, new TypeReference<>() {
+            });
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Function<Object, Map<String, Object>> objectToMap = obj -> {
+        try {
+            return obj == null ? null : objectMapper.convertValue(obj, new TypeReference<Map<String, Object>>() {
+            });
+        } catch (IllegalArgumentException e) {
+            return Collections.emptyMap();
+        }
+    };
+    /**
+     * 将对象转换为指定类型的实例
+     *
+     * @param object 需要转换的对象
+     * @param targetType 目标类型Class
+     * @param <T> 目标类型
+     * @return 转换后的目标类型实例
+     */
+    public static <T> T convertObject(Object object, Class<T> targetType) {
+        try {
+            return objectMapper.convertValue(object, targetType);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    /**
+     * 创建一个Function，用于将对象转换为指定类型的实例
+     *
+     * @param targetType 目标类型Class
+     * @param <T> 目标类型
+     * @return 转换函数
+     */
+    public static <T> Function<Object, T> objectToType(Class<T> targetType) {
+        return obj -> {
+            try {
+                return obj == null ? null : objectMapper.convertValue(obj, targetType);
+            } catch (IllegalArgumentException e) {
+                throw new RuntimeException(e);
+            }
+        };
+    }
 }

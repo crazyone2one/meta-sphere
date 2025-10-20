@@ -2,6 +2,8 @@ export interface IScheduleInfo {
     id: string;
     name: string;
     resourceId: string;
+    resourceType?: string;
+    sensorType?: string;
     projectName: string;
     num: number;
     enable: boolean;
