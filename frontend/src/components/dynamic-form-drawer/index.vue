@@ -128,6 +128,7 @@ const removeField = (index: number) => {
 // 切换字段禁用状态
 const toggleFieldDisabled = (field: FormField) => {
   field.disabled = !field.disabled;
+  console.log('toggleFieldDisabled', field)
 };
 // 重置表单
 const resetForm = () => {
@@ -157,7 +158,7 @@ watch(
           }
         });
       }
-
+      console.log('newFields',newFields)
       // 初始化新增字段
       newFields.forEach(field => {
         if (formData[field.key] === undefined) {
@@ -185,6 +186,7 @@ watch(
           }
         }
       });
+      console.log('newFields',formData)
     },
     {deep: true}
 );
@@ -349,15 +351,15 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
                   <n-checkbox v-model:checked="field.required" size="small">
                     设为必填
                   </n-checkbox>
-                  <n-button size="tiny" @click="toggleFieldDisabled(field)">
-                    {{ field.disabled ? '启用' : '禁用' }}
-                  </n-button>
                 </div>
                 <div v-else>
                   <n-button size="tiny" @click="handleUpdateCustomConfig(formData[field.key])">
                     编辑
                   </n-button>
                 </div>
+                <n-button size="tiny" @click="toggleFieldDisabled(field)">
+                  {{ field.disabled ? '启用' : '禁用' }}
+                </n-button>
                 <!-- 字段操作按钮 -->
                 <n-button size="tiny" type="error" text @click="removeField(index)">
                   <n-icon :size="20">

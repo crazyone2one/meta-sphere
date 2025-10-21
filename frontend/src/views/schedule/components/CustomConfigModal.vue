@@ -9,26 +9,14 @@ import {useRequest} from "alova/client";
 
 const appStore = useAppStore();
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false});
-const sensorOptions = ref<Array<SelectOption>>([
-  {
-    label: '1',
-    value: '1'
-  },
-  {
-    label: '2',
-    value: '2'
-  },
-  {
-    label: '3',
-    value: '3'
-  },
-])
+const sensorOptions = ref<Array<SelectOption>>()
 let customConfig = ref<ICustomConfig>({
   sensorIds: '',
   superthreshold: false, //超阈值
   thresholdInterval: '', //阈值区间
   alarmFlag: false, //是否预警
-  sensorType: '' // 测点类型
+  sensorType: '', // 测点类型
+  sensorValueType: '', // 测点数值类型
 })
 const {config = {}} = defineProps<{
   config?: ICustomConfig
@@ -43,6 +31,7 @@ const handleSubmit = () => {
 }
 const handleSelectSensor = (_value: string, option: SelectOption) => {
   customConfig.value.sensorType = option.sensorType;
+  customConfig.value.sensorValueType = option.sensorValueType;
 }
 const {send: fetchSensorList} = useRequest(() => scheduleApi.getSensorList(appStore.currentProjectId), {immediate: false})
 watch(() => config, (newValue) => {
