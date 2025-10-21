@@ -89,7 +89,10 @@ const resetNewFieldForm = () => {
 const removeField = (index: number) => {
   const removedField = formFields.value.splice(index, 1)[0];
   // 从表单数据中删除对应的字段
-  delete formData[removedField.key];
+  // delete formData[removedField.key];
+  if (removedField && removedField.key) {
+    delete formData[removedField.key];
+  }
 };
 // 切换字段禁用状态
 const toggleFieldDisabled = (field: FormField) => {
