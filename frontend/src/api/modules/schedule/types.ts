@@ -21,6 +21,15 @@ export interface IScheduleConfig {
     runConfig: IRunConfig
 }
 
+export interface ICustomConfig {
+    sensorIds: string;
+    superthreshold: boolean;
+    thresholdInterval: string;
+    alarmFlag: boolean;
+
+    [key: string]: any;
+}
+
 export interface IRunConfig {
     [key: string]: any;
 }
@@ -37,6 +46,7 @@ export interface ICreateTask {
     resourceType: string
     runConfig?: IScheduleConfig;
 }
+
 export interface IUpdateTask {
     value: string;
     id: string;

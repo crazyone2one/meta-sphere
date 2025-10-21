@@ -1,9 +1,15 @@
 <script setup lang="ts">
 
 import {ref, watch} from "vue";
+import type {ICustomConfig} from "/@/api/modules/schedule/types.ts";
+import type {SelectOption} from "naive-ui";
+import {scheduleApi} from "/@/api/modules/schedule";
+import {useAppStore} from "/@/store";
+import {useRequest} from "alova/client";
 
+const appStore = useAppStore();
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false});
-const sensorOptions = ref([
+const sensorOptions = ref<Array<SelectOption>>([
   {
     label: '1',
     value: '1'
@@ -17,26 +23,37 @@ const sensorOptions = ref([
     value: '3'
   },
 ])
-let customConfig = ref<Record<string, any>>({
-  sensorIds: [],
+let customConfig = ref<ICustomConfig>({
+  sensorIds: '',
   superthreshold: false, //超阈值
   thresholdInterval: '', //阈值区间
-  alarmFlag: false //是否预警
+  alarmFlag: false, //是否预警
+  sensorType: '' // 测点类型
 })
 const {config = {}} = defineProps<{
-  config?: Record<string, any>
+  config?: ICustomConfig
 }>()
 const emit = defineEmits<{
-  (e: 'updateConfig', value: Record<string, any>, key: string): void;
+  (e: 'updateConfig', value: ICustomConfig, key: string): void;
   (e: 'close'): void;
 }>();
 const handleSubmit = () => {
   emit('updateConfig', customConfig.value, "customConfig")
   emit('close')
 }
+const handleSelectSensor = (_value: string, option: SelectOption) => {
+  customConfig.value.sensorType = option.sensorType;
+}
+const {send: fetchSensorList} = useRequest(() => scheduleApi.getSensorList(appStore.currentProjectId), {immediate: false})
 watch(() => config, (newValue) => {
-  customConfig.value = {...newValue}
+  customConfig.value = {...newValue} as ICustomConfig
 }, {deep: true})
+watch(() => showModal.value, (show) => {
+  if (show) {
+    sensorOptions.value = [];
+    fetchSensorList().then(res => sensorOptions.value = res)
+  }
+})
 </script>
 
 <template>
@@ -52,8 +69,9 @@ watch(() => config, (newValue) => {
           size="small" class="mt-[20px]"
       >
         <n-form-item label="测点id">
-          <n-select v-model:value="customConfig.sensorIds" :options="sensorOptions" multiple
-                    placeholder="选择测点sensor id"/>
+          <n-select v-model:value="customConfig.sensorIds" :options="sensorOptions"
+                    @update:value="handleSelectSensor"
+                    filterable placeholder="选择测点sensor id"/>
         </n-form-item>
         <n-form-item label="超阈值">
           <n-radio-group v-model:value="customConfig.superthreshold" name="superthreshold">
@@ -78,7 +96,7 @@ watch(() => config, (newValue) => {
     </div>
     <template #action>
       <n-space>
-        <n-button>取消</n-button>
+        <n-button @click="emit('close')">取消</n-button>
         <n-button type="primary" @click="handleSubmit">确定</n-button>
       </n-space>
     </template>

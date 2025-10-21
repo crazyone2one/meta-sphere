@@ -1,5 +1,6 @@
 package com.master.meta.utils;
 
+import com.master.meta.constants.SensorType;
 import com.mybatisflex.core.datasource.DataSourceKey;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
@@ -49,13 +50,22 @@ public class SensorUtil {
             return sensorList;
         }
     }
-    public List<Row> getCDSSSensorFromRedis(String projectNum, String key, String tableName, Boolean deleted) {
-        String sensorListInRedis = redisService.getSensor(projectNum, key);
+
+    /**
+     * 获取CDSS传感器列表
+     *
+     * @param projectNum 项目编号
+     * @param sensorType 传感器类型
+     * @param deleted    是否删除
+     * @return 传感器列表
+     */
+    public List<Row> getCDSSSensorFromRedis(String projectNum, SensorType sensorType, Boolean deleted) {
+        String sensorListInRedis = redisService.getSensor(projectNum, sensorType.getKey());
         if (sensorListInRedis != null) {
             return JSON.parseArray(sensorListInRedis, Row.class);
         } else {
-            List<Row> sensorList = getCDSSList(tableName, deleted);
-            redisService.storeSensor(projectNum, key, sensorList, 60 * 60 * 24 * 7);
+            List<Row> sensorList = getCDSSList(sensorType.getTableName(), deleted);
+            redisService.storeSensor(projectNum, sensorType.getKey(), sensorList, 60 * 60 * 24 * 7);
             return sensorList;
         }
     }

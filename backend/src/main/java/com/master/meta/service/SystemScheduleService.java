@@ -36,4 +36,6 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
     void enable(String id);
 
     void updateCron(ScheduleCronRequest request);
+
+    List<SensorSelectOptionDTO> getSensorOptions(String projectId);
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type {IScheduleInfo} from "/@/api/modules/schedule/types.ts";
+import type {ICustomConfig, IScheduleInfo} from "/@/api/modules/schedule/types.ts";
 import BaseCronSelect from "/@/components/BaseCronSelect.vue";
 import {reactive, ref, watch} from "vue";
 import {useForm} from "alova/client";
@@ -14,7 +14,12 @@ const showModal = defineModel<boolean>('showModal', {type: Boolean, default: fal
 const props = defineProps<{ task: IScheduleInfo }>()
 const showDynamicFormModalVisible = ref(false);
 const dynamicFormDrawerRef = ref<InstanceType<typeof DynamicFormDrawer>>();
-let customConfig = reactive({})
+let customConfig = reactive<ICustomConfig>({
+  alarmFlag: false,
+  sensorIds: '',
+  superthreshold: false,
+  thresholdInterval: ''
+})
 const handleClose = (search: boolean) => {
   emit('close', search, 'config')
 }
@@ -53,7 +58,7 @@ const handleSubmitConfig = (value: Record<string, any>): void => {
   model.value.runConfig['customConfig'] = customConfig;
   handleCloseDynamicFormModal()
 }
-const handleCustomConfig = (config: Record<string, any>) => {
+const handleCustomConfig = (config: ICustomConfig) => {
   customConfig = {...config};
 }
 watch(() => props.task, (newValue) => {

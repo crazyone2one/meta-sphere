@@ -53,6 +53,11 @@ public class SystemProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
         return queryChain().where(SYSTEM_PROJECT.ORGANIZATION_ID.eq(organizationId)).list();
     }
 
+    @Override
+    public SystemProject checkProjectExit(String projectId) {
+        return queryChain().where(SYSTEM_PROJECT.ID.eq(projectId)).oneOpt().orElseThrow(() -> new CustomException("<项目不存在>"));
+    }
+
     private void checkProjectExistByName(SystemProject request) {
         boolean exists = queryChain().where(SYSTEM_PROJECT.NAME.eq(request.getName())
                 .and(SYSTEM_PROJECT.ORGANIZATION_ID.eq(request.getOrganizationId()))

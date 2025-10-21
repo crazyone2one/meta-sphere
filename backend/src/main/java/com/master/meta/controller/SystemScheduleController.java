@@ -144,4 +144,10 @@ public class SystemScheduleController {
     public void enableOrg(@PathVariable String id) {
         systemScheduleService.enable(id);
     }
+
+    @GetMapping("/sensor/option/{projectId}")
+    @Operation(summary = "定时任务开启关闭")
+    public List<SensorSelectOptionDTO> getSensorOptions(@PathVariable String projectId) {
+        return systemScheduleService.getSensorOptions(projectId);
+    }
 }
