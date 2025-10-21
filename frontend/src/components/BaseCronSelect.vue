@@ -9,6 +9,7 @@ const cron = defineModel<string>('modelValue', {
 const options = [
   {label: '(每 1 分钟)', value: '0 0/1 * * * ?'},
   {label: '(每 5 分钟)', value: '0 0/5 * * * ?'},
+  {label: '(每 10 分钟)', value: '0 0/10 * * * ?'},
   {label: '(每小时)', value: '0 0 0/1 * * ?'},
   {label: '(每 6 小时)', value: '0 0 0/6 * * ?'},
   {label: '(每 12 小时)', value: '0 0 0/12 * * ?'},
