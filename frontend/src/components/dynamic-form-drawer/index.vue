@@ -128,7 +128,6 @@ const removeField = (index: number) => {
 // 切换字段禁用状态
 const toggleFieldDisabled = (field: FormField) => {
   field.disabled = !field.disabled;
-  console.log('toggleFieldDisabled', field)
 };
 // 重置表单
 const resetForm = () => {
@@ -158,7 +157,6 @@ watch(
           }
         });
       }
-      console.log('newFields',newFields)
       // 初始化新增字段
       newFields.forEach(field => {
         if (formData[field.key] === undefined) {
@@ -186,7 +184,6 @@ watch(
           }
         }
       });
-      console.log('newFields',formData)
     },
     {deep: true}
 );
