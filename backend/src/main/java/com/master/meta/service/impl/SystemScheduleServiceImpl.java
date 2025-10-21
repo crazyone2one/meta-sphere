@@ -5,13 +5,13 @@ import com.master.meta.constants.SensorType;
 import com.master.meta.dto.*;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
+import com.master.meta.handle.ClassScanner;
 import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.schedule.ScheduleManager;
 import com.master.meta.mapper.SystemScheduleMapper;
 import com.master.meta.service.SystemScheduleService;
 import com.master.meta.uid.NumGenerator;
-import com.master.meta.utils.ScheduleFileUtil;
 import com.master.meta.utils.SensorUtil;
 import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
@@ -43,10 +43,14 @@ import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDUL
 public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper, SystemSchedule> implements SystemScheduleService {
     private final ScheduleManager scheduleManager;
     private final SensorUtil sensorUtil;
+    private final ClassScanner classScanner;
 
-    public SystemScheduleServiceImpl(ScheduleManager scheduleManager, SensorUtil sensorUtil) {
+    public SystemScheduleServiceImpl(ScheduleManager scheduleManager,
+                                     SensorUtil sensorUtil,
+                                     ClassScanner classScanner) {
         this.scheduleManager = scheduleManager;
         this.sensorUtil = sensorUtil;
+        this.classScanner = classScanner;
     }
 
     @Override
@@ -137,7 +141,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
 
     @Override
     public List<SelectOptionDTO> getScheduleNameList(String projectId) {
-        List<String> allJobNames = ScheduleFileUtil.getClassesInPackage("com.master.meta.schedule");
+        List<String> allJobNames = classScanner.scanPackage("com.master.meta.schedule");
         List<String> existJobNames = queryChain().select(SYSTEM_SCHEDULE.JOB)
                 .where(SYSTEM_SCHEDULE.PROJECT_ID.eq(projectId)).listAs(String.class);
         return allJobNames.stream()
