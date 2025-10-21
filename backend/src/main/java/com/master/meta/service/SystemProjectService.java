@@ -19,4 +19,6 @@ public interface SystemProjectService extends IService<SystemProject> {
     SystemUser switchProject(ProjectSwitchRequest request, String currentUserId);
 
     List<SystemProject> listProject(String organizationId);
+
+    SystemProject checkProjectExit(String projectId);
 }

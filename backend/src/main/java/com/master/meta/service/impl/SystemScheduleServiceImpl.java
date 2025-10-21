@@ -1,7 +1,9 @@
 package com.master.meta.service.impl;
 
 import com.master.meta.constants.ApplicationNumScope;
+import com.master.meta.constants.SensorType;
 import com.master.meta.dto.*;
+import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
@@ -10,9 +12,11 @@ import com.master.meta.mapper.SystemScheduleMapper;
 import com.master.meta.service.SystemScheduleService;
 import com.master.meta.uid.NumGenerator;
 import com.master.meta.utils.ScheduleFileUtil;
+import com.master.meta.utils.SensorUtil;
 import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
+import com.mybatisflex.core.row.Row;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -22,6 +26,7 @@ import org.quartz.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.master.meta.entity.table.SystemProjectTableDef.SYSTEM_PROJECT;
@@ -37,9 +42,11 @@ import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDUL
 @Service
 public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper, SystemSchedule> implements SystemScheduleService {
     private final ScheduleManager scheduleManager;
+    private final SensorUtil sensorUtil;
 
-    public SystemScheduleServiceImpl(ScheduleManager scheduleManager) {
+    public SystemScheduleServiceImpl(ScheduleManager scheduleManager, SensorUtil sensorUtil) {
         this.scheduleManager = scheduleManager;
+        this.sensorUtil = sensorUtil;
     }
 
     @Override
@@ -174,6 +181,28 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
         } catch (ClassNotFoundException e) {
             throw new CustomException("找不到定时任务类: " + schedule.getJob());
         }
+    }
+
+    @Override
+    public List<SensorSelectOptionDTO> getSensorOptions(String projectId) {
+        SystemProject systemProject = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(projectId)).oneOpt()
+                .orElseThrow(() -> new CustomException("<项目不存在>"));
+        List<Row> sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorType.CDSS, false);
+        if (CollectionUtils.isEmpty(sensorFromRedis)) {
+            return new ArrayList<>();
+        }
+
+        List<Row> sensorList = sensorFromRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
+        return sensorList.stream()
+                .map(row -> new SensorSelectOptionDTO(row.getString("sensor_location"),
+                        row.getString("sensor_code"),
+                        row.getString("sensor_code"),
+                        row.getString("sensor_location"),
+                        row.getString("sensor_type"),
+                        row.getString("sensor_value_type"),
+                        row.getString("sensor_value_unit"),
+                        row.getBoolean("is_delete"))
+                ).toList();
     }
 
     @Transactional(rollbackFor = Exception.class)

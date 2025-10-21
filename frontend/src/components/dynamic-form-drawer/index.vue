@@ -12,6 +12,7 @@ import {
 } from "naive-ui";
 import {computed, reactive, ref, watch} from 'vue';
 import CustomConfigModal from "/@/views/schedule/components/CustomConfigModal.vue";
+import type {ICustomConfig} from "/@/api/modules/schedule/types.ts";
 
 // 字段类型定义
 type FieldType = 'text' | 'number' | 'select' | 'checkbox' | 'radio' | 'textarea' | 'custom';
@@ -45,7 +46,7 @@ const {config = {}, resourceType = false} = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void,
   (e: 'update', value: Record<string, any>): void;
-  (e: 'updateConfig', value: Record<string, any>): void;
+  (e: 'updateConfig', value: ICustomConfig): void;
 }>();
 const newFieldType = ref<FieldType>('text');
 const newFieldOptions = ref('');
@@ -137,7 +138,7 @@ const resetForm = () => {
   });
   resetNewFieldForm();
 };
-const handleUpdateConfig = (config: Record<string, any>, key: string) => {
+const handleUpdateConfig = (config: ICustomConfig, key: string) => {
   formData[key] = config;
   emit('updateConfig', config)
 };
@@ -204,7 +205,7 @@ watch(() => config, (newValue) => {
         }
       }
       // 推断字段类型
-      let fieldType: FieldType = 'text';
+      let fieldType: FieldType;
       if (typeof config[key] === 'number') {
         fieldType = 'number';
       } else if (Array.isArray(config[key])) {
@@ -212,9 +213,11 @@ watch(() => config, (newValue) => {
       } else if (typeof config[key] === 'boolean' ||
           (typeof config[key] === 'string' && ['yes', 'no', 'true', 'false', '1', '0'].includes(config[key].toLowerCase()))) {
         fieldType = 'radio'; // 布尔值用复选框表示
-      } else if (typeof newValue[key] === 'string' && (key.includes('Ids') || key.includes('type') || key.includes('category'))) {
+      } else if (typeof config[key] === 'string' && (key.includes('Ids') || key.includes('type') || key.includes('category'))) {
         // 通过key的命名规则推断可能是select类型
         fieldType = 'select';
+      } else if (typeof config[key] === 'string') {
+        fieldType = 'text';
       } else {
         fieldType = 'custom';
       }
@@ -247,10 +250,15 @@ const addFieldButtonDisabled = computed(() => {
   if (newFieldType.value === 'custom') {
     return false
   }
-  return !newFieldKey || !newFieldLabel
+  return !newFieldKey.value || !newFieldLabel.value
 });
-let customConfig = reactive({})
-const handleUpdateCustomConfig = (config: Record<string, any>) => {
+let customConfig = reactive<ICustomConfig>({
+  alarmFlag: false,
+  sensorIds: '',
+  superthreshold: false,
+  thresholdInterval: ''
+})
+const handleUpdateCustomConfig = (config: ICustomConfig) => {
   customConfig = {...config}
   showCustomConfigModalVisible.value = true;
 }
