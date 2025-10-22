@@ -1,4 +1,4 @@
-import {get, post, put} from "/@/api";
+import {get, post, put, del} from "/@/api";
 import type {IPageResponse, ITableQueryParams} from "/@/api/types.ts";
 import type {ICreateTask, IScheduleConfig, IScheduleInfo, IUpdateTask} from "/@/api/modules/schedule/types.ts";
 import type {SelectOption} from "naive-ui";
@@ -14,6 +14,8 @@ export const scheduleApi = {
     getScheduleNameList: (projectId: string) => get<Array<SelectOption>>(`/system-schedule/schedule-name-list/${projectId}`),
     // 获取传感器列表
     getSensorList: (projectId: string) => get<Array<SelectOption>>(`/system-schedule/sensor/option/${projectId}`),
+    // 删除任务
+    removeSchedule: (id: string) => del(`/system-schedule/remove/${id}`),
     // 修改任务状态
     changeScheduleStatus: (id: string) => get(`/system-schedule/status/switch/${id}`),
 }

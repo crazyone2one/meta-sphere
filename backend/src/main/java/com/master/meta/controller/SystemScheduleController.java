@@ -47,12 +47,11 @@ public class SystemScheduleController {
      * 根据主键删除定时任务。
      *
      * @param id 主键
-     * @return {@code true} 删除成功，{@code false} 删除失败
      */
     @DeleteMapping("remove/{id}")
     @Operation(description = "根据主键删除定时任务")
-    public boolean remove(@PathVariable @Parameter(description = "定时任务主键") String id) {
-        return systemScheduleService.removeById(id);
+    public void remove(@PathVariable @Parameter(description = "定时任务主键") String id) {
+        systemScheduleService.deleteScheduleTask(id);
     }
 
     /**
