@@ -1,7 +1,7 @@
 package com.master.meta.service.impl;
 
 import com.master.meta.constants.ApplicationNumScope;
-import com.master.meta.constants.SensorType;
+import com.master.meta.constants.SensorMNType;
 import com.master.meta.dto.*;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
@@ -191,7 +191,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     public List<SensorSelectOptionDTO> getSensorOptions(String projectId) {
         SystemProject systemProject = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(projectId)).oneOpt()
                 .orElseThrow(() -> new CustomException("<项目不存在>"));
-        List<Row> sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorType.CDSS, false);
+        List<Row> sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_AQJK_CO, false);
         if (CollectionUtils.isEmpty(sensorFromRedis)) {
             return new ArrayList<>();
         }
@@ -207,6 +207,13 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                         row.getString("sensor_value_unit"),
                         row.getBoolean("is_delete"))
                 ).toList();
+    }
+
+    @Override
+    public void deleteScheduleTask(String id) {
+        SystemSchedule schedule = checkScheduleExit(id);
+        mapper.deleteById(schedule);
+        removeJob(schedule.getResourceId(), schedule.getJob());
     }
 
     @Transactional(rollbackFor = Exception.class)

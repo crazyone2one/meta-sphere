@@ -38,4 +38,6 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
     void updateCron(ScheduleCronRequest request);
 
     List<SensorSelectOptionDTO> getSensorOptions(String projectId);
+
+    void deleteScheduleTask(String id);
 }

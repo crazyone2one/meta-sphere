@@ -52,7 +52,12 @@ const columns: DataTableColumns<IScheduleInfo> = [
           size: 'small', text: true, type: 'primary', class: '!mr-[12px]',
           onClick: () => handleScheduleConfig(record)
         }, {default: () => '修改配置'}),
-        h(NButton, {size: 'small', text: true, type: 'error'}, {default: () => '删除'})
+        h(NButton, {
+          size: 'small',
+          text: true,
+          type: 'error',
+          onClick: () => handleRemove(record)
+        }, {default: () => '删除'})
       ];
     }
   },
@@ -116,11 +121,23 @@ const handleScheduleConfig = (record: IScheduleInfo) => {
   showScheduleConfigVisible.value = true;
 }
 
-const handleStatusChange = async (v: boolean, record: IScheduleInfo) => {
-  console.log(v)
+const handleStatusChange = async (_v: boolean, record: IScheduleInfo) => {
   await scheduleApi.changeScheduleStatus(record.id);
   window.$message.success('修改成功');
   await fetchData();
+}
+const handleRemove = (record: IScheduleInfo) => {
+  window.$dialog.warning({
+    title:'Tips',
+    content: `确定要删除${record.name}任务吗？`,
+    negativeText: '取消',
+    positiveText: '确定',
+    onPositiveClick: async () => {
+      await scheduleApi.removeSchedule(record.id);
+      window.$message.success('删除成功');
+      await fetchData();
+    }
+  })
 }
 onMounted(() => {
   fetchData();
