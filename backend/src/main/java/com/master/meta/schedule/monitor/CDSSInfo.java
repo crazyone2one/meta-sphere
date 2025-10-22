@@ -85,11 +85,13 @@ public class CDSSInfo extends BaseScheduleJob {
             if (customFlag) {
                 // 超过阈值
                 if (customConfig.getSuperthreshold()) {
-                    sensorState = "4";
                     if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
                         sensorValue = RandomUtil.generateRandomDoubleString(customConfig.getThresholdInterval().getFirst(), customConfig.getThresholdInterval().getLast());
                     }
                 }
+            }
+            if (configDTO.isTuningFlag()) {
+                sensorState = "4";
             }
             String sensorContent = sensorInfoCode + ";"
                     + sensor.getString("sensor_type_name") + ";"
