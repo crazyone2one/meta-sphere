@@ -17,29 +17,32 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * 风筒传感器测点实时数据
+ *
  * @author Created by 11's papa on 2025/10/22
  */
-public class SmokeRealTimeInfo extends BaseScheduleJob {
+public class FTRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
+    LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
 
-    private SmokeRealTimeInfo(SensorUtil sensorUtil) {
+    private FTRealTimeInfo(SensorUtil sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(super.projectNum, SensorKGType.SENSOR_AQJK_1008, false);
+        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(super.projectNum, SensorKGType.SENSOR_AQJK_1003, false);
         List<Row> sensorList = sensorInRedis.stream()
                 .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
                 .filter(row -> {
+                    // 排除传感器类型为1003、1008和1010的数据
                     String sensorType = row.getString("sensor_type");
-                    return SensorKGType.SENSOR_AQJK_1008.getSensorType().equals(sensorType);
+                    return SensorKGType.SENSOR_AQJK_1003.getSensorType().equals(sensorType);
                 })
                 .toList();
-        LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_CDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+        String fileName = fileName("_CDSS_", now);
+        String content = contentHeader(now) +
                 // 文件体
                 bodyContent(sensorList, now) +
                 END_FLAG;
@@ -52,8 +55,12 @@ public class SmokeRealTimeInfo extends BaseScheduleJob {
         Map<String, Row> sensorMap = rows.stream()
                 .collect(Collectors.toMap(row -> row.getString("sensor_code"), row -> row));
         rows.forEach(row -> {
-            String sensorValue = super.config.isYcFlag() ? "1" : "0";
+            String sensorValue = "1";
             String sensorInfoCode = row.getString("sensor_code");
+            if (sensorInfoCode.equals(this.config.getCustomConfig().getSensorIds()) &&
+                    this.config.getCustomConfig().getAlarmFlag()) {
+                sensorValue = "0";
+            }
             Row sensor = sensorMap.get(sensorInfoCode);
             String sensorContent = sensorInfoCode + ";"
                     + sensor.getString("sensor_type_name") + ";"
@@ -68,10 +75,10 @@ public class SmokeRealTimeInfo extends BaseScheduleJob {
     }
 
     public static JobKey getJobKey(String resourceId) {
-        return new JobKey(resourceId, SmokeRealTimeInfo.class.getName());
+        return new JobKey(resourceId, FTRealTimeInfo.class.getName());
     }
 
     public static TriggerKey getTriggerKey(String resourceId) {
-        return new TriggerKey(resourceId, SmokeRealTimeInfo.class.getName());
+        return new TriggerKey(resourceId, FTRealTimeInfo.class.getName());
     }
 }
