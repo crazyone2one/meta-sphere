@@ -125,7 +125,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .select(SYSTEM_SCHEDULE.ID, SYSTEM_SCHEDULE.NAME, SYSTEM_SCHEDULE.ENABLE, SYSTEM_SCHEDULE.VALUE)
                 .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME, SYSTEM_SCHEDULE.NUM, SYSTEM_SCHEDULE.PROJECT_ID)
                 .select(SYSTEM_SCHEDULE.RESOURCE_ID, SYSTEM_SCHEDULE.CONFIG.as("runConfig"))
-                .select(SYSTEM_SCHEDULE.RESOURCE_TYPE, SYSTEM_SCHEDULE.SENSOR_TYPE)
+                .select(SYSTEM_SCHEDULE.RESOURCE_TYPE, SYSTEM_SCHEDULE.SENSOR_GROUP)
                 .select(SYSTEM_PROJECT.NAME.as("projectName"))
                 .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
@@ -188,8 +188,9 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
-    public List<SensorSelectOptionDTO> getSensorOptions(String projectId) {
-        SystemProject systemProject = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(projectId)).oneOpt()
+    public List<SensorSelectOptionDTO> getSensorOptions(BaseCondition request) {
+        SystemProject systemProject = QueryChain.of(SystemProject.class)
+                .where(SYSTEM_PROJECT.ID.eq(request.getProjectId())).oneOpt()
                 .orElseThrow(() -> new CustomException("<项目不存在>"));
         List<Row> sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_AQJK_CO, false);
         if (CollectionUtils.isEmpty(sensorFromRedis)) {
@@ -198,11 +199,10 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
 
         List<Row> sensorList = sensorFromRedis.stream()
                 .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
-                .filter(row -> {
-                    // 排除传感器类型为1003、1008和1010的数据
-                    String sensorType = row.getString("sensor_type");
-                    return !("1003".equals(sensorType) || "1008".equals(sensorType) || "1010".equals(sensorType));
-                })
+//                .filter(row -> {
+//                    String sensorType = row.getString("sensor_type");
+//                    return !("1003".equals(sensorType) || "1008".equals(sensorType) || "1010".equals(sensorType));
+//                })
                 .toList();
         return sensorList.stream()
                 .map(row -> new SensorSelectOptionDTO(row.getString("sensor_location"),

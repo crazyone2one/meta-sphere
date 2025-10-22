@@ -38,10 +38,10 @@ const customConfigModalRef = ref<InstanceType<typeof CustomConfigModal>>();
 const showCustomConfigModalVisible = ref(false);
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false});
 
-const {config = {}, resourceType = false} = defineProps<{
+const {config = {}} = defineProps<{
   config: FormData,
   resourceType?: boolean,
-  sensorType?: string
+  sensorGroup?: string
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -57,7 +57,7 @@ const formData = reactive<FormData>({});
 const formFields = ref<FormField[]>([]);
 
 const fieldTypeOptions = computed(() => {
-  const options = [
+  return [
     {label: '文本输入', value: 'text'},
     {label: '数字输入', value: 'number'},
     {label: '下拉选择', value: 'select'},
@@ -65,50 +65,43 @@ const fieldTypeOptions = computed(() => {
     {label: '单选框', value: 'radio'},
     {value: 'textarea', label: '多行文本框',}
   ]
-  if (resourceType) {
-    options.push({label: '特殊值', value: 'custom'})
-  }
-  return options
 })
+const addCustomField = () => showCustomConfigModalVisible.value = true;
 // 添加新字段
 const addField = () => {
-  if (newFieldType.value === 'custom') {
-    showCustomConfigModalVisible.value = true;
-  } else {
-    // 检查key是否已存在
-    if (formFields.value.some(field => field.key === newFieldKey.value)) {
-      window.$message.warning('字段标识已存在，请更换');
-      return;
-    }
-
-    // 处理选项
-    let options: Option[] = [];
-    if (['select', 'checkbox'].includes(newFieldType.value) && newFieldOptions.value) {
-      options = newFieldOptions.value.split(',').map(option => ({
-        label: option.trim(),
-        value: option.trim()
-      }));
-    }
-
-    // 添加新字段
-    const newField: FormField = {
-      key: newFieldKey.value,
-      label: newFieldLabel.value,
-      type: newFieldType.value,
-      ...(options.length > 0 && {options}),
-      required: false,
-      disabled: false
-    };
-    formFields.value.push(newField);
-    // 初始化表单数据
-    if (['select', 'checkbox'].includes(newFieldType.value)) {
-      formData[newFieldKey.value] = [];
-    } else {
-      formData[newFieldKey.value] = newFieldType.value === 'number' ? 0 : '';
-    }
-    // 重置表单
-    resetNewFieldForm();
+  // 检查key是否已存在
+  if (formFields.value.some(field => field.key === newFieldKey.value)) {
+    window.$message.warning('字段标识已存在，请更换');
+    return;
   }
+
+  // 处理选项
+  let options: Option[] = [];
+  if (['select', 'checkbox'].includes(newFieldType.value) && newFieldOptions.value) {
+    options = newFieldOptions.value.split(',').map(option => ({
+      label: option.trim(),
+      value: option.trim()
+    }));
+  }
+
+  // 添加新字段
+  const newField: FormField = {
+    key: newFieldKey.value,
+    label: newFieldLabel.value,
+    type: newFieldType.value,
+    ...(options.length > 0 && {options}),
+    required: false,
+    disabled: false
+  };
+  formFields.value.push(newField);
+  // 初始化表单数据
+  if (['select', 'checkbox'].includes(newFieldType.value)) {
+    formData[newFieldKey.value] = [];
+  } else {
+    formData[newFieldKey.value] = newFieldType.value === 'number' ? 0 : '';
+  }
+  // 重置表单
+  resetNewFieldForm();
 };
 // 重置新增字段表单
 const resetNewFieldForm = () => {
@@ -185,7 +178,7 @@ watch(
         }
       });
     },
-    {deep: true}
+    {deep: true, immediate: true}
 );
 watch(() => config, (newValue) => {
   if (newValue) {
@@ -233,6 +226,32 @@ watch(() => config, (newValue) => {
     })
   }
 }, {immediate: true})
+watch(() => showModal.value, (show) => {
+  if (show) {
+    const hasYcFlag = formFields.value.some(field => field.key === 'ycFlag');
+    const hasTuningFlag = formFields.value.some(field => field.key === 'tuningFlag');
+    const fieldsToAdd: Array<FormField> = [];
+    if (!hasYcFlag) {
+      fieldsToAdd.push({
+        key: 'ycFlag',
+        label: '是否为异常文件',
+        type: 'radio',
+        options: [{label: '是', value: 'true'}, {label: '否', value: 'false'}]
+      })
+    }
+    if (!hasTuningFlag) {
+      fieldsToAdd.push({
+        key: 'tuningFlag',
+        label: '是否为标校文件',
+        type: 'radio',
+        options: [{label: '是', value: 'true'}, {label: '否', value: 'false'}]
+      });
+    }
+    if (fieldsToAdd.length > 0) {
+      formFields.value.unshift(...fieldsToAdd);
+    }
+  }
+})
 const handleClose = () => {
   emit('close')
   resetForm()
@@ -245,12 +264,7 @@ const handleSubmit = () => {
     }
   })
 }
-const addFieldButtonDisabled = computed(() => {
-  if (newFieldType.value === 'custom') {
-    return false
-  }
-  return !newFieldKey.value || !newFieldLabel.value
-});
+
 let customConfig = reactive<ICustomConfig>({
   alarmFlag: false,
   sensorIds: '',
@@ -277,8 +291,11 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
                    :disabled="newFieldType === 'custom'"/>
           <n-input v-model:value="newFieldLabel" placeholder="输入字段标签" style="width: 140px" size="small"
                    :disabled="newFieldType === 'custom'"/>
-          <n-button type="primary" size="small" :disabled="addFieldButtonDisabled" @click="addField">
-            {{ addFieldButtonDisabled ? '添加字段' : '录入自定义参数' }}
+          <n-button type="primary" size="small" :disabled="!newFieldKey || !newFieldLabel" @click="addField">
+            添加字段
+          </n-button>
+          <n-button type="primary" size="small" @click="addCustomField">
+            添加自定义参数
           </n-button>
         </n-space>
         <!-- 选项配置 (仅当下拉选择、单选、复选时显示) -->
@@ -378,6 +395,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
   </n-drawer>
   <custom-config-modal ref="customConfigModalRef" v-model:show-modal="showCustomConfigModalVisible"
                        :config="customConfig"
+                       :sensor-group="sensorGroup"
                        @update-config="handleUpdateConfig"
                        @close="handleCloseConfigModal"/>
 </template>

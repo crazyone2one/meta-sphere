@@ -144,9 +144,9 @@ public class SystemScheduleController {
         systemScheduleService.enable(id);
     }
 
-    @GetMapping("/sensor/option/{projectId}")
+    @PostMapping("/sensor/option")
     @Operation(summary = "获取测点信息")
-    public List<SensorSelectOptionDTO> getSensorOptions(@PathVariable String projectId) {
-        return systemScheduleService.getSensorOptions(projectId);
+    public List<SensorSelectOptionDTO> getSensorOptions(@Validated @RequestBody BaseCondition request) {
+        return systemScheduleService.getSensorOptions(request);
     }
 }

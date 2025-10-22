@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, h, onMounted, ref} from "vue";
 import type {IScheduleInfo} from "/@/api/modules/schedule/types.ts";
-import {type DataTableColumns, type DataTableRowKey, NButton, NSwitch} from "naive-ui";
+import {type DataTableColumns, type DataTableRowKey, NButton, NSwitch, NTag} from "naive-ui";
 import type {ITableQueryParams} from "/@/api/types.ts";
 import {scheduleApi} from "/@/api/modules/schedule";
 import {usePagination} from "alova/client";
@@ -18,6 +18,14 @@ const keyword = ref('');
 const resourceType = ref<string>('CDSS');
 const showScheduleModalVisible = ref(false);
 const showScheduleConfigVisible = ref(false);
+
+const sensorGroupTag = computed<Record<string, { label: string, type: 'info' | 'success' | 'warning' }>>(() => {
+  return {
+    aqjk: {label: '安全监控', type: 'info'},
+    ky: {label: '矿压', type: 'warning'},
+    shfz: {label: '水害防治', type: 'success'},
+  }
+});
 const columns: DataTableColumns<IScheduleInfo> = [
   {
     type: 'selection', fixed: 'left'
@@ -39,15 +47,44 @@ const columns: DataTableColumns<IScheduleInfo> = [
       });
     }
   },
-  {title: '操作人', key: 'createUser', width: 100},
-  {title: '操作时间', key: 'createTime', width: 150, ellipsis: {tooltip: true}},
+  {
+    title: '传感器分组', key: 'sensorGroup', width: 100,
+    render: (record) => {
+      return h(NTag, {
+        bordered: false,
+        type: sensorGroupTag.value[record.sensorGroup]?.type,
+        size: 'small'
+      }, {default: () => sensorGroupTag.value[record.sensorGroup]?.label})
+    }
+  },
+  // {title: '操作时间', key: 'createTime', width: 150, ellipsis: {tooltip: true}},
   {title: '上次完成时间', key: 'lastTimeAsLocalDateTime', width: 150},
   {title: '下次执行时间', key: 'nextTimeAsLocalDateTime', width: 150},
   {
     title: '操作', key: 'actions', fixed: 'right', width: 200,
     render: (record) => {
       return [
-        h(NButton, {size: 'small', text: true, type: 'primary', class: '!mr-[12px]'}, {default: () => '详情'}),
+        h(NButton, {
+          size: 'small',
+          text: true,
+          type: 'primary',
+          class: '!mr-[12px]',
+          disabled: true
+        }, {default: () => '详情'}),
+        h(NButton, {
+          size: 'small',
+          text: true,
+          type: 'info',
+          class: '!mr-[12px]',
+          disabled: true
+        }, {default: () => '编辑'}),
+        h(NButton, {
+          size: 'small',
+          text: true,
+          type: 'info',
+          class: '!mr-[12px]',
+          disabled: true
+        }, {default: () => 'once'}),
         h(NButton, {
           size: 'small', text: true, type: 'primary', class: '!mr-[12px]',
           onClick: () => handleScheduleConfig(record)
@@ -114,7 +151,8 @@ const currentTask = ref<IScheduleInfo>({
   num: 0,
   projectName: "",
   resourceId: "",
-  value: ""
+  value: "",
+  sensorGroup: ''
 });
 const handleScheduleConfig = (record: IScheduleInfo) => {
   currentTask.value = record;
@@ -128,7 +166,7 @@ const handleStatusChange = async (_v: boolean, record: IScheduleInfo) => {
 }
 const handleRemove = (record: IScheduleInfo) => {
   window.$dialog.warning({
-    title:'Tips',
+    title: 'Tips',
     content: `确定要删除${record.name}任务吗？`,
     negativeText: '取消',
     positiveText: '确定',
