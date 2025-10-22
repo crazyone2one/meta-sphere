@@ -62,7 +62,7 @@ class MetaSphereApplicationTests {
 
     @Test
     void testGetClassesInPackage() {
-        List<SelectOptionDTO> scheduleNameList = scheduleService.getScheduleNameList();
+        List<SelectOptionDTO> scheduleNameList = scheduleService.getScheduleNameList("");
         scheduleNameList.forEach(System.out::println);
     }
 
