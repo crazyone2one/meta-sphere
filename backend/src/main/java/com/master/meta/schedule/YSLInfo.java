@@ -1,5 +1,6 @@
 package com.master.meta.schedule;
 
+import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
@@ -22,13 +23,13 @@ public class YSLInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
 
-    public YSLInfo(SensorUtil sensorUtil) {
+    private YSLInfo(SensorUtil sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "ysl", "sf_shfz_ysl_cddy", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, SensorMNType.SENSOR_SHFZ_YSL, false);
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_YSLCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +

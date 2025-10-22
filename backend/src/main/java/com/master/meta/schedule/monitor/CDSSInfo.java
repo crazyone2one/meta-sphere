@@ -1,6 +1,7 @@
 package com.master.meta.schedule.monitor;
 
-import com.master.meta.constants.SensorType;
+import com.master.meta.constants.SensorMNType;
+import com.master.meta.constants.SensorKGType;
 import com.master.meta.dto.CustomConfig;
 import com.master.meta.dto.ScheduleConfigDTO;
 import com.master.meta.handle.schedule.BaseScheduleJob;
@@ -34,10 +35,10 @@ public class CDSSInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(super.projectNum, SensorType.CDSS, false);
+        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(super.projectNum, SensorMNType.SENSOR_AQJK_CO, false);
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_" + SensorType.CDSS.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String fileName = super.projectNum + "_CDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(sensorList, now) +
@@ -62,14 +63,28 @@ public class CDSSInfo extends BaseScheduleJob {
             if ("KG".equals(row.getString("sensor_value_type"))) {
                 sensorValue = "1";
             } else {
-                sensorValue = RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
+                String sensorType = sensor.getString("sensor_type");
+                sensorValue = switch (sensorType) {
+                    case "0043" -> // SENSOR_CH4
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_CH4.getMinValue(), SensorMNType.SENSOR_CH4.getMaxValue());
+                    case "0004" -> // SENSOR_CO
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_AQJK_CO.getMinValue(), SensorMNType.SENSOR_AQJK_CO.getMaxValue());
+                    case "0001" -> // SENSOR_0001
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0001.getMinValue(), SensorMNType.SENSOR_0001.getMaxValue());
+                    case "0012" -> // SENSOR_0012
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0012.getMinValue(), SensorMNType.SENSOR_0012.getMaxValue());
+                    case "0013" -> // SENSOR_0012
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0013.getMinValue(), SensorMNType.SENSOR_0013.getMaxValue());
+                    default -> RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
+                };
             }
             if (customFlag) {
-                if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
-                    if (customConfig.getThresholdInterval().getFirst() >= configDTO.getMaxValue()) {
-                        sensorState = "4";
+                // 超过阈值
+                if (customConfig.getSuperthreshold()) {
+                    sensorState = "4";
+                    if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
+                        sensorValue = RandomUtil.generateRandomDoubleString(customConfig.getThresholdInterval().getFirst(), customConfig.getThresholdInterval().getLast());
                     }
-                    sensorValue = RandomUtil.generateRandomDoubleString(customConfig.getThresholdInterval().getFirst(), customConfig.getThresholdInterval().getLast());
                 }
             }
             String sensorContent = sensorInfoCode + ";"
