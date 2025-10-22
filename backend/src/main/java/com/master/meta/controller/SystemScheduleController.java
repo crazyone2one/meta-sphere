@@ -145,7 +145,7 @@ public class SystemScheduleController {
     }
 
     @GetMapping("/sensor/option/{projectId}")
-    @Operation(summary = "定时任务开启关闭")
+    @Operation(summary = "获取测点信息")
     public List<SensorSelectOptionDTO> getSensorOptions(@PathVariable String projectId) {
         return systemScheduleService.getSensorOptions(projectId);
     }

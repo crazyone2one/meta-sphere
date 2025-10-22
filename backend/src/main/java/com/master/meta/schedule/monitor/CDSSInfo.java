@@ -58,12 +58,16 @@ public class CDSSInfo extends BaseScheduleJob {
         for (Row row : rows) {
             String sensorInfoCode = row.getString("sensor_code");
             Row sensor = sensorMap.get(sensorInfoCode);
+            String sensorType = sensor.getString("sensor_type");
+            // 排除对 主通风机(1010) 风筒(1003) 烟雾(1008)
+            if ("1010".equals(sensorType) || "1003".equals(sensorType) || "1008".equals(sensorType)) {
+                continue;
+            }
             String sensorValue;
             String sensorState = "0";
             if ("KG".equals(row.getString("sensor_value_type"))) {
                 sensorValue = "1";
             } else {
-                String sensorType = sensor.getString("sensor_type");
                 sensorValue = switch (sensorType) {
                     case "0043" -> // SENSOR_CH4
                             RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_CH4.getMinValue(), SensorMNType.SENSOR_CH4.getMaxValue());

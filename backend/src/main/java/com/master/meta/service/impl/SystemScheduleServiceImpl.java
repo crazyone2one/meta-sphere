@@ -196,7 +196,14 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
             return new ArrayList<>();
         }
 
-        List<Row> sensorList = sensorFromRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
+        List<Row> sensorList = sensorFromRedis.stream()
+                .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
+                .filter(row -> {
+                    // 排除传感器类型为1003、1008和1010的数据
+                    String sensorType = row.getString("sensor_type");
+                    return !("1003".equals(sensorType) || "1008".equals(sensorType) || "1010".equals(sensorType));
+                })
+                .toList();
         return sensorList.stream()
                 .map(row -> new SensorSelectOptionDTO(row.getString("sensor_location"),
                         row.getString("sensor_code"),
