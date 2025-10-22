@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,7 +16,8 @@ import java.util.Map;
 public class ScheduleConfigDTO {
     private double minValue = 0.2;
     private double maxValue = 1.5;
-    private List<String> sensorIds;
+    private boolean ycFlag;
+    private String sensorId;
     private CustomConfig customConfig;
     // 用于存放动态字段
     private Map<String, Object> additionalFields = new HashMap<>();
