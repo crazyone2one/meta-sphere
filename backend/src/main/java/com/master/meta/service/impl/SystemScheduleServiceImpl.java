@@ -125,7 +125,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .select(SYSTEM_SCHEDULE.ID, SYSTEM_SCHEDULE.NAME, SYSTEM_SCHEDULE.ENABLE, SYSTEM_SCHEDULE.VALUE)
                 .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME, SYSTEM_SCHEDULE.NUM, SYSTEM_SCHEDULE.PROJECT_ID)
                 .select(SYSTEM_SCHEDULE.RESOURCE_ID, SYSTEM_SCHEDULE.CONFIG.as("runConfig"))
-                .select(SYSTEM_SCHEDULE.RESOURCE_TYPE, SYSTEM_SCHEDULE.SENSOR_TYPE)
+                .select(SYSTEM_SCHEDULE.RESOURCE_TYPE, SYSTEM_SCHEDULE.SENSOR_GROUP)
                 .select(SYSTEM_PROJECT.NAME.as("projectName"))
                 .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
