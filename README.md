@@ -1,33 +1,32 @@
-# Getting Started
+# Spring Boot 3 + Spring Security框架
 
-### Reference Documentation
+一个基于 Spring Boot 3.x 、Spring Security、vue 3.x 的框架。
 
-For further reference, please consider the following sections:
+## 🚀 特性
 
-* [Official Apache Maven documentation](https://maven.apache.org/guides/index.html)
-* [Spring Boot Maven Plugin Reference Guide](https://docs.spring.io/spring-boot/3.5.6/maven-plugin)
-* [Create an OCI image](https://docs.spring.io/spring-boot/3.5.6/maven-plugin/build-image.html)
-* [Spring Configuration Processor](https://docs.spring.io/spring-boot/3.5.6/specification/configuration-metadata/annotation-processor.html)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/3.5.6/reference/using/devtools.html)
-* [Spring Security](https://docs.spring.io/spring-boot/3.5.6/reference/web/spring-security.html)
-* [Spring Session for Spring Data Redis](https://docs.spring.io/spring-session/reference/)
-* [Spring Web](https://docs.spring.io/spring-boot/3.5.6/reference/web/servlet.html)
+- [x] Spring Boot 3 (Jakarta EE)
+- [ ] 权限管理
+- [ ] 接口测试
+- [ ] 自动化测试
+- [ ] 压力测试测试
+- [ ] JMeter 5 非 GUI 自动执行
+- [ ] YAML/Excel 数据驱动
+- [ ] 自定义 Java 断言
+- [ ] HTML 报告生成
+- [ ] CI/CD 友好
 
-### Guides
+## 🛠 环境要求
 
-The following guides illustrate how to use some features concretely:
+- JDK 21+
+- Apache JMeter 5.6+
+- Maven 3.9+
 
-* [Accessing data with MySQL](https://spring.io/guides/gs/accessing-data-mysql/)
-* [Securing a Web Application](https://spring.io/guides/gs/securing-web/)
-* [Spring Boot and OAuth2](https://spring.io/guides/tutorials/spring-boot-oauth2/)
-* [Authenticating a User with LDAP](https://spring.io/guides/gs/authenticating-ldap/)
-* [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-* [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-* [Building REST services with Spring](https://spring.io/guides/tutorials/rest/)
+## ⚙️ 配置
 
-### Maven Parent overrides
-~~~
-docker build -t metasphere:v1 .
-docker run -d -p 18081:8080 --name metasphere -v /home/app/files/ftp:/app/files metasphere:v1
-~~~
+1. 安装 JMeter 并设置 `test.jmeter.home` 路径
+2. 修改 `application-[env].yml` 中的 `base-url` 和路径
 
+## ▶️ 运行
+
+```bash
+mvn spring-boot:run
