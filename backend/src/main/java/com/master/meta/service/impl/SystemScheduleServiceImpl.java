@@ -217,9 +217,10 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteScheduleTask(String id) {
         SystemSchedule schedule = checkScheduleExit(id);
-        mapper.deleteById(schedule);
+        mapper.delete(schedule);
         removeJob(schedule.getResourceId(), schedule.getJob());
     }
 
