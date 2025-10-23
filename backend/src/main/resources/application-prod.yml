@@ -54,6 +54,10 @@ influx:
   token: CgfdhyPnh-GIrYtLV37zLffC4mvP620xRXA6mu2BRThTrnWwNJp1b6Pl5dpGnykgYhg5EoI0WptScdKq7YKZ2g==
   org: admin
   bucket: analyse
+jmeter:
+  home: /opt/apache-jmeter-5.6.2   # 你的 JMeter 安装路径
+  results.dir: ./results
+  reports.dir: ./reports
 logging:
   level:
     web: info # Web 模块日志级别
