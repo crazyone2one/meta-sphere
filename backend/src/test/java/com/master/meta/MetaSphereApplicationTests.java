@@ -1,13 +1,14 @@
 package com.master.meta;
 
+import com.influxdb.query.FluxRecord;
+import com.influxdb.query.FluxTable;
 import com.master.meta.constants.ScheduleType;
+import com.master.meta.dto.SelectOptionDTO;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.mapper.SystemProjectMapper;
-import com.master.meta.schedule.DemoJob;
-import com.master.meta.service.SystemProjectService;
 import com.master.meta.service.SystemScheduleService;
-import com.master.meta.utils.ScheduleFileUtil;
+import com.master.meta.utils.InfluxDbUtils;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.quartz.Job;
@@ -15,12 +16,8 @@ import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 @SpringBootTest
 class MetaSphereApplicationTests {
@@ -29,6 +26,8 @@ class MetaSphereApplicationTests {
     private SystemScheduleService scheduleService;
     @Resource
     private SystemProjectMapper projectMapper;
+    @Resource
+    InfluxDbUtils influxDbUtils;
 
     @Test
     void contextLoads() {
@@ -66,17 +65,11 @@ class MetaSphereApplicationTests {
         SystemSchedule schedule = scheduleService.getById("79905916361000193");
         scheduleService.removeJob("test-resource-id", schedule.getJob());
     }
+
     @Test
     void testGetClassesInPackage() {
-        try {
-            List<String> classNames = ScheduleFileUtil.getClassesInPackage("com.master.meta.schedule");
-            System.out.println("Classes in package:");
-            for (String className : classNames) {
-                System.out.println(className);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        List<SelectOptionDTO> scheduleNameList = scheduleService.getScheduleNameList("");
+        scheduleNameList.forEach(System.out::println);
     }
 
     @Test
@@ -88,5 +81,24 @@ class MetaSphereApplicationTests {
         project.setCreateUser("admin");
         project.setUpdateUser("admin");
         projectMapper.insertSelective(project);
+    }
+
+    @Test
+    void testInfluxDB() {
+        String query =
+                "|> range(start: -5m)" +
+                        "  |> filter(fn: (r) => r[\"_measurement\"] == \"sf_shfz_cgk_cdss\")" +
+                        "  |> filter(fn: (r) => r[\"send_id\"] == \"150622004499MNAEDKamaMj\")" +
+                        "  |> yield(name: \"mean\")";
+        List<FluxTable> fluxTables = influxDbUtils.getData(query);
+        fluxTables.forEach(i -> {
+            List<FluxRecord> records = i.getRecords();
+            records.forEach(r -> {
+                Map<String, Object> values = r.getValues();
+                values.forEach((k, v) -> {
+                    System.out.println(k + ":" + v);
+                });
+            });
+        });
     }
 }

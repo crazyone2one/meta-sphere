@@ -49,7 +49,11 @@ jwt:
   secret: K4lgrcqOP576NhrtYJhuQD8DdMYfZtb58hWdJaTjPbk=
   access-token-validity: 43200000 #2h
   refresh-token-validity: 604800000 # 7d
-
+influx:
+  url: http://172.16.2.10:8086
+  token: CgfdhyPnh-GIrYtLV37zLffC4mvP620xRXA6mu2BRThTrnWwNJp1b6Pl5dpGnykgYhg5EoI0WptScdKq7YKZ2g==
+  org: admin
+  bucket: analyse
 logging:
   level:
     web: info # Web 模块日志级别
