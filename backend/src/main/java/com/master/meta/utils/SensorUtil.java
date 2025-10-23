@@ -5,6 +5,7 @@ import com.mybatisflex.core.datasource.DataSourceKey;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -19,6 +20,8 @@ import java.util.Map;
 @Slf4j
 @Component
 public class SensorUtil {
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
     private final RedisService redisService;
 
     public SensorUtil(RedisService redisService) {
@@ -86,6 +89,10 @@ public class SensorUtil {
     }
 
     public void generateFile(String filePath, String content, String type) {
+        if (activeProfile.equals("dev")) {
+            log.info("{}", content);
+            return;
+        }
         FileWriter fw = null;
         try {
             File file = new File(filePath);
