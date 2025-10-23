@@ -3,10 +3,13 @@ package com.master.meta;
 import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
 import com.master.meta.constants.ScheduleType;
+import com.master.meta.constants.SensorMNType;
+import com.master.meta.constants.SensorTypeEnum;
 import com.master.meta.dto.SelectOptionDTO;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.mapper.SystemProjectMapper;
+import com.master.meta.service.SensorService;
 import com.master.meta.service.SystemScheduleService;
 import com.master.meta.utils.InfluxDbUtils;
 import jakarta.annotation.Resource;
@@ -16,6 +19,8 @@ import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.Duration;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +32,7 @@ class MetaSphereApplicationTests {
     @Resource
     private SystemProjectMapper projectMapper;
     @Resource
-    InfluxDbUtils influxDbUtils;
+    SensorService sensorService;
 
     @Test
     void contextLoads() {
@@ -85,20 +90,7 @@ class MetaSphereApplicationTests {
 
     @Test
     void testInfluxDB() {
-        String query =
-                "|> range(start: -5m)" +
-                        "  |> filter(fn: (r) => r[\"_measurement\"] == \"sf_shfz_cgk_cdss\")" +
-                        "  |> filter(fn: (r) => r[\"send_id\"] == \"150622004499MNAEDKamaMj\")" +
-                        "  |> yield(name: \"mean\")";
-        List<FluxTable> fluxTables = influxDbUtils.getData(query);
-        fluxTables.forEach(i -> {
-            List<FluxRecord> records = i.getRecords();
-            records.forEach(r -> {
-                Map<String, Object> values = r.getValues();
-                values.forEach((k, v) -> {
-                    System.out.println(k + ":" + v);
-                });
-            });
-        });
+        double v = sensorService.averageForTheLastDays("150622004499MNAEDKamaMj", SensorTypeEnum.CGK, Duration.ofHours(1));
+        System.out.println(v);
     }
 }

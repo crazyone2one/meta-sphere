@@ -52,7 +52,7 @@ public class SmokeRealTimeInfo extends BaseScheduleJob {
         Map<String, Row> sensorMap = rows.stream()
                 .collect(Collectors.toMap(row -> row.getString("sensor_code"), row -> row));
         rows.forEach(row -> {
-            String sensorValue = super.config.isYcFlag() ? "1" : "0";
+            String sensorValue = super.config.getCustomConfig().getAlarmFlag() ? "1" : "0";
             String sensorInfoCode = row.getString("sensor_code");
             Row sensor = sensorMap.get(sensorInfoCode);
             String sensorContent = sensorInfoCode + ";"

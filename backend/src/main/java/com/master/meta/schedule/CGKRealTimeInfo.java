@@ -1,7 +1,9 @@
 package com.master.meta.schedule;
 
 import com.master.meta.constants.SensorMNType;
+import com.master.meta.constants.SensorTypeEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
@@ -11,6 +13,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -20,10 +23,12 @@ import java.util.List;
  */
 public class CGKRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
+    private final SensorService sensorService;
     private final static String END_FLAG = "||";
 
-    private CGKRealTimeInfo(SensorUtil sensorUtil) {
+    private CGKRealTimeInfo(SensorUtil sensorUtil, SensorService sensorService) {
         this.sensorUtil = sensorUtil;
+        this.sensorService = sensorService;
     }
 
     @Override
@@ -45,11 +50,19 @@ public class CGKRealTimeInfo extends BaseScheduleJob {
     private StringBuilder bodyContent(List<Row> sensorList, LocalDateTime now) {
         StringBuilder content = new StringBuilder();
         sensorList.forEach(row -> {
+            String sensorId = row.getString("sensor_id");
             // 文件体
-            content.append(row.getString("sensor_id")).append(";")
+            content.append(sensorId).append(";")
                     .append("0").append(";");
-            content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_0502.getMinValue(), SensorMNType.SENSOR_SHFZ_0502.getMaxValue())).append(";");
-            content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_0502.getMinValue(), SensorMNType.SENSOR_SHFZ_0502.getMaxValue())).append(";");
+            //水位测点值
+            if (super.config.getCustomConfig().getAlarmFlag() && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
+                double average = sensorService.averageForTheLastDays(sensorId, SensorTypeEnum.CGK, Duration.ofDays(7));
+                content.append(RandomUtil.generateRandomDoubleString(average, average + 0.5)).append(";");
+            } else {
+                content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_0502)).append(";");
+            }
+            //水温测点值
+            content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_0502)).append(";");
             content.append(DateFormatUtil.localDateTime2StringStyle2(now));
             content.append("~");
         });
