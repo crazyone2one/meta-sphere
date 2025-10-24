@@ -21,6 +21,33 @@ const mainRoutes: RouteRecordRaw[] = [
         }
     },
     {
+        path: '/setting',
+        name: 'setting',
+        component: null,
+        meta: {
+            title: 'Setting',
+            icon: 'i-ant-design:setting-outlined'
+        },
+        children: [
+            {
+                path: 'user', name: 'settingUser',
+                component: () => import('/@/views/setting/user/index.vue'),
+                meta: {
+                    title: '用户',
+                    roles: ['SYSTEM_USER_ROLE:READ'],
+                },
+            },
+            {
+                path: 'user-group', name: 'settingUserGroup',
+                component: () => import('/@/views/setting/user-group/index.vue'),
+                meta: {
+                    title: '用户组',
+                    roles: ['SYSTEM_USER_ROLE:READ'],
+                },
+            }
+        ]
+    },
+    {
         name: 'Template',
         path: '/template',
         component: null,

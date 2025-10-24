@@ -20,7 +20,8 @@ const mapping = (items: Menu[]): MenuOption[] =>
     items.map(item => ({
       ...item,
       key: item.label,
-      label: item.name != null ? () => h(RouterLink, {to: item}, {default: () => item.label}) : item.label,
+      label: item.children ? item.label :
+          item.name != null ? () => h(RouterLink, {to: item}, {default: () => item.label}) : item.label,
       icon: item.icon != null ? () => h("div", {class: item.icon}) : undefined,
       children: item.children && mapping(item.children)
     }))
@@ -34,6 +35,21 @@ const menus = computed(() => [
     label: 'Schedule',
     name: 'Schedule',
     icon: 'i-ant-design:schedule-outlined',
+  },
+  {
+    label: 'Setting',
+    name: 'setting',
+    icon: 'i-ant-design:setting-outlined',
+    children: [
+      {
+        label: 'User',
+        name: 'settingUser',
+      },
+      {
+        label: 'UserGroup',
+        name: 'settingUserGroup',
+      }
+    ]
   },
   {
     label: 'Template',
@@ -86,6 +102,7 @@ watchEffect(() => menus.value && matchExpanded(menus.value))
         :options="options"
         :collapsed-width="64"
         :collapsed-icon-size="22"
+        :root-indent="18"
         class="mt-[64px]"
         @update:value="
         (k: string) => {
