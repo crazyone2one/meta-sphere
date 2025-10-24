@@ -3,8 +3,10 @@ import {computed, h, ref, watchEffect} from "vue";
 import type {MenuOption} from "naive-ui";
 import {RouterLink, useRoute} from "vue-router";
 import useAppStore from "../../store/modules/app";
+import {mainRoutes} from "/@/router/index.ts";
+import {generateMenus} from "/@/layouts/sidebar/utils.ts";
 
-interface Menu {
+export interface Menu {
   label: string
   icon?: string
   name: string
@@ -25,45 +27,10 @@ const mapping = (items: Menu[]): MenuOption[] =>
       icon: item.icon != null ? () => h("div", {class: item.icon}) : undefined,
       children: item.children && mapping(item.children)
     }))
-const menus = computed(() => [
-  {
-    label: 'Dashboard',
-    name: 'Dashboard',
-    icon: 'i-ant-design:dashboard-outlined',
-  },
-  {
-    label: 'Schedule',
-    name: 'Schedule',
-    icon: 'i-ant-design:schedule-outlined',
-  },
-  {
-    label: 'Setting',
-    name: 'setting',
-    icon: 'i-ant-design:setting-outlined',
-    children: [
-      {
-        label: 'User',
-        name: 'settingUser',
-      },
-      {
-        label: 'UserGroup',
-        name: 'settingUserGroup',
-      }
-    ]
-  },
-  {
-    label: 'Template',
-    name: 'Template',
-    icon: "i-ant-design:slack-outlined",
-    children: [
-      {
-        label: 'DynamicForm',
-        name: 'DynamicForm',
-        icon: 'i-ant-design:table-outlined',
-      }
-    ]
-  }
-])
+
+const menus = computed(() => {
+  return generateMenus(mainRoutes)
+})
 const options = computed(() => (menus.value ? mapping(menus.value) : []))
 const routeMatched = (menu: Menu): boolean => {
   return route.name === menu.name && (menu.params == null || JSON.stringify(route.params) === JSON.stringify(menu.params))

@@ -1,7 +1,7 @@
 import {createRouter, createWebHashHistory, type RouteRecordRaw} from 'vue-router'
 import createRouteGuard from "/@/router/guard";
 
-const mainRoutes: RouteRecordRaw[] = [
+export const mainRoutes: RouteRecordRaw[] = [
     {
         name: 'Dashboard',
         path: '/dashboard',
@@ -33,7 +33,15 @@ const mainRoutes: RouteRecordRaw[] = [
                 path: 'user', name: 'settingUser',
                 component: () => import('/@/views/setting/user/index.vue'),
                 meta: {
-                    title: '用户',
+                    title: 'User',
+                    roles: ['SYSTEM_USER_ROLE:READ'],
+                },
+            },
+            {
+                path: 'user', name: 'settingOrgProject',
+                component: () => import('/@/views/setting/org-project/index.vue'),
+                meta: {
+                    title: 'SettingOrgProject',
                     roles: ['SYSTEM_USER_ROLE:READ'],
                 },
             },
@@ -41,7 +49,7 @@ const mainRoutes: RouteRecordRaw[] = [
                 path: 'user-group', name: 'settingUserGroup',
                 component: () => import('/@/views/setting/user-group/index.vue'),
                 meta: {
-                    title: '用户组',
+                    title: 'UserGroup',
                     roles: ['SYSTEM_USER_ROLE:READ'],
                 },
             }
