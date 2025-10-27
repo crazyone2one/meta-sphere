@@ -1,13 +1,11 @@
 package com.master.meta;
 
 import com.master.meta.constants.ScheduleType;
-import com.master.meta.constants.SensorTypeEnum;
 import com.master.meta.dto.SelectOptionDTO;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.mapper.SystemProjectMapper;
 import com.master.meta.service.JMeterService;
-import com.master.meta.service.SensorService;
 import com.master.meta.service.SystemScheduleService;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
@@ -16,7 +14,6 @@ import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +25,7 @@ class MetaSphereApplicationTests {
     private SystemScheduleService scheduleService;
     @Resource
     private SystemProjectMapper projectMapper;
-    @Resource
-    SensorService sensorService;
+
     @Resource
     JMeterService jMeterService;
 
@@ -85,12 +81,6 @@ class MetaSphereApplicationTests {
         project.setCreateUser("admin");
         project.setUpdateUser("admin");
         projectMapper.insertSelective(project);
-    }
-
-    @Test
-    void testInfluxDB() {
-        double v = sensorService.averageForTheLastDays("150622004499MNAEDKamaMj", SensorTypeEnum.CGK, Duration.ofHours(1));
-        System.out.println(v);
     }
 
     @Test
