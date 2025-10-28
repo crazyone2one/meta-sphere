@@ -96,7 +96,7 @@ public class SensorUtil {
         }
     }
 
-    private List<Row> getCDSSList(String tableName, Boolean deleted) {
+    public List<Row> getCDSSList(String tableName, Boolean deleted) {
         List<Row> rows;
         try {
             DataSourceKey.use("ds-slave1");
