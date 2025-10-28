@@ -19,7 +19,7 @@ let customConfig = ref<ICustomConfig>({
   sensorType: '', // 测点类型
   sensorValueType: '', // 测点数值类型
 })
-const {config = {},sensorGroup=''} = defineProps<{
+const {config = {}, sensorGroup = ''} = defineProps<{
   config?: ICustomConfig;
   sensorGroup?: string
 }>()
@@ -62,7 +62,7 @@ watch(() => showModal.value, (show) => {
 
 <template>
   <n-spin v-model:show="loading">
-    <n-modal v-model:show="showModal" preset="dialog" title="Dialog">
+    <n-modal v-model:show="showModal" preset="dialog" title="Dialog" style="width: 500px">
       <template #header>
         <div>自定义参数</div>
       </template>
@@ -77,7 +77,7 @@ watch(() => showModal.value, (show) => {
             <n-select v-model:value="customConfig.sensorIds"
                       :options="sensorOptions"
                       @update:value="handleSelectSensor"
-                      filterable
+                      filterable clearable
                       placeholder="选择测点sensor id"/>
             <n-select :options="sensorTypeOptions" @update:value="handleUpdateSensorTypeOption" style="width: 150px"
                       placeholder="过滤测点"/>
