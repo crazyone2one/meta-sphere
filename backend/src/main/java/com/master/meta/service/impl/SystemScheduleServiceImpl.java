@@ -188,8 +188,8 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     }
 
     @Override
-    public List<SensorSelectOptionDTO> getSensorOptions(String projectId) {
-        SystemProject systemProject = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(projectId)).oneOpt()
+    public List<SensorSelectOptionDTO> getSensorOptions(BaseCondition request) {
+        SystemProject systemProject = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(request.getProjectId())).oneOpt()
                 .orElseThrow(() -> new CustomException("<项目不存在>"));
         List<Row> sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_AQJK_CO, false);
         if (CollectionUtils.isEmpty(sensorFromRedis)) {
