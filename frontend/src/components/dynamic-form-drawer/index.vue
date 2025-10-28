@@ -5,6 +5,7 @@ import {
   NCode,
   NCollapse,
   NCollapseItem,
+  NDatePicker,
   NDrawer,
   NDrawerContent,
   type NForm,
@@ -13,26 +14,13 @@ import {
 import {computed, reactive, ref, watch} from 'vue';
 import CustomConfigModal from "/@/views/schedule/components/CustomConfigModal.vue";
 import type {ICustomConfig} from "/@/api/modules/schedule/types.ts";
-
-// 字段类型定义
-type FieldType = 'text' | 'number' | 'select' | 'checkbox' | 'radio' | 'textarea' | 'custom';
-// 表单数据类型（动态key）
-export type FormData = Record<string, any>;
-
-interface Option {
-  label: string;
-  value: string;
-}
-
-// 表单字段定义
-interface FormField {
-  key: string;
-  label: string;
-  type?: FieldType;
-  options?: Option[];
-  required?: boolean;
-  disabled?: boolean;
-}
+import {
+  type FieldType,
+  type FormData,
+  type FormField,
+  FormFieldOptions,
+  type Option
+} from "/@/components/dynamic-form-drawer/utils.ts";
 
 const customConfigModalRef = ref<InstanceType<typeof CustomConfigModal>>();
 const showCustomConfigModalVisible = ref(false);
@@ -172,6 +160,8 @@ watch(
             }
           } else if (field.type === 'number') {
             formData[field.key] = 0;
+          } else if (field.type === 'radio') {
+            formData[field.key] = false;
           } else {
             formData[field.key] = '';
           }
@@ -201,7 +191,7 @@ watch(() => config, (newValue) => {
       if (typeof config[key] === 'number') {
         fieldType = 'number';
       } else if (Array.isArray(config[key])) {
-        fieldType = 'select';
+        fieldType = key === 'range' ? 'date' : 'select';
       } else if (typeof config[key] === 'boolean' ||
           (typeof config[key] === 'string' && ['yes', 'no', 'true', 'false', '1', '0'].includes(config[key].toLowerCase()))) {
         fieldType = 'radio'; // 布尔值用复选框表示
@@ -252,6 +242,19 @@ watch(() => showModal.value, (show) => {
     }
   }
 })
+
+const handleUpdate = (v: boolean, key: string) => {
+  if (v && 'ycFlag' === key) {
+    const fieldsToAdd: Array<FormField> = [];
+    fieldsToAdd.push({
+      key: 'range',
+      label: '异常时间',
+      type: 'date',
+    })
+    formFields.value.unshift(...fieldsToAdd);
+    formData['range'] = [Date.now(), Date.now()]
+  }
+}
 const handleClose = () => {
   emit('close')
   resetForm()
@@ -278,7 +281,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
 </script>
 
 <template>
-  <n-drawer v-model:show="showModal" :width="750" :mask-closable="false">
+  <n-drawer v-model:show="showModal" :width="850" :mask-closable="false">
     <n-drawer-content>
       <template #header>
         动态表单构建器
@@ -321,7 +324,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
             <n-space justify="space-between">
 
               <!-- 根据字段类型渲染不同的表单控件 -->
-              <n-form-item :label="field.label"
+              <n-form-item :label="FormFieldOptions[field.label]?.label"
                            :rules="field.required ? [{ required: true, message: '此字段为必填项' }] : []">
                 <template v-if="field.type === 'text'">
                   <n-input v-model:value="formData[field.key]" :placeholder="`请输入${field.label}`"
@@ -338,7 +341,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
                   />
                 </template>
                 <template v-else-if="field.type === 'radio'">
-                  <n-radio-group v-model:value="formData[field.key]">
+                  <n-radio-group v-model:value="formData[field.key]" @update:value="(v)=>handleUpdate(v,field.key)">
                     <n-radio :value="true">true</n-radio>
                     <n-radio :value="false">false</n-radio>
                   </n-radio-group>
@@ -356,6 +359,9 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
                 </template>
                 <template v-else-if="field.type === 'custom'">
                   <n-code :code="JSON.stringify(formData[field.key], null, 1)" language="json"/>
+                </template>
+                <template v-else-if="field.type === 'date'">
+                  <n-date-picker v-model:value="formData[field.key]" type="datetimerange" size="small"/>
                 </template>
               </n-form-item>
 
