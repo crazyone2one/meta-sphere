@@ -152,7 +152,8 @@ const currentTask = ref<IScheduleInfo>({
   projectName: "",
   resourceId: "",
   value: "",
-  sensorGroup: ''
+  sensorGroup: '',
+  sensorType: ''
 });
 const handleScheduleConfig = (record: IScheduleInfo) => {
   currentTask.value = record;

@@ -30,6 +30,7 @@ const {config = {}} = defineProps<{
   config: FormData,
   resourceType?: boolean,
   sensorGroup?: string
+  sensorType?: string
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -402,6 +403,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
   <custom-config-modal ref="customConfigModalRef" v-model:show-modal="showCustomConfigModalVisible"
                        :config="customConfig"
                        :sensor-group="sensorGroup"
+                       :sensor-type="sensorType"
                        @update-config="handleUpdateConfig"
                        @close="handleCloseConfigModal"/>
 </template>

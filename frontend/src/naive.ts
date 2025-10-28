@@ -34,7 +34,7 @@ import {
     NRadioGroup,
     NRadio,
     NText,
-    NTooltip, NSelect, NNotificationProvider, NDataTable, NDivider, NGrid, NFormItemGi, NScrollbar, NSpin
+    NTooltip, NSelect, NNotificationProvider, NDataTable, NDivider, NGrid, NFormItemGi, NScrollbar, NSpin,NFlex
 } from 'naive-ui'
 
 export default create({
@@ -71,6 +71,6 @@ export default create({
         NDialogProvider,
         NMessageProvider,
         NLoadingBarProvider, NSelect, NDivider,
-        NNotificationProvider, NDataTable, NModal, NGrid, NFormItemGi, NScrollbar, NSpin
+        NNotificationProvider, NDataTable, NModal, NGrid, NFormItemGi, NScrollbar, NSpin,NFlex
     ]
 })

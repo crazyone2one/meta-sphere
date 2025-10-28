@@ -44,6 +44,7 @@ const {form: model, loading, send: submit} = useForm((formData) => scheduleApi.s
     type: 'CRON',
     resourceType: 'CDDY',
     sensorGroup: 'aqjk',
+    sensorType: '',
   },
   immediate: false,
   resetAfterSubmiting: true
@@ -113,20 +114,23 @@ watch(() => showModal.value, (value) => {
           <n-form-item-gi :span="6" label="job" path="job">
             <n-select v-model:value="model.job" :options="jobOptions"/>
           </n-form-item-gi>
-          <n-form-item-gi :span="6" label="资源类型" path="resourceType">
+          <n-form-item-gi :span="4" label="资源类型" path="resourceType">
             <n-select v-model:value="model.resourceType" :options="resourceTypeOptions"/>
           </n-form-item-gi>
-          <n-form-item-gi :span="6" label="传感器分组" path="sensorGroup">
+          <n-form-item-gi :span="4" label="传感器分组" path="sensorGroup">
             <n-select v-model:value="model.sensorGroup" :options="sensorGroupOptions"/>
+          </n-form-item-gi>
+          <n-form-item-gi :span="4" label="传感器类型" path="sensorType">
+            <n-input v-model:value="model.sensorType" clearable placeholder="输入传感器类型"/>
           </n-form-item-gi>
         </n-grid>
       </n-form>
     </div>
     <template #action>
-      <n-space>
+      <n-flex>
         <n-button :disabled="loading" @click="handleClose(false)">取消</n-button>
         <n-button type="primary" :disabled="loading" @click="handleSubmit">确定</n-button>
-      </n-space>
+      </n-flex>
     </template>
   </n-modal>
 </template>

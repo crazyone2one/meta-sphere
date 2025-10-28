@@ -85,6 +85,7 @@ public class SystemSchedule implements Serializable {
      */
     @Schema(description = "传感器分组")
     private String sensorGroup;
+    private String sensorType;
 
     /**
      * 创建时间

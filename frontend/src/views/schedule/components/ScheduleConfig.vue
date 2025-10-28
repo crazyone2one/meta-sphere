@@ -86,7 +86,7 @@ watch(() => props.task, (newValue) => {
         </n-form-item>
         <n-divider title-placement="left">运行配置</n-divider>
         <n-form-item>
-          <n-button quaternary  type="warning" @click="addConfigItem">
+          <n-button quaternary type="warning" @click="addConfigItem">
             <template #icon>
               <div class="i-ant-design:tool-outlined"/>
             </template>
@@ -107,6 +107,7 @@ watch(() => props.task, (newValue) => {
                        v-model:show-modal="showDynamicFormModalVisible" :config="model.runConfig"
                        :resourceType="task.resourceType==='CDSS'"
                        :sensor-group="task.sensorGroup"
+                       :sensor-type="task.sensorType"
                        @close="handleCloseDynamicFormModal"
                        @update="handleSubmitConfig"
                        @update-config="handleCustomConfig"/>

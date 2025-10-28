@@ -19,9 +19,10 @@ let customConfig = ref<ICustomConfig>({
   sensorType: '', // 测点类型
   sensorValueType: '', // 测点数值类型
 })
-const {config = {}, sensorGroup = ''} = defineProps<{
+const {config = {}, sensorGroup = '', sensorType = ''} = defineProps<{
   config?: ICustomConfig;
   sensorGroup?: string
+  sensorType?: string
 }>()
 const emit = defineEmits<{
   (e: 'updateConfig', value: ICustomConfig, key: string): void;
@@ -45,7 +46,7 @@ const handleUpdateSensorTypeOption = (sensorType: string) => {
   }
 }
 const {send: fetchSensorList, loading} = useRequest(() => {
-  const param = {projectId: appStore.currentProjectId, sensorGroup: sensorGroup}
+  const param = {projectId: appStore.currentProjectId, sensorGroup: sensorGroup, sensorType: sensorType}
   return scheduleApi.getSensorList(param);
 }, {immediate: false})
 

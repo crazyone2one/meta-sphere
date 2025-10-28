@@ -10,6 +10,7 @@ import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.schedule.ScheduleManager;
 import com.master.meta.mapper.SystemScheduleMapper;
+import com.master.meta.service.SensorService;
 import com.master.meta.service.SystemScheduleService;
 import com.master.meta.uid.NumGenerator;
 import com.master.meta.utils.SensorUtil;
@@ -43,13 +44,15 @@ import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDUL
 public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper, SystemSchedule> implements SystemScheduleService {
     private final ScheduleManager scheduleManager;
     private final SensorUtil sensorUtil;
+    private final SensorService sensorService;
     private final ClassScanner classScanner;
 
     public SystemScheduleServiceImpl(ScheduleManager scheduleManager,
-                                     SensorUtil sensorUtil,
+                                     SensorUtil sensorUtil, SensorService sensorService,
                                      ClassScanner classScanner) {
         this.scheduleManager = scheduleManager;
         this.sensorUtil = sensorUtil;
+        this.sensorService = sensorService;
         this.classScanner = classScanner;
     }
 
@@ -125,7 +128,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .select(SYSTEM_SCHEDULE.ID, SYSTEM_SCHEDULE.NAME, SYSTEM_SCHEDULE.ENABLE, SYSTEM_SCHEDULE.VALUE)
                 .select(SYSTEM_SCHEDULE.CREATE_USER, SYSTEM_SCHEDULE.CREATE_TIME, SYSTEM_SCHEDULE.NUM, SYSTEM_SCHEDULE.PROJECT_ID)
                 .select(SYSTEM_SCHEDULE.RESOURCE_ID, SYSTEM_SCHEDULE.CONFIG.as("runConfig"))
-                .select(SYSTEM_SCHEDULE.RESOURCE_TYPE, SYSTEM_SCHEDULE.SENSOR_GROUP)
+                .select(SYSTEM_SCHEDULE.RESOURCE_TYPE, SYSTEM_SCHEDULE.SENSOR_GROUP, SYSTEM_SCHEDULE.SENSOR_TYPE)
                 .select(SYSTEM_PROJECT.NAME.as("projectName"))
                 .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
@@ -191,29 +194,94 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
     public List<SensorSelectOptionDTO> getSensorOptions(BaseCondition request) {
         SystemProject systemProject = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(request.getProjectId())).oneOpt()
                 .orElseThrow(() -> new CustomException("<项目不存在>"));
-        List<Row> sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_AQJK_CO, false);
-        if (CollectionUtils.isEmpty(sensorFromRedis)) {
-            return new ArrayList<>();
-        }
+        List<Row> sensorFromRedis;
+        List<Row> sensorList;
+        List<SensorSelectOptionDTO> options = new ArrayList<>();
+        switch (request.getSensorType()) {
+            case "pls":
+                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_PSL, false);
+                if (CollectionUtils.isEmpty(sensorFromRedis)) {
+                    return new ArrayList<>();
+                }
+                sensorList = sensorFromRedis.stream()
+                        .filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted")))
+                        .toList();
+                options = sensorList.stream()
+                        .map(row -> new SensorSelectOptionDTO(row.getString("install_location"),
+                                row.getString("sensor_id"),
+                                row.getString("sensor_id"),
+                                row.getString("install_location"),
+                                row.getString("sensor_type"),
+                                row.getString("sensor_value_type"),
+                                row.getString("sensor_value_unit"),
+                                row.getBoolean("deleted"))
+                        ).toList();
+                break;
+            case "ysl":
+                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_YSL, false);
+                if (CollectionUtils.isEmpty(sensorFromRedis)) {
+                    return new ArrayList<>();
+                }
+                sensorList = sensorFromRedis.stream()
+                        .filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted")))
+                        .toList();
+                options = sensorList.stream()
+                        .map(row -> new SensorSelectOptionDTO(row.getString("install_location"),
+                                row.getString("sensor_id"),
+                                row.getString("sensor_id"),
+                                row.getString("install_location"),
+                                row.getString("sensor_type"),
+                                row.getString("sensor_value_type"),
+                                row.getString("sensor_value_unit"),
+                                row.getBoolean("deleted"))
+                        ).toList();
+                break;
+            case "ckg":
+                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_0502, false);
+                if (CollectionUtils.isEmpty(sensorFromRedis)) {
+                    return new ArrayList<>();
+                }
+                sensorList = sensorFromRedis.stream()
+                        .filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted")))
+                        .toList();
+                options = sensorList.stream()
+                        .map(row -> new SensorSelectOptionDTO(row.getString("position"),
+                                row.getString("sensor_id"),
+                                row.getString("sensor_id"),
+                                row.getString("position"),
+                                row.getString("type"),
+                                row.getString("sensor_value_type"),
+                                row.getString("sensor_value_unit"),
+                                row.getBoolean("deleted"))
+                        ).toList();
+                break;
+            default:
+                sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_AQJK_CO, false);
+                if (CollectionUtils.isEmpty(sensorFromRedis)) {
+                    return new ArrayList<>();
+                }
 
-        List<Row> sensorList = sensorFromRedis.stream()
-                .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
-                .filter(row -> {
-                    // 排除传感器类型为1003、1008和1010的数据
-                    String sensorType = row.getString("sensor_type");
-                    return !("1003".equals(sensorType) || "1008".equals(sensorType) || "1010".equals(sensorType));
-                })
-                .toList();
-        return sensorList.stream()
-                .map(row -> new SensorSelectOptionDTO(row.getString("sensor_location"),
-                        row.getString("sensor_code"),
-                        row.getString("sensor_code"),
-                        row.getString("sensor_location"),
-                        row.getString("sensor_type"),
-                        row.getString("sensor_value_type"),
-                        row.getString("sensor_value_unit"),
-                        row.getBoolean("is_delete"))
-                ).toList();
+                sensorList = sensorFromRedis.stream()
+                        .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
+                        .filter(row -> {
+                            // 排除传感器类型为1003、1008和1010的数据
+                            String sensorType = row.getString("sensor_type");
+                            return !("1003".equals(sensorType) || "1008".equals(sensorType) || "1010".equals(sensorType));
+                        })
+                        .toList();
+                options = sensorList.stream()
+                        .map(row -> new SensorSelectOptionDTO(row.getString("sensor_location"),
+                                row.getString("sensor_code"),
+                                row.getString("sensor_code"),
+                                row.getString("sensor_location"),
+                                row.getString("sensor_type"),
+                                row.getString("sensor_value_type"),
+                                row.getString("sensor_value_unit"),
+                                row.getBoolean("is_delete"))
+                        ).toList();
+                break;
+        }
+        return options;
     }
 
     @Override

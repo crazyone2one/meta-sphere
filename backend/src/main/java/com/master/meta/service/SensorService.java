@@ -1,8 +1,15 @@
 package com.master.meta.service;
 
 import com.influxdb.query.FluxTable;
+import com.master.meta.constants.SensorMNType;
 import com.master.meta.constants.SensorTypeEnum;
 import com.master.meta.utils.InfluxDbUtils;
+import com.master.meta.utils.JSON;
+import com.master.meta.utils.RedisService;
+import com.mybatisflex.core.datasource.DataSourceKey;
+import com.mybatisflex.core.row.Db;
+import com.mybatisflex.core.row.Row;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -11,20 +18,52 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author Created by 11's papa on 2025/10/23
  */
 @Service
 public class SensorService {
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
+    private final RedisService redisService;
     private final InfluxDbUtils influxDbUtils;
     private static final DateTimeFormatter UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    public SensorService(InfluxDbUtils influxDbUtils) {
+    public SensorService(RedisService redisService, InfluxDbUtils influxDbUtils) {
+        this.redisService = redisService;
         this.influxDbUtils = influxDbUtils;
+    }
+
+    public List<Row> getShfzSensorList(String tableName, Boolean deleted) {
+        List<Row> rows;
+        try {
+            DataSourceKey.use("ds-slave1");
+            Map<String, Object> map = new LinkedHashMap<>();
+            if (deleted) {
+                map.put("deleted", "0");
+            }
+            rows = Db.selectListByMap(tableName, map);
+        } finally {
+            DataSourceKey.clear();
+        }
+        return rows;
+    }
+
+    public List<Row> getShfzSensorFromRedis(String projectNum, SensorMNType sensorMNType, Boolean deleted) {
+        return getShfzSensorFromRedis(projectNum, sensorMNType.getKey(), sensorMNType.getTableName(), deleted);
+    }
+
+    public List<Row> getShfzSensorFromRedis(String projectNum, String key, String tableName, Boolean deleted) {
+        String rainDefineInRedis = redisService.getSensor(projectNum, key);
+        if (rainDefineInRedis != null) {
+            return JSON.parseArray(rainDefineInRedis, Row.class);
+        } else {
+            List<Row> sensorList = getShfzSensorList(tableName, deleted);
+            redisService.storeSensor(projectNum, key, sensorList, 60 * 60 * 24 * 7);
+            return sensorList;
+        }
     }
 
     /**
