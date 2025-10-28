@@ -85,12 +85,15 @@ watch(() => props.task, (newValue) => {
           <base-cron-select v-model:model-value="model.cron" size="small"/>
         </n-form-item>
         <n-divider title-placement="left">运行配置</n-divider>
-        <n-code :code="JSON.stringify(model.runConfig, null, 2)" language="json"/>
         <n-form-item>
-          <n-button secondary type="info" size="tiny" @click="addConfigItem">
-            添加参数
+          <n-button quaternary  type="warning" @click="addConfigItem">
+            <template #icon>
+              <div class="i-ant-design:tool-outlined"/>
+            </template>
+            配置运行时参数
           </n-button>
         </n-form-item>
+        <n-code :code="JSON.stringify(model.runConfig, null, 2)" language="json"/>
       </n-form>
     </div>
     <template #action>
@@ -103,6 +106,7 @@ watch(() => props.task, (newValue) => {
   <dynamic-form-drawer ref="dynamicFormDrawerRef"
                        v-model:show-modal="showDynamicFormModalVisible" :config="model.runConfig"
                        :resourceType="task.resourceType==='CDSS'"
+                       :sensor-group="task.sensorGroup"
                        @close="handleCloseDynamicFormModal"
                        @update="handleSubmitConfig"
                        @update-config="handleCustomConfig"/>

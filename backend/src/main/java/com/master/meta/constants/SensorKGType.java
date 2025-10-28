@@ -9,7 +9,7 @@ import lombok.Getter;
 public enum SensorKGType {
     SENSOR_AQJK_1010("主通风机", "CDSS", "1010", "sf_aqjk_sensor", true),
     SENSOR_AQJK_1003("风筒", "CDSS", "1003", "sf_aqjk_sensor", true),
-    SENSOR_AQJK_1008("烟雾", "CDSS", "1008", "sf_aqjk_sensor", true),
+    SENSOR_AQJK_1008("烟雾", "CDSS", "1008", "sf_aqjk_sensor", false),
     ;
     private final String label;
     private final String key;

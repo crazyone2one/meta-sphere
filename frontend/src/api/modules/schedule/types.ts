@@ -3,7 +3,7 @@ export interface IScheduleInfo {
     name: string;
     resourceId: string;
     resourceType?: string;
-    sensorType?: string;
+    sensorGroup: string;
     projectName: string;
     num: number;
     enable: boolean;
@@ -45,6 +45,7 @@ export interface ICreateTask {
     type: string
     resourceType: string
     runConfig?: IScheduleConfig;
+    sensorGroup: string;
 }
 
 export interface IUpdateTask {

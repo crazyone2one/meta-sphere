@@ -5,6 +5,7 @@ import {
   NCode,
   NCollapse,
   NCollapseItem,
+  NDatePicker,
   NDrawer,
   NDrawerContent,
   type NForm,
@@ -13,35 +14,22 @@ import {
 import {computed, reactive, ref, watch} from 'vue';
 import CustomConfigModal from "/@/views/schedule/components/CustomConfigModal.vue";
 import type {ICustomConfig} from "/@/api/modules/schedule/types.ts";
-
-// 字段类型定义
-type FieldType = 'text' | 'number' | 'select' | 'checkbox' | 'radio' | 'textarea' | 'custom';
-// 表单数据类型（动态key）
-export type FormData = Record<string, any>;
-
-interface Option {
-  label: string;
-  value: string;
-}
-
-// 表单字段定义
-interface FormField {
-  key: string;
-  label: string;
-  type?: FieldType;
-  options?: Option[];
-  required?: boolean;
-  disabled?: boolean;
-}
+import {
+  type FieldType,
+  type FormData,
+  type FormField,
+  FormFieldOptions,
+  type Option
+} from "/@/components/dynamic-form-drawer/utils.ts";
 
 const customConfigModalRef = ref<InstanceType<typeof CustomConfigModal>>();
 const showCustomConfigModalVisible = ref(false);
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false});
 
-const {config = {}, resourceType = false} = defineProps<{
+const {config = {}} = defineProps<{
   config: FormData,
   resourceType?: boolean,
-  sensorType?: string
+  sensorGroup?: string
 }>()
 const emit = defineEmits<{
   (e: 'close'): void,
@@ -57,7 +45,7 @@ const formData = reactive<FormData>({});
 const formFields = ref<FormField[]>([]);
 
 const fieldTypeOptions = computed(() => {
-  const options = [
+  return [
     {label: '文本输入', value: 'text'},
     {label: '数字输入', value: 'number'},
     {label: '下拉选择', value: 'select'},
@@ -65,50 +53,43 @@ const fieldTypeOptions = computed(() => {
     {label: '单选框', value: 'radio'},
     {value: 'textarea', label: '多行文本框',}
   ]
-  if (resourceType) {
-    options.push({label: '特殊值', value: 'custom'})
-  }
-  return options
 })
+const addCustomField = () => showCustomConfigModalVisible.value = true;
 // 添加新字段
 const addField = () => {
-  if (newFieldType.value === 'custom') {
-    showCustomConfigModalVisible.value = true;
-  } else {
-    // 检查key是否已存在
-    if (formFields.value.some(field => field.key === newFieldKey.value)) {
-      window.$message.warning('字段标识已存在，请更换');
-      return;
-    }
-
-    // 处理选项
-    let options: Option[] = [];
-    if (['select', 'checkbox'].includes(newFieldType.value) && newFieldOptions.value) {
-      options = newFieldOptions.value.split(',').map(option => ({
-        label: option.trim(),
-        value: option.trim()
-      }));
-    }
-
-    // 添加新字段
-    const newField: FormField = {
-      key: newFieldKey.value,
-      label: newFieldLabel.value,
-      type: newFieldType.value,
-      ...(options.length > 0 && {options}),
-      required: false,
-      disabled: false
-    };
-    formFields.value.push(newField);
-    // 初始化表单数据
-    if (['select', 'checkbox'].includes(newFieldType.value)) {
-      formData[newFieldKey.value] = [];
-    } else {
-      formData[newFieldKey.value] = newFieldType.value === 'number' ? 0 : '';
-    }
-    // 重置表单
-    resetNewFieldForm();
+  // 检查key是否已存在
+  if (formFields.value.some(field => field.key === newFieldKey.value)) {
+    window.$message.warning('字段标识已存在，请更换');
+    return;
   }
+
+  // 处理选项
+  let options: Option[] = [];
+  if (['select', 'checkbox'].includes(newFieldType.value) && newFieldOptions.value) {
+    options = newFieldOptions.value.split(',').map(option => ({
+      label: option.trim(),
+      value: option.trim()
+    }));
+  }
+
+  // 添加新字段
+  const newField: FormField = {
+    key: newFieldKey.value,
+    label: newFieldLabel.value,
+    type: newFieldType.value,
+    ...(options.length > 0 && {options}),
+    required: false,
+    disabled: false
+  };
+  formFields.value.push(newField);
+  // 初始化表单数据
+  if (['select', 'checkbox'].includes(newFieldType.value)) {
+    formData[newFieldKey.value] = [];
+  } else {
+    formData[newFieldKey.value] = newFieldType.value === 'number' ? 0 : '';
+  }
+  // 重置表单
+  resetNewFieldForm();
 };
 // 重置新增字段表单
 const resetNewFieldForm = () => {
@@ -179,13 +160,15 @@ watch(
             }
           } else if (field.type === 'number') {
             formData[field.key] = 0;
+          } else if (field.type === 'radio') {
+            formData[field.key] = false;
           } else {
             formData[field.key] = '';
           }
         }
       });
     },
-    {deep: true}
+    {deep: true, immediate: true}
 );
 watch(() => config, (newValue) => {
   if (newValue) {
@@ -208,7 +191,7 @@ watch(() => config, (newValue) => {
       if (typeof config[key] === 'number') {
         fieldType = 'number';
       } else if (Array.isArray(config[key])) {
-        fieldType = 'select';
+        fieldType = key === 'range' ? 'date' : 'select';
       } else if (typeof config[key] === 'boolean' ||
           (typeof config[key] === 'string' && ['yes', 'no', 'true', 'false', '1', '0'].includes(config[key].toLowerCase()))) {
         fieldType = 'radio'; // 布尔值用复选框表示
@@ -233,6 +216,45 @@ watch(() => config, (newValue) => {
     })
   }
 }, {immediate: true})
+watch(() => showModal.value, (show) => {
+  if (show) {
+    const hasYcFlag = formFields.value.some(field => field.key === 'ycFlag');
+    const hasTuningFlag = formFields.value.some(field => field.key === 'tuningFlag');
+    const fieldsToAdd: Array<FormField> = [];
+    if (!hasYcFlag) {
+      fieldsToAdd.push({
+        key: 'ycFlag',
+        label: '是否为异常文件',
+        type: 'radio',
+        options: [{label: '是', value: 'true'}, {label: '否', value: 'false'}]
+      })
+    }
+    if (!hasTuningFlag) {
+      fieldsToAdd.push({
+        key: 'tuningFlag',
+        label: '是否为标校文件',
+        type: 'radio',
+        options: [{label: '是', value: 'true'}, {label: '否', value: 'false'}]
+      });
+    }
+    if (fieldsToAdd.length > 0) {
+      formFields.value.unshift(...fieldsToAdd);
+    }
+  }
+})
+
+const handleUpdate = (v: boolean, key: string) => {
+  if (v && 'ycFlag' === key) {
+    const fieldsToAdd: Array<FormField> = [];
+    fieldsToAdd.push({
+      key: 'range',
+      label: '异常时间',
+      type: 'date',
+    })
+    formFields.value.unshift(...fieldsToAdd);
+    formData['range'] = [Date.now(), Date.now()]
+  }
+}
 const handleClose = () => {
   emit('close')
   resetForm()
@@ -245,12 +267,7 @@ const handleSubmit = () => {
     }
   })
 }
-const addFieldButtonDisabled = computed(() => {
-  if (newFieldType.value === 'custom') {
-    return false
-  }
-  return !newFieldKey.value || !newFieldLabel.value
-});
+
 let customConfig = reactive<ICustomConfig>({
   alarmFlag: false,
   sensorIds: '',
@@ -264,7 +281,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
 </script>
 
 <template>
-  <n-drawer v-model:show="showModal" :width="750" :mask-closable="false">
+  <n-drawer v-model:show="showModal" :width="850" :mask-closable="false">
     <n-drawer-content>
       <template #header>
         动态表单构建器
@@ -277,8 +294,11 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
                    :disabled="newFieldType === 'custom'"/>
           <n-input v-model:value="newFieldLabel" placeholder="输入字段标签" style="width: 140px" size="small"
                    :disabled="newFieldType === 'custom'"/>
-          <n-button type="primary" size="small" :disabled="addFieldButtonDisabled" @click="addField">
-            {{ addFieldButtonDisabled ? '添加字段' : '录入自定义参数' }}
+          <n-button type="primary" size="small" :disabled="!newFieldKey || !newFieldLabel" @click="addField">
+            添加字段
+          </n-button>
+          <n-button type="primary" size="small" @click="addCustomField">
+            添加自定义参数
           </n-button>
         </n-space>
         <!-- 选项配置 (仅当下拉选择、单选、复选时显示) -->
@@ -304,7 +324,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
             <n-space justify="space-between">
 
               <!-- 根据字段类型渲染不同的表单控件 -->
-              <n-form-item :label="field.label"
+              <n-form-item :label="FormFieldOptions[field.label]?.label"
                            :rules="field.required ? [{ required: true, message: '此字段为必填项' }] : []">
                 <template v-if="field.type === 'text'">
                   <n-input v-model:value="formData[field.key]" :placeholder="`请输入${field.label}`"
@@ -321,7 +341,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
                   />
                 </template>
                 <template v-else-if="field.type === 'radio'">
-                  <n-radio-group v-model:value="formData[field.key]">
+                  <n-radio-group v-model:value="formData[field.key]" @update:value="(v)=>handleUpdate(v,field.key)">
                     <n-radio :value="true">true</n-radio>
                     <n-radio :value="false">false</n-radio>
                   </n-radio-group>
@@ -339,6 +359,9 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
                 </template>
                 <template v-else-if="field.type === 'custom'">
                   <n-code :code="JSON.stringify(formData[field.key], null, 1)" language="json"/>
+                </template>
+                <template v-else-if="field.type === 'date'">
+                  <n-date-picker v-model:value="formData[field.key]" type="datetimerange" size="small"/>
                 </template>
               </n-form-item>
 
@@ -378,6 +401,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
   </n-drawer>
   <custom-config-modal ref="customConfigModalRef" v-model:show-modal="showCustomConfigModalVisible"
                        :config="customConfig"
+                       :sensor-group="sensorGroup"
                        @update-config="handleUpdateConfig"
                        @close="handleCloseConfigModal"/>
 </template>

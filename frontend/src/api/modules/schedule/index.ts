@@ -13,7 +13,11 @@ export const scheduleApi = {
     // 获取后台已创建的任务名称
     getScheduleNameList: (projectId: string) => get<Array<SelectOption>>(`/system-schedule/schedule-name-list/${projectId}`),
     // 获取传感器列表
-    getSensorList: (projectId: string) => get<Array<SelectOption>>(`/system-schedule/sensor/option/${projectId}`),
+    getSensorList: (data: {
+        projectId: string,
+        sensorType?: string
+        sensorGroup?: string
+    }) => post<Array<SelectOption>>(`/system-schedule/sensor/option`, data),
     // 删除任务
     removeSchedule: (id: string) => del(`/system-schedule/remove/${id}`),
     // 修改任务状态

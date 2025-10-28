@@ -1,12 +1,19 @@
 package com.master.meta.handle.schedule;
 
 import com.master.meta.dto.ScheduleConfigDTO;
+import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.JSON;
+import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Created by 11's papa on 2025/10/11
@@ -35,4 +42,12 @@ public abstract class BaseScheduleJob implements Job {
     }
 
     protected abstract void businessExecute(JobExecutionContext context);
+
+    public String fileName(String fileCode, LocalDateTime localDateTime) {
+        return projectNum + fileCode + DateFormatUtil.localDateTimeToString(localDateTime) + ".txt";
+    }
+
+    public String contentHeader(LocalDateTime localDateTime) {
+        return projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(localDateTime) + "~";
+    }
 }

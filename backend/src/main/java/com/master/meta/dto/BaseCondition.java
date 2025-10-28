@@ -11,4 +11,6 @@ public class BaseCondition {
     @Schema(description = "关键字")
     private String keyword;
     private String projectId;
+    private String sensorType;
+    private String sensorGroup;
 }

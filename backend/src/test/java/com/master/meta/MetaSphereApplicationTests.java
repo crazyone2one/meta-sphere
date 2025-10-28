@@ -1,12 +1,17 @@
 package com.master.meta;
 
+import com.influxdb.query.FluxRecord;
+import com.influxdb.query.FluxTable;
 import com.master.meta.constants.ScheduleType;
+import com.master.meta.constants.SensorMNType;
+import com.master.meta.constants.SensorTypeEnum;
 import com.master.meta.dto.SelectOptionDTO;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemSchedule;
 import com.master.meta.mapper.SystemProjectMapper;
-import com.master.meta.service.JMeterService;
+import com.master.meta.service.SensorService;
 import com.master.meta.service.SystemScheduleService;
+import com.master.meta.utils.InfluxDbUtils;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.quartz.Job;
@@ -14,7 +19,8 @@ import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.LinkedHashMap;
+import java.time.Duration;
+import java.time.Period;
 import java.util.List;
 import java.util.Map;
 
@@ -25,9 +31,8 @@ class MetaSphereApplicationTests {
     private SystemScheduleService scheduleService;
     @Resource
     private SystemProjectMapper projectMapper;
-
     @Resource
-    JMeterService jMeterService;
+    SensorService sensorService;
 
     @Test
     void contextLoads() {
@@ -84,10 +89,8 @@ class MetaSphereApplicationTests {
     }
 
     @Test
-    void testJmeter() {
-        String jmxFile = "login.jmx";
-        Map<String, String> variables = new LinkedHashMap<>();
-        variables.put("threads", "1");
-        jMeterService.execute(jmxFile, variables);
+    void testInfluxDB() {
+        double v = sensorService.averageForTheLastDays("150622004499MNAEDKamaMj", SensorTypeEnum.CGK, Duration.ofHours(1));
+        System.out.println(v);
     }
 }

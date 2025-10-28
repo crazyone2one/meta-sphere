@@ -28,15 +28,9 @@ const uuid = computed(() => {
 })
 
 const rules = {
-  name: [
-    {required: true, message: '请输入名称'},
-  ],
-  job: [
-    {required: true, message: '请选择对应的job'},
-  ],
-  value: [
-    {required: true, message: '请选择或者录入对应的cron'},
-  ],
+  name: [{required: true, message: '请输入名称'},],
+  job: [{required: true, message: '请选择对应的job'},],
+  value: [{required: true, message: '请选择或者录入对应的cron'}],
 };
 const {form: model, loading, send: submit} = useForm((formData) => scheduleApi.saveSchedule(formData), {
   initialForm: {
@@ -48,7 +42,8 @@ const {form: model, loading, send: submit} = useForm((formData) => scheduleApi.s
     projectId: appStore.currentProjectId,
     job: '',
     type: 'CRON',
-    resourceType: 'CDDY'
+    resourceType: 'CDDY',
+    sensorGroup: 'aqjk',
   },
   immediate: false,
   resetAfterSubmiting: true
@@ -58,6 +53,13 @@ const resourceTypeOptions = ref<SelectOption[]>([
   {label: "CDDY", value: "CDDY"},
   {label: "CDSS", value: "CDSS"},
 ]);
+const sensorGroupOptions = computed<Array<SelectOption>>(() => {
+  return [
+    {label: '安全监控', value: 'aqjk'},
+    {label: '矿压', value: 'ky'},
+    {label: '水害防治', value: 'shfz'},
+  ];
+});
 const handleSubmit = () => {
   formRef.value?.validate(error => {
     if (!error) {
@@ -98,32 +100,33 @@ watch(() => showModal.value, (value) => {
           ref="formRef"
           :model="model"
           :rules="rules"
-          label-placement="left"
-          label-width="auto"
+          label-placement="top"
           require-mark-placement="right-hanging"
       >
-        <n-form-item label="name" path="name">
-          <n-input v-model:value="model.name" placeholder="输入任务名称" clearable/>
-        </n-form-item>
-        <n-form-item label="cron表达式" path="value">
-          <base-cron-select v-model:model-value="model.value" placeholder="xxxxx"/>
-        </n-form-item>
-        <n-form-item label="job" path="job">
-          <n-select v-model:value="model.job" :options="jobOptions"/>
-        </n-form-item>
+        <n-grid :cols="12" :x-gap="12">
+          <n-form-item-gi :span="12" label="name" path="name">
+            <n-input v-model:value="model.name" placeholder="输入任务名称" clearable/>
+          </n-form-item-gi>
+          <n-form-item-gi :span="6" label="cron表达式" path="value">
+            <base-cron-select v-model:model-value="model.value" placeholder="xxxxx"/>
+          </n-form-item-gi>
+          <n-form-item-gi :span="6" label="job" path="job">
+            <n-select v-model:value="model.job" :options="jobOptions"/>
+          </n-form-item-gi>
+          <n-form-item-gi :span="6" label="资源类型" path="resourceType">
+            <n-select v-model:value="model.resourceType" :options="resourceTypeOptions"/>
+          </n-form-item-gi>
+          <n-form-item-gi :span="6" label="传感器分组" path="sensorGroup">
+            <n-select v-model:value="model.sensorGroup" :options="sensorGroupOptions"/>
+          </n-form-item-gi>
+        </n-grid>
       </n-form>
     </div>
     <template #action>
-      <div class="flex items-center justify-between">
-        <div class="flex flex-row items-center justify-center mr-3">
-          <n-select v-model:value="model.resourceType" :options="resourceTypeOptions" class="w-[90px]"/>
-        </div>
-        <n-space>
-          <n-button :disabled="loading" @click="handleClose(false)">取消</n-button>
-          <n-button type="primary" :disabled="loading" @click="handleSubmit">确定</n-button>
-        </n-space>
-      </div>
-
+      <n-space>
+        <n-button :disabled="loading" @click="handleClose(false)">取消</n-button>
+        <n-button type="primary" :disabled="loading" @click="handleSubmit">确定</n-button>
+      </n-space>
     </template>
   </n-modal>
 </template>

@@ -47,7 +47,7 @@ public class ScheduleDTO implements Serializable {
 
     @Schema(description = "类型")
     private String resourceType;
-    private String sensorType;
+    private String sensorGroup;
 
     @Schema(description = "运行规则（cron表达式）")
     private String value;
