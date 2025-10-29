@@ -2,7 +2,6 @@ package com.master.meta.service;
 
 import com.influxdb.query.FluxTable;
 import com.master.meta.constants.SensorMNType;
-import com.master.meta.constants.SensorTypeEnum;
 import com.master.meta.utils.InfluxDbUtils;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RedisService;
@@ -74,7 +73,7 @@ public class SensorService {
      * @param time           时间间隔
      * @return 传感器在指定时间段内的平均值
      */
-    public double averageForTheLastDays(String sensorId, SensorTypeEnum sensorTypeEnum, Duration time) {
+    public double averageForTheLastDays(String sensorId, SensorMNType sensorTypeEnum, Duration time) {
         LocalDateTime lastTime = java.time.LocalDateTime.now();
         LocalDateTime startTime = lastTime.minus(time);
         String startTimeStr = getUTCByLocal(startTime);
@@ -85,6 +84,32 @@ public class SensorService {
                 " |> filter(fn: (r) => r[\"_field\"] == \"" + sensorTypeEnum.getQueryFields() + "\")" +
                 " |> toFloat()" +
                 " |> mean()";
+        List<FluxTable> fluxTables = influxDbUtils.getData(query);
+        Object value = fluxTables.getFirst().getRecords().getFirst().getValue();
+        double result = (double) Optional.ofNullable(value).orElse(0.0);
+        // 保留两位小数，四舍五入
+        return BigDecimal.valueOf(result).setScale(2, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    /**
+     * 计算指定时间段内传感器数据的总值
+     *
+     * @param sensorId       传感器ID
+     * @param sensorTypeEnum 传感器类型枚举
+     * @param time           时间间隔
+     * @return 传感器在指定时间段内的总值
+     */
+    public double sumForTheLastDays(String sensorId, SensorMNType sensorTypeEnum, Duration time) {
+        LocalDateTime lastTime = java.time.LocalDateTime.now();
+        LocalDateTime startTime = lastTime.minus(time);
+        String startTimeStr = getUTCByLocal(startTime);
+        String endTimeStr = getUTCByLocal(lastTime);
+        String query = "|> range(start: " + startTimeStr + ",stop:" + endTimeStr + ")" +
+                " |> filter(fn: (r) => r[\"_measurement\"] == \"" + sensorTypeEnum.getMeasurement() + "\")" +
+                " |> filter(fn: (r) => r[\"send_id\"] == \"" + sensorId + "\")" +
+                " |> filter(fn: (r) => r[\"_field\"] == \"" + sensorTypeEnum.getQueryFields() + "\")" +
+                " |> toFloat()" +
+                " |> sum()";
         List<FluxTable> fluxTables = influxDbUtils.getData(query);
         Object value = fluxTables.getFirst().getRecords().getFirst().getValue();
         double result = (double) Optional.ofNullable(value).orElse(0.0);
