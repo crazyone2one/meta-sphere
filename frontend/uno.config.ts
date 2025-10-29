@@ -9,9 +9,11 @@ import {
 } from 'unocss'
 // loader helpers
 import {FileSystemIconLoader} from '@iconify/utils/lib/loader/node-loaders'
+import {generateMenuIcons} from "./src/layouts/sidebar/utils";
+import {mainRoutes} from "./src/router/routes";
 
-const iconsDir = "./src/assets/icons";
 export default defineConfig({
+    safelist: [...generateMenuIcons(mainRoutes)],
     shortcuts: {
         'one-line-text': 'overflow-hidden overflow-ellipsis whitespace-nowrap'
     },

@@ -18,3 +18,16 @@ export const generateMenus = (routers: RouteRecordRaw[]) => {
         return menu
     })
 }
+/**
+ * 根据路由信息生成菜单图标
+ * @param routers
+ */
+export const generateMenuIcons = (routers: RouteRecordRaw[]) => {
+    const menuIcons: Array<string> = [];
+    routers.forEach(router => {
+        if (router.meta?.icon) {
+            menuIcons.push(router.meta.icon as string)
+        }
+    })
+    return menuIcons
+}

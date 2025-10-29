@@ -3,8 +3,8 @@ import {computed, h, ref, watchEffect} from "vue";
 import type {MenuOption} from "naive-ui";
 import {RouterLink, useRoute} from "vue-router";
 import useAppStore from "../../store/modules/app";
-import {mainRoutes} from "/@/router/index.ts";
 import {generateMenus} from "/@/layouts/sidebar/utils.ts";
+import {mainRoutes} from "/@/router/routes";
 
 export interface Menu {
   label: string
