@@ -50,7 +50,7 @@ public class SensorUtil {
             return JSON.parseArray(rainDefineInRedis, Row.class);
         } else {
             List<Row> sensorList = getRainDefineList(tableName, deleted);
-            redisService.storeSensor(projectNum, key, sensorList, 60 * 60 * 24 * 7);
+            redisService.storeSensor(projectNum, key, sensorList, 60 * 60 * 24);
             return sensorList;
         }
     }
@@ -61,7 +61,7 @@ public class SensorUtil {
             return JSON.parseArray(rainDefineInRedis, Row.class);
         } else {
             List<Row> sensorList = getRainDefineList(sensorMNType.getTableName(), deleted);
-            redisService.storeSensor(projectNum, sensorMNType.getKey(), sensorList, 60 * 60 * 24 * 7);
+            redisService.storeSensor(projectNum, sensorMNType.getKey(), sensorList, 60 * 60 * 24);
             return sensorList;
         }
     }
@@ -80,7 +80,7 @@ public class SensorUtil {
             return JSON.parseArray(sensorListInRedis, Row.class);
         } else {
             List<Row> sensorList = getCDSSList(sensorMNType.getTableName(), deleted);
-            redisService.storeSensor(projectNum, sensorMNType.getKey(), sensorList, 60 * 60 * 24 * 7);
+            redisService.storeSensor(projectNum, sensorMNType.getKey(), sensorList, 60 * 60 * 24);
             return sensorList;
         }
     }
@@ -91,7 +91,7 @@ public class SensorUtil {
             return JSON.parseArray(sensorListInRedis, Row.class);
         } else {
             List<Row> sensorList = getCDSSList(sensorKGType.getTableName(), deleted);
-            redisService.storeSensor(projectNum, sensorKGType.getKey(), sensorList, 60 * 60 * 24 * 7);
+            redisService.storeSensor(projectNum, sensorKGType.getKey(), sensorList, 60 * 60 * 24);
             return sensorList;
         }
     }
