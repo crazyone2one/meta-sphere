@@ -13,7 +13,7 @@ public enum SensorMNType {
     SENSOR_0001("环境瓦斯", "CDSS", "0001", "sf_aqjk_sensor", 0.1, 0.5, "", ""),
     SENSOR_0012("氧气", "CDSS", "0012", "sf_aqjk_sensor", 0.1, 0.5, "", ""),
     SENSOR_SHFZ_YSL("涌水量", "ysl", "0503", "sf_shfz_ysl_cddy", 0.1, 0.5, "sf_shfz_ysl_cdss", "numerical_value"),
-    SENSOR_SHFZ_0502("长观孔", "CGK", "0502", "sf_shfz_cgk_cddy", 0.1, 0.5, "sf_shfz_ysl_cdss", ""),
+    SENSOR_SHFZ_0502("长观孔", "CGK", "0502", "sf_shfz_cgk_cddy", 0.1, 0.5, "sf_shfz_cgk_cdss", "water_level_value"),
     SENSOR_SHFZ_PSL("排水量", "psl", "0502", "sf_shfz_psl_cddy", 0.1, 0.5, "", ""),
     ;
     private final String label;

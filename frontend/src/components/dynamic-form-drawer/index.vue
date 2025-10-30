@@ -325,7 +325,7 @@ const handleUpdateCustomConfig = (config: ICustomConfig) => {
             <n-space justify="space-between">
 
               <!-- 根据字段类型渲染不同的表单控件 -->
-              <n-form-item :label="FormFieldOptions[field.label]?.label"
+              <n-form-item :label="FormFieldOptions[field.key]?.label"
                            :rules="field.required ? [{ required: true, message: '此字段为必填项' }] : []">
                 <template v-if="field.type === 'text'">
                   <n-input v-model:value="formData[field.key]" :placeholder="`请输入${field.label}`"

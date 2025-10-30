@@ -1,7 +1,6 @@
 package com.master.meta.schedule;
 
 import com.master.meta.constants.SensorMNType;
-import com.master.meta.constants.SensorTypeEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
@@ -55,9 +54,8 @@ public class CGKRealTimeInfo extends BaseScheduleJob {
             content.append(sensorId).append(";")
                     .append("0").append(";");
             //水位测点值
-            if (super.config.getCustomConfig().getAlarmFlag() && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
-                double average = sensorService.averageForTheLastDays(sensorId, SensorTypeEnum.CGK, Duration.ofDays(7));
-                content.append(RandomUtil.generateRandomDoubleString(average, average + 0.5)).append(";");
+            if (super.config.getCustomConfig().getSuperthreshold() && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
+                content.append(RandomUtil.generateRandomDoubleString(super.config.getCustomConfig().getThresholdInterval().getFirst(), super.config.getCustomConfig().getThresholdInterval().getLast())).append(";");
             } else {
                 content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_0502)).append(";");
             }

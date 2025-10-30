@@ -2,6 +2,7 @@ package com.master.meta.schedule;
 
 import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
@@ -12,6 +13,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -24,10 +26,12 @@ import java.util.List;
 @Slf4j
 public class YSLRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
+    private final SensorService sensorService;
     private final static String END_FLAG = "||";
 
-    private YSLRealTimeInfo(SensorUtil sensorUtil) {
+    private YSLRealTimeInfo(SensorUtil sensorUtil, SensorService sensorService) {
         this.sensorUtil = sensorUtil;
+        this.sensorService = sensorService;
     }
 
     @Override
@@ -39,7 +43,7 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
         // 文件头
         content.append(super.projectNum).append(";").append(super.projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, SensorMNType.SENSOR_SHFZ_YSL, false);
+        List<Row> sensorInRedis = sensorService.getShfzSensorFromRedis(super.projectNum, SensorMNType.SENSOR_SHFZ_YSL, false);
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         content.append(cdssBodyContent(sensorList, now));
         content.append(END_FLAG);
@@ -49,11 +53,17 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
     private StringBuilder cdssBodyContent(List<Row> sensorList, LocalDateTime now) {
         StringBuilder content = new StringBuilder();
         sensorList.forEach(row -> {
-            // 文件体
-            content.append(row.getString("sensor_id")).append(";")
-                    //.append(SENSOR_TYPE_YSL).append(";")
-                    .append("0").append(";");
-            content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_YSL.getMinValue(), SensorMNType.SENSOR_SHFZ_YSL.getMaxValue())).append(";");
+            String sensorId = row.getString("sensor_id");
+            // 测点编码、测点状态
+            content.append(sensorId).append(";").append("0").append(";");
+            //涌水量
+            if (super.config.getCustomConfig().getAlarmFlag() && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
+                double average = sensorService.averageForTheLastDays(sensorId, SensorMNType.SENSOR_SHFZ_YSL, Duration.ofDays(7));
+                content.append(RandomUtil.generateRandomDoubleString(average, average + 0.5)).append(";");
+            } else {
+                content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_YSL)).append(";");
+            }
+            //时间
             content.append(DateFormatUtil.localDateTime2StringStyle2(now));
             content.append("~");
         });
