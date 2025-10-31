@@ -23,4 +23,6 @@ public interface GlobalUserRoleService extends BaseUserRoleService {
     List<PermissionDefinitionItem> getPermissionSetting(String roleId);
 
     void updatePermissionSetting(PermissionSettingUpdateRequest request);
+
+    List<UserRole> list();
 }

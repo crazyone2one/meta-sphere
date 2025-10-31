@@ -142,6 +142,24 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
             }
             firstLevel.setEnable(allCheck);
         }
+        // todo 仅显示部分权限，若有需求注释掉这段代码
+        // *******
+        Set<String> excludeIds = Set.of("SYSTEM_PLUGIN", "SYSTEM_AUTHORIZATION_MANAGEMENT", "SYSTEM_TEST_RESOURCE_POOL", "SYSTEM_PARAMETER_SETTING");
+        Set<String> excludePermissionIds = Set.of("SYSTEM_USER:READ+INVITE", "SYSTEM_ORGANIZATION_PROJECT:READ+RECOVER");
+        permissionDefinition = permissionDefinition.stream().filter(item -> item.getId().equals("SYSTEM")).toList();
+        permissionDefinition.forEach(p -> {
+            List<PermissionDefinitionItem> children = p.getChildren().stream()
+                    .filter(c -> !excludeIds.contains(c.getId()))
+                    .peek(c -> {
+                        List<Permission> permissions = c.getPermissions().stream()
+                                .filter(permission -> !excludePermissionIds.contains(permission.getId()))
+                                .toList();
+                        c.setPermissions(permissions);
+                    })
+                    .toList();
+            p.setChildren(children);
+        });
+        // *******
         return permissionDefinition;
     }
 

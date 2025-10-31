@@ -1,5 +1,6 @@
 package com.master.meta.controller;
 
+import com.master.meta.dto.UserRoleUpdateRequest;
 import com.master.meta.dto.permission.PermissionDefinitionItem;
 import com.master.meta.dto.permission.PermissionSettingUpdateRequest;
 import com.master.meta.entity.UserRole;
@@ -11,6 +12,7 @@ import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -36,8 +38,10 @@ public class GlobalUserRoleController {
 
     @PostMapping("save")
     @Operation(description = "系统设置-系统-用户组-添加自定义全局用户组")
-    public UserRole save(@RequestBody @Parameter(description = "用户组") @Validated({Created.class}) UserRole userRole) {
+    public UserRole save(@RequestBody @Parameter(description = "用户组") @Validated({Created.class}) UserRoleUpdateRequest request) {
+        UserRole userRole = new UserRole();
         userRole.setCreateUser(SessionUtils.getCurrentUserId());
+        BeanUtils.copyProperties(request, userRole);
         return globalUserRoleService.add(userRole);
     }
 
@@ -49,7 +53,9 @@ public class GlobalUserRoleController {
 
     @PostMapping("update")
     @Operation(description = "系统设置-系统-用户组-更新自定义全局用户组")
-    public UserRole update(@RequestBody @Parameter(description = "用户组主键") @Validated({Updated.class}) UserRole userRole) {
+    public UserRole update(@RequestBody @Parameter(description = "用户组主键") @Validated({Updated.class}) UserRoleUpdateRequest request) {
+        UserRole userRole = new UserRole();
+        BeanUtils.copyProperties(request, userRole);
         return globalUserRoleService.update(userRole);
     }
 

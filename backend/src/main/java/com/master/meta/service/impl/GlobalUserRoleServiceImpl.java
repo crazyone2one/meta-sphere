@@ -13,6 +13,7 @@ import com.master.meta.service.BaseUserRolePermissionService;
 import com.master.meta.service.BaseUserRoleRelationService;
 import com.master.meta.service.GlobalUserRoleService;
 import com.master.meta.utils.SessionUtils;
+import com.mybatisflex.core.query.QueryWrapper;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
