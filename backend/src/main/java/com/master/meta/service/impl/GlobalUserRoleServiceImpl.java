@@ -6,6 +6,7 @@ import com.master.meta.constants.UserRoleScope;
 import com.master.meta.constants.UserRoleType;
 import com.master.meta.dto.permission.PermissionDefinitionItem;
 import com.master.meta.dto.permission.PermissionSettingUpdateRequest;
+import com.master.meta.dto.system.UserSelectOption;
 import com.master.meta.entity.UserRole;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.mapper.UserRolePermissionMapper;
@@ -13,7 +14,6 @@ import com.master.meta.service.BaseUserRolePermissionService;
 import com.master.meta.service.BaseUserRoleRelationService;
 import com.master.meta.service.GlobalUserRoleService;
 import com.master.meta.utils.SessionUtils;
-import com.mybatisflex.core.query.QueryWrapper;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -59,6 +59,21 @@ public class GlobalUserRoleServiceImpl extends BaseUserRoleServiceImpl implement
                 .thenComparingInt(item -> getInternal(item.getInternal()))
                 .thenComparing(UserRole::getCreateTime));
         return userRoles;
+    }
+
+    @Override
+    public List<UserSelectOption> getGlobalSystemRoleList() {
+        List<UserSelectOption> returnList = new ArrayList<>();
+        List<UserRole> userRoles = queryChain().where(USER_ROLE.SCOPE_ID.eq("global").and(USER_ROLE.TYPE.eq(UserRoleType.SYSTEM.name()))).list();
+        userRoles.forEach(userRole -> {
+            UserSelectOption userRoleOption = new UserSelectOption();
+            userRoleOption.setId(userRole.getId());
+            userRoleOption.setName(userRole.getName());
+            userRoleOption.setSelected(Objects.equals(userRole.getCode(), MEMBER.getValue()));
+            userRoleOption.setCloseable(!Objects.equals(userRole.getCode(), MEMBER.getValue()));
+            returnList.add(userRoleOption);
+        });
+        return returnList;
     }
 
     private int getInternal(Boolean internal) {

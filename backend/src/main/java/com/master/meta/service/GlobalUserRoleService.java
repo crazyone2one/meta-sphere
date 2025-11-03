@@ -2,6 +2,7 @@ package com.master.meta.service;
 
 import com.master.meta.dto.permission.PermissionDefinitionItem;
 import com.master.meta.dto.permission.PermissionSettingUpdateRequest;
+import com.master.meta.dto.system.UserSelectOption;
 import com.master.meta.entity.UserRole;
 
 import java.util.List;
@@ -25,4 +26,6 @@ public interface GlobalUserRoleService extends BaseUserRoleService {
     void updatePermissionSetting(PermissionSettingUpdateRequest request);
 
     List<UserRole> list();
+
+    List<UserSelectOption> getGlobalSystemRoleList();
 }

@@ -1,13 +1,21 @@
 package com.master.meta.controller;
 
+import com.master.meta.constants.UserSource;
+import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.UserInfoDTO;
+import com.master.meta.dto.system.*;
 import com.master.meta.entity.SystemUser;
+import com.master.meta.handle.validation.Updated;
+import com.master.meta.service.GlobalUserRoleService;
 import com.master.meta.service.SystemUserService;
+import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,21 +29,21 @@ import java.util.List;
 @RestController
 @Tag(name = "用户接口")
 @RequestMapping("/system-user")
-@RequiredArgsConstructor
 public class SystemUserController {
 
     private final SystemUserService systemUserService;
+    private final GlobalUserRoleService globalUserRoleService;
 
-    /**
-     * 保存用户。
-     *
-     * @param systemUser 用户
-     * @return {@code true} 保存成功，{@code false} 保存失败
-     */
+    public SystemUserController(SystemUserService systemUserService,
+                                @Qualifier("globalUserRoleService") GlobalUserRoleService globalUserRoleService) {
+        this.systemUserService = systemUserService;
+        this.globalUserRoleService = globalUserRoleService;
+    }
+
     @PostMapping("save")
-    @Operation(description = "保存用户")
-    public boolean save(@RequestBody @Parameter(description = "用户") SystemUser systemUser) {
-        return systemUserService.save(systemUser);
+    @Operation(description = "添加用户")
+    public UserBatchCreateResponse save(@RequestBody @Parameter(description = "用户") @Validated UserBatchCreateRequest request) {
+        return systemUserService.addUser(request, UserSource.LOCAL.name(), SessionUtils.getUserName());
     }
 
     /**
@@ -50,16 +58,16 @@ public class SystemUserController {
         return systemUserService.removeById(id);
     }
 
-    /**
-     * 根据主键更新用户。
-     *
-     * @param systemUser 用户
-     * @return {@code true} 更新成功，{@code false} 更新失败
-     */
     @PutMapping("update")
-    @Operation(description = "根据主键更新用户")
-    public boolean update(@RequestBody @Parameter(description = "用户主键") SystemUser systemUser) {
-        return systemUserService.updateById(systemUser);
+    @Operation(description = "修改用户")
+    public UserEditRequest update(@RequestBody @Parameter(description = "用户主键") @Validated({Updated.class}) UserEditRequest request) {
+        return systemUserService.updateUser(request);
+    }
+
+    @PostMapping("/update/enable")
+    @Operation(summary = "系统设置-系统-用户-启用/禁用用户")
+    public TableBatchProcessResponse updateUserEnable(@Validated @RequestBody UserChangeEnableRequest request) {
+        return systemUserService.updateUserEnable(request, SessionUtils.getUserName());
     }
 
     /**
@@ -73,16 +81,10 @@ public class SystemUserController {
         return systemUserService.list();
     }
 
-    /**
-     * 根据主键获取用户。
-     *
-     * @param id 用户主键
-     * @return 用户详情
-     */
-    @GetMapping("getInfo/{id}")
-    @Operation(description = "根据主键获取用户")
-    public SystemUser getInfo(@PathVariable @Parameter(description = "用户主键") String id) {
-        return systemUserService.getById(id);
+    @GetMapping("getInfo/{keyword}")
+    @Operation(description = "通过email或id查找用户")
+    public UserDTO getInfo(@PathVariable @Parameter(description = "用户主键") String keyword) {
+        return systemUserService.getUserDTOByKeyword(keyword);
     }
 
     @GetMapping("get-user-info")
@@ -91,16 +93,14 @@ public class SystemUserController {
         return systemUserService.getUserInfo();
     }
 
-    /**
-     * 分页查询用户。
-     *
-     * @param page 分页对象
-     * @return 分页对象
-     */
-    @GetMapping("page")
+    @PostMapping("page")
     @Operation(description = "分页查询用户")
-    public Page<SystemUser> page(@Parameter(description = "分页信息") Page<SystemUser> page) {
-        return systemUserService.page(page);
+    public Page<UserTableResponse> page(@Validated @RequestBody BasePageRequest request) {
+        return systemUserService.pageUserTable(request);
     }
-
+    @GetMapping("/get/global/system/role")
+    @Operation(summary = "系统设置-系统-用户-查找系统级用户组")
+    public List<UserSelectOption> getGlobalSystemRole() {
+        return globalUserRoleService.getGlobalSystemRoleList();
+    }
 }

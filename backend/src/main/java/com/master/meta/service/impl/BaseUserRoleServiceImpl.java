@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.master.meta.entity.table.UserRoleTableDef.USER_ROLE;
 import static com.master.meta.handle.result.CommonResultCode.INTERNAL_USER_ROLE_PERMISSION;
 
 /**
@@ -161,6 +162,25 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
         });
         // *******
         return permissionDefinition;
+    }
+
+    @Override
+    public List<UserRole> selectByUserRoleRelations(List<UserRoleRelation> userRoleRelations) {
+        if (CollectionUtils.isNotEmpty(userRoleRelations)) {
+            List<String> userRoleIds = userRoleRelations.stream().map(UserRoleRelation::getRoleId).distinct().toList();
+            return mapper.selectListByIds(userRoleIds);
+        }
+        return List.of();
+    }
+
+    @Override
+    public void checkRoleIsGlobalAndHaveMember(List<String> roleIdList, boolean isSystem) {
+        long count = queryChain().where(USER_ROLE.ID.in(roleIdList))
+                .and(USER_ROLE.TYPE.eq("SYSTEM").when(isSystem))
+                .and(USER_ROLE.SCOPE_ID.eq("global")).count();
+        if (count != roleIdList.size()) {
+            throw new CustomException(Translator.get("role.not.global"));
+        }
     }
 
     protected void updatePermissionSetting(PermissionSettingUpdateRequest request) {

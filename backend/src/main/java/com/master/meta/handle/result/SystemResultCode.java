@@ -11,6 +11,7 @@ public enum SystemResultCode implements IResultCode {
     GLOBAL_USER_ROLE_EXIST(101002, "global_user_role_exist_error"),
     GLOBAL_USER_ROLE_RELATION_SYSTEM_PERMISSION(101003, "global_user_role_relation_system_permission_error"),
     GLOBAL_USER_ROLE_LIMIT(101004, "global_user_role_limit_error"),
+    INVITE_EMAIL_EXIST(101513, "user_email_already_exists"),
     ;
     private final int code;
     private final String message;
