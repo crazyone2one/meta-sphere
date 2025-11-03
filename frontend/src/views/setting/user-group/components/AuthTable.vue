@@ -156,13 +156,16 @@ const tableColumns: DataTableColumns<AuthTableItem> = [
 const handleRowAuthChange = (value: boolean | (string | number | boolean)[], rowIndex: number) => {
   if (!tableData.value) return;
   const tmpArr = tableData.value;
-  tmpArr[rowIndex].indeterminate = false;
+  const row = tmpArr[rowIndex];
+  // 检查row是否存在以及permissions是否存在
+  if (!row) return;
+  row.indeterminate = false;
   if (value) {
-    tmpArr[rowIndex].enable = true;
-    tmpArr[rowIndex].perChecked = tmpArr[rowIndex].permissions?.map((item) => item.id);
+    row.enable = true;
+    row.perChecked = row.permissions?.map((item) => item.id) ?? [];
   } else {
-    tmpArr[rowIndex].enable = false;
-    tmpArr[rowIndex].perChecked = [];
+    row.enable = false;
+    row.perChecked = [];
   }
   tableData.value = [...tmpArr];
   handleAllChange();
@@ -177,16 +180,19 @@ const handleCellAuthChange = (_value: (string | number)[], rowIndex: number,
   setAutoRead(row, e.value as string);
   if (!tableData.value) return;
   const tmpArr = tableData.value;
-  const length = tmpArr[rowIndex].permissions?.length || 0;
+  const tmpRow = tmpArr[rowIndex];
+  // 检查row是否存在以及permissions是否存在
+  if (!tmpRow) return;
+  const length = tmpRow.permissions?.length || 0;
   if (row.perChecked?.length === length) {
-    tmpArr[rowIndex].enable = true;
-    tmpArr[rowIndex].indeterminate = false;
+    tmpRow.enable = true;
+    tmpRow.indeterminate = false;
   } else if (row.perChecked?.length === 0) {
-    tmpArr[rowIndex].enable = false;
-    tmpArr[rowIndex].indeterminate = false;
+    tmpRow.enable = false;
+    tmpRow.indeterminate = false;
   } else {
-    tmpArr[rowIndex].enable = false;
-    tmpArr[rowIndex].indeterminate = true;
+    tmpRow.enable = false;
+    tmpRow.indeterminate = true;
   }
   handleAllChange();
 }
@@ -218,7 +224,7 @@ const setAutoRead = (record: AuthTableItem, currentValue: string) => {
     const postStr = currentValue.split(':')[1];
     if (postStr === 'READ') {
       // 当前是查询 那 移除所有相关的
-      record.perChecked = record.perChecked.filter((item: string) => !item.includes(preStr));
+      record.perChecked = record.perChecked.filter((item: string) => !item.includes(preStr as string));
     } else {
       record.perChecked.splice(record.perChecked.indexOf(currentValue), 1);
     }
