@@ -34,7 +34,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
 
     @Override
     public List<UserRoleRelation> getByRoleId(String roleId) {
-        return queryChain().where(USER_ROLE_RELATION.ROLE_ID.eq(roleId)).list();
+        return queryChain().where(USER_ROLE_RELATION.ROLE_CODE.eq(roleId)).list();
     }
 
     @Override
@@ -42,14 +42,14 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
     public void deleteByRoleId(String roleId) {
         List<UserRoleRelation> userRoleRelations = getByRoleId(roleId);
         userRoleRelations.forEach(userRoleRelation ->
-                checkAdminPermissionRemove(userRoleRelation.getUserId(), userRoleRelation.getRoleId()));
-        QueryChain<UserRoleRelation> userRoleRelationQueryChain = queryChain().where(USER_ROLE_RELATION.ROLE_ID.eq(roleId));
+                checkAdminPermissionRemove(userRoleRelation.getUserId(), userRoleRelation.getRoleCode()));
+        QueryChain<UserRoleRelation> userRoleRelationQueryChain = queryChain().where(USER_ROLE_RELATION.ROLE_CODE.eq(roleId));
         mapper.deleteByQuery(userRoleRelationQueryChain);
     }
 
     @Override
     public List<String> getUserIdByRoleId(String roleId) {
-        return queryChain().select(USER_ROLE_RELATION.USER_ID).where(USER_ROLE_RELATION.ROLE_ID.eq(roleId)).listAs(String.class);
+        return queryChain().select(USER_ROLE_RELATION.USER_ID).where(USER_ROLE_RELATION.ROLE_CODE.eq(roleId)).listAs(String.class);
     }
 
     @Override
@@ -58,7 +58,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
             return List.of();
         }
         return queryChain()
-                .select(USER_ROLE_RELATION.ROLE_ID, USER_ROLE_RELATION.USER_ID, USER_ROLE_RELATION.SOURCE_ID)
+                .select(USER_ROLE_RELATION.ROLE_CODE, USER_ROLE_RELATION.USER_ID, USER_ROLE_RELATION.SOURCE_ID)
                 .where(USER_ROLE_RELATION.USER_ID.in(userIds)).list();
     }
 
@@ -73,7 +73,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
         List<String> deleteRoleList = new ArrayList<>();
         List<UserRoleRelation> saveList = new ArrayList<>();
         List<UserRoleRelation> userRoleRelationList = queryChain().where(USER_ROLE_RELATION.USER_ID.eq(user.getId())).list();
-        List<String> userSavedRoleIdList = userRoleRelationList.stream().map(UserRoleRelation::getRoleId).toList();
+        List<String> userSavedRoleIdList = userRoleRelationList.stream().map(UserRoleRelation::getRoleCode).toList();
         //获取要移除的权限
         for (String userSavedRoleId : userSavedRoleIdList) {
             if (!roleList.contains(userSavedRoleId)) {
@@ -85,7 +85,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
             if (!userSavedRoleIdList.contains(roleId)) {
                 UserRoleRelation userRoleRelation = new UserRoleRelation();
                 userRoleRelation.setUserId(user.getId());
-                userRoleRelation.setRoleId(roleId);
+                userRoleRelation.setRoleCode(roleId);
                 userRoleRelation.setSourceId(UserRoleScope.SYSTEM);
                 userRoleRelation.setCreateUser(operator);
                 userRoleRelation.setOrganizationId(UserRoleScope.SYSTEM);
@@ -95,7 +95,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
         if (CollectionUtils.isNotEmpty(deleteRoleList)) {
             List<String> deleteIdList = new ArrayList<>();
             userRoleRelationList.forEach(item -> {
-                if (deleteRoleList.contains(item.getRoleId())) {
+                if (deleteRoleList.contains(item.getRoleCode())) {
                     deleteIdList.add(item.getId());
                 }
             });
@@ -115,7 +115,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
     @Override
     public Map<String, UserTableResponse> selectGlobalUserRoleAndOrganization(List<String> userIdList) {
         List<UserRoleRelation> userRoleRelationList = queryChain().where(USER_ROLE_RELATION.USER_ID.in(userIdList)).list();
-        List<String> userRoleIdList = userRoleRelationList.stream().map(UserRoleRelation::getRoleId).distinct().toList();
+        List<String> userRoleIdList = userRoleRelationList.stream().map(UserRoleRelation::getRoleCode).distinct().toList();
         List<String> sourceIdList = userRoleRelationList.stream().map(UserRoleRelation::getSourceId).distinct().toList();
         Map<String, UserRole> userRoleMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(userRoleIdList)) {
@@ -130,7 +130,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
                 userInfo.setId(userRoleRelation.getUserId());
                 returnMap.put(userRoleRelation.getUserId(), userInfo);
             }
-            UserRole userRole = userRoleMap.get(userRoleRelation.getRoleId());
+            UserRole userRole = userRoleMap.get(userRoleRelation.getRoleCode());
             if (userRole != null && Strings.CS.equals(userRole.getType(), UserRoleScope.SYSTEM)) {
                 userInfo.setUserRole(userRole);
             }

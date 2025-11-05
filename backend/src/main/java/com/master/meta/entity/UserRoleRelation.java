@@ -47,8 +47,8 @@ public class UserRoleRelation implements Serializable {
     /**
      * 组ID
      */
-    @Schema(description = "组ID")
-    private String roleId;
+    @Schema(description = "组code")
+    private String roleCode;
 
     /**
      * 组织或项目ID

@@ -6,6 +6,7 @@ import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -47,14 +48,14 @@ public class RestControllerExceptionHandler {
     @ExceptionHandler(RefreshTokenExpiredException.class)
     public ResponseEntity<ResultHolder> handleRefreshTokenExpired(RefreshTokenExpiredException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ResultHolder.error(100401, ex.getMessage(), getStackTraceAsString(ex)));
+                .body(ResultHolder.error(ResultCode.UNAUTHORIZED.getCode(), ex.getMessage(), getStackTraceAsString(ex)));
     }
 
     // 添加对ExpiredJwtException的专门处理
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<ResultHolder> handleExpiredJwtException(ExpiredJwtException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ResultHolder.error(100401, "Token has expired", getStackTraceAsString(ex)));
+                .body(ResultHolder.error(ResultCode.UNAUTHORIZED.getCode(), "Token has expired", getStackTraceAsString(ex)));
     }
 
     @ExceptionHandler(JwtException.class)
@@ -63,9 +64,16 @@ public class RestControllerExceptionHandler {
                 .body(ResultHolder.error(100411, ex.getMessage(), getStackTraceAsString(ex)));
     }
 
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<ResultHolder> handleAuthorizationDeniedException(AuthorizationDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ResultHolder.error(ResultCode.FORBIDDEN.getCode(),
+                        ResultCode.FORBIDDEN.getMessage(),
+                        getStackTraceAsString(ex)));
+    }
+
     @ExceptionHandler({Exception.class})
     public ResponseEntity<ResultHolder> handleException(Exception e) {
-        log.error("系统异常:", e);
         return ResponseEntity.internalServerError()
                 .body(ResultHolder.error(ResultCode.FAILED.getCode(),
                         e.getMessage(), getStackTraceAsString(e)));

@@ -60,7 +60,7 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
         if (Objects.equals(userRole.getType(), UserRoleType.PROJECT.name())) {
             // 项目级别用户组, 初始化基本信息权限
             UserRolePermission initPermission = new UserRolePermission();
-            initPermission.setRoleId(userRole.getId());
+            initPermission.setRoleCode(userRole.getId());
             initPermission.setPermissionId("PROJECT_BASE_INFO:READ");
             userRolePermissionMapper.insertSelective(initPermission);
         }
@@ -107,7 +107,7 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
                 .filter(item -> Objects.equals(item.getType(), userRole.getType())
                         || Objects.equals(userRole.getCode(), InternalUserRole.ADMIN.getValue()))
                 .sorted(Comparator.comparing(PermissionDefinitionItem::getOrder))
-                .collect(Collectors.toList());
+                .toList();
         for (PermissionDefinitionItem firstLevel : permissionDefinition) {
             List<PermissionDefinitionItem> children = firstLevel.getChildren();
             boolean allCheck = true;
@@ -167,7 +167,7 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
     @Override
     public List<UserRole> selectByUserRoleRelations(List<UserRoleRelation> userRoleRelations) {
         if (CollectionUtils.isNotEmpty(userRoleRelations)) {
-            List<String> userRoleIds = userRoleRelations.stream().map(UserRoleRelation::getRoleId).distinct().toList();
+            List<String> userRoleIds = userRoleRelations.stream().map(UserRoleRelation::getRoleCode).distinct().toList();
             return mapper.selectListByIds(userRoleIds);
         }
         return List.of();
@@ -188,22 +188,19 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
     }
 
     private String translateDefaultPermissionName(Permission p) {
-//        if (StringUtils.isNotBlank(p.getName())) {
-//            p.getName();
-//        }
         String[] idSplit = p.getId().split(":");
         String permissionKey = idSplit[idSplit.length - 1];
-        Map<String, String> translationMap = new HashMap<>() {{
-            put("READ", "permission.read");
-            put("READ+ADD", "permission.add");
-            put("READ+UPDATE", "permission.edit");
-            put("READ+DELETE", "permission.delete");
-            put("READ+IMPORT", "permission.import");
-            put("READ+RECOVER", "permission.recover");
-            put("READ+EXPORT", "permission.export");
-            put("READ+EXECUTE", "permission.execute");
-            put("READ+DEBUG", "permission.debug");
-        }};
+        Map<String, String> translationMap = Map.of(
+                "READ", "permission.read",
+                "READ+ADD", "permission.add",
+                "READ+UPDATE", "permission.edit",
+                "READ+DELETE", "permission.delete",
+                "READ+IMPORT", "permission.import",
+                "READ+RECOVER", "permission.recover",
+                "READ+EXPORT", "permission.export",
+                "READ+EXECUTE", "permission.execute",
+                "READ+DEBUG", "permission.debug"
+        );
         return Translator.get(translationMap.get(permissionKey));
     }
 
@@ -222,11 +219,11 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
         List<UserRoleRelation> addRelations = new ArrayList<>();
         userRoleRelationMap.forEach((groupId, relations) -> {
             // 如果当前用户组只有一个用户，并且就是要删除的用户组，则添加组织成员等默认用户组
-            if (relations.size() == 1 && Objects.equals(relations.getFirst().getRoleId(), roleId)) {
+            if (relations.size() == 1 && Objects.equals(relations.getFirst().getRoleCode(), roleId)) {
                 UserRoleRelation relation = new UserRoleRelation();
                 relation.setUserId(relations.getFirst().getUserId());
                 relation.setSourceId(relations.getFirst().getSourceId());
-                relation.setRoleId(defaultRoleId);
+                relation.setRoleCode(defaultRoleId);
                 relation.setCreateUser(currentUserId);
                 relation.setOrganizationId(orgId);
                 addRelations.add(relation);

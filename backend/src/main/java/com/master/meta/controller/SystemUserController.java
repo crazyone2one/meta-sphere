@@ -5,6 +5,7 @@ import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.UserInfoDTO;
 import com.master.meta.dto.system.*;
 import com.master.meta.entity.SystemUser;
+import com.master.meta.handle.annotation.RequiresPermissions;
 import com.master.meta.handle.validation.Updated;
 import com.master.meta.service.GlobalUserRoleService;
 import com.master.meta.service.SystemUserService;
@@ -13,8 +14,8 @@ import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -83,6 +84,7 @@ public class SystemUserController {
 
     @GetMapping("getInfo/{keyword}")
     @Operation(description = "通过email或id查找用户")
+    @PreAuthorize("@rpe.hasPermission('SYSTEM_USER:READ')")
     public UserDTO getInfo(@PathVariable @Parameter(description = "用户主键") String keyword) {
         return systemUserService.getUserDTOByKeyword(keyword);
     }
@@ -98,6 +100,7 @@ public class SystemUserController {
     public Page<UserTableResponse> page(@Validated @RequestBody BasePageRequest request) {
         return systemUserService.pageUserTable(request);
     }
+
     @GetMapping("/get/global/system/role")
     @Operation(summary = "系统设置-系统-用户-查找系统级用户组")
     public List<UserSelectOption> getGlobalSystemRole() {

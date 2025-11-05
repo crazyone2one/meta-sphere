@@ -28,7 +28,7 @@ public class BaseUserRolePermissionServiceImpl extends ServiceImpl<UserRolePermi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteByRoleId(String roleId) {
-        QueryChain<UserRolePermission> permissionQueryChain = queryChain().where(USER_ROLE_PERMISSION.ROLE_ID.eq(roleId));
+        QueryChain<UserRolePermission> permissionQueryChain = queryChain().where(USER_ROLE_PERMISSION.ROLE_CODE.eq(roleId));
         mapper.deleteByQuery(permissionQueryChain);
     }
 
@@ -41,7 +41,7 @@ public class BaseUserRolePermissionServiceImpl extends ServiceImpl<UserRolePermi
 
     @Override
     public List<UserRolePermission> getByRoleId(String roleId) {
-        return queryChain().where(USER_ROLE_PERMISSION.ROLE_ID.eq(roleId)).list();
+        return queryChain().where(USER_ROLE_PERMISSION.ROLE_CODE.eq(roleId)).list();
     }
 
     @Override
@@ -49,7 +49,7 @@ public class BaseUserRolePermissionServiceImpl extends ServiceImpl<UserRolePermi
     public void updatePermissionSetting(PermissionSettingUpdateRequest request) {
         List<PermissionSettingUpdateRequest.PermissionUpdateRequest> permissions = request.getPermissions();
         // 先删除 (排除内置基本信息用户组)
-        QueryChain<UserRolePermission> permissionQueryChain = queryChain().where(USER_ROLE_PERMISSION.ROLE_ID.eq(request.getUserRoleId())
+        QueryChain<UserRolePermission> permissionQueryChain = queryChain().where(USER_ROLE_PERMISSION.ROLE_CODE.eq(request.getUserRoleId())
                 .and(USER_ROLE_PERMISSION.PERMISSION_ID.ne("PROJECT_BASE_INFO:READ")));
         mapper.deleteByQuery(permissionQueryChain);
         // 再新增
@@ -58,7 +58,7 @@ public class BaseUserRolePermissionServiceImpl extends ServiceImpl<UserRolePermi
             if (BooleanUtils.isTrue(permission.getEnable())) {
                 String permissionId = permission.getId();
                 UserRolePermission groupPermission = new UserRolePermission();
-                groupPermission.setRoleId(groupId);
+                groupPermission.setRoleCode(groupId);
                 groupPermission.setPermissionId(permissionId);
                 mapper.insert(groupPermission);
             }
