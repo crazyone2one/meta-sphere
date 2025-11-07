@@ -175,12 +175,22 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
 
     @Override
     public void checkRoleIsGlobalAndHaveMember(List<String> roleIdList, boolean isSystem) {
-        long count = queryChain().where(USER_ROLE.ID.in(roleIdList))
+        long count = queryChain().where(USER_ROLE.CODE.in(roleIdList))
                 .and(USER_ROLE.TYPE.eq("SYSTEM").when(isSystem))
                 .and(USER_ROLE.SCOPE_ID.eq("global")).count();
         if (count != roleIdList.size()) {
             throw new CustomException(Translator.get("role.not.global"));
         }
+    }
+
+    @Override
+    public UserRole getWithCheck(String roleId) {
+        return checkResourceExist(mapper.selectOneById(roleId));
+    }
+
+    @Override
+    public UserRole getWithCheckByCode(String roleCode) {
+        return checkResourceExist(queryChain().where(USER_ROLE.CODE.eq(roleCode)).one());
     }
 
     protected void updatePermissionSetting(PermissionSettingUpdateRequest request) {

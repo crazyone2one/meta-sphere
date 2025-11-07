@@ -4,6 +4,7 @@ import CreateOrUpdateUserGroup from "/@/views/setting/user-group/components/Crea
 import {AuthScopeEnum, type AuthScopeEnumType} from "/@/enums/common-enum.ts";
 import type {CurrentUserGroupItem, UserGroupItem} from "/@/api/modules/setting/types.ts";
 import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
+import AddUserModal from "/@/views/setting/user-group/components/AddUserModal.vue";
 
 const systemType = inject<AuthScopeEnumType>('systemType');
 const emit = defineEmits<{
@@ -18,8 +19,10 @@ const {isGlobalDisable = false} = defineProps<{
 const systemToggle = ref(true);
 const systemUserGroupVisible = ref(false);
 const userGroupList = ref<UserGroupItem[]>([]);
-const currentItem = ref<CurrentUserGroupItem>({id: '', name: '', internal: false, type: AuthScopeEnum.SYSTEM});
+const currentItem = ref<CurrentUserGroupItem>({id: '', name: '', internal: false, type: AuthScopeEnum.SYSTEM, code: ''});
 const currentId = ref('');
+const userModalVisible = ref(false);
+
 const handleCreateUG = (scoped: string) => {
   if (scoped === "SYSTEM") {
     systemUserGroupVisible.value = true;
@@ -29,8 +32,8 @@ const systemUserGroupList = computed(() => {
   return userGroupList.value.filter((ele) => ele.type === AuthScopeEnum.SYSTEM);
 });
 const handleListItemClick = (element: UserGroupItem) => {
-  const {id, name, type, internal} = element;
-  currentItem.value = {id, name, type, internal};
+  const {id, name, type, internal, code} = element;
+  currentItem.value = {id, name, type, internal, code};
   currentId.value = id;
   emit('handleSelect', element);
 };
@@ -59,6 +62,15 @@ const initData = async (id?: string, isSelect = true) => {
 const handleCreateUserGroup = (id: string) => {
   initData(id);
 };
+const handleAddMember = () => {
+  userModalVisible.value = true;
+};
+const handleAddUserCancel = (shouldSearch: boolean) => {
+  userModalVisible.value = false;
+  if (shouldSearch) {
+    emit('addUserSuccess', currentId.value);
+  }
+};
 defineExpose({
   initData,
 });
@@ -72,7 +84,8 @@ defineExpose({
     <div class="mt-2">
       <div class="flex items-center justify-between px-[4px] py-[7px]">
         <div class="flex flex-row items-center gap-1">
-          <div v-if="systemToggle" class="cursor-pointer i-ant-design:down-outlined text-[12px]" @click="systemToggle = false"/>
+          <div v-if="systemToggle" class="cursor-pointer i-ant-design:down-outlined text-[12px]"
+               @click="systemToggle = false"/>
           <div v-else class="cursor-pointer i-ant-design:right-outlined text-[12px]" @click="systemToggle = true"/>
           <div class="text-[14px]">系统用户组</div>
         </div>
@@ -83,7 +96,8 @@ defineExpose({
                                      @submit="handleCreateUserGroup">
           <n-tooltip trigger="hover">
             <template #trigger>
-              <div class="i-ant-design:plus-circle-outlined cursor-pointer text-[20px]" @click="handleCreateUG('SYSTEM')"/>
+              <div class="i-ant-design:plus-circle-outlined cursor-pointer text-[20px]"
+                   @click="handleCreateUG('SYSTEM')"/>
             </template>
             添加系统用户组
           </n-tooltip>
@@ -111,8 +125,10 @@ defineExpose({
                   "
                      class="list-item-action flex flex-row items-center gap-[8px] opacity-0"
                      :class="{ '!opacity-100': element.id === currentId }">
-                  <div v-if="element.type === systemType" class="icon-button">
-                    <div class="i-ant-design:plus-outlined cursor-pointer text-[16px]"/>
+                  <div v-if="element.type === systemType">
+                    <n-button text @click="handleAddMember">
+                      <div class="i-ant-design:plus-outlined cursor-pointer text-[16px]"/>
+                    </n-button>
                   </div>
                 </div>
               </div>
@@ -122,6 +138,7 @@ defineExpose({
       </Transition>
     </div>
   </div>
+  <add-user-modal v-model:show-modal="userModalVisible" :current-id="currentItem.code" @cancel="handleAddUserCancel"/>
 </template>
 
 <style scoped>

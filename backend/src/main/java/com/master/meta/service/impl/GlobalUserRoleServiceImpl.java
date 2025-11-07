@@ -64,7 +64,7 @@ public class GlobalUserRoleServiceImpl extends BaseUserRoleServiceImpl implement
     @Override
     public List<UserSelectOption> getGlobalSystemRoleList() {
         List<UserSelectOption> returnList = new ArrayList<>();
-        List<UserRole> userRoles = queryChain().where(USER_ROLE.SCOPE_ID.eq("global").and(USER_ROLE.TYPE.eq(UserRoleType.SYSTEM.name()))).list();
+        List<UserRole> userRoles = queryChain().where(USER_ROLE.SCOPE_ID.eq("global")).list();
         userRoles.forEach(userRole -> {
             UserSelectOption userRoleOption = new UserSelectOption();
             userRoleOption.setId(userRole.getId());

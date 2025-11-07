@@ -1,20 +1,21 @@
 package com.master.meta.controller;
 
-import com.mybatisflex.core.paginate.Page;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.master.meta.dto.system.UserExcludeOptionDTO;
+import com.master.meta.dto.system.UserRoleRelationUpdateRequest;
 import com.master.meta.entity.UserRoleRelation;
-import com.master.meta.service.BaseUserRoleRelationService;
-import org.springframework.web.bind.annotation.RestController;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.master.meta.handle.validation.Created;
+import com.master.meta.service.GlobalUserRoleRelationService;
+import com.master.meta.utils.SessionUtils;
+import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
@@ -25,22 +26,25 @@ import java.util.List;
  */
 @RestController
 @Tag(name = "用户组关系接口")
-@RequestMapping("/userRoleRelation")
+@RequestMapping("/user/role/relation/global")
 public class UserRoleRelationController {
 
-    @Autowired
-    private BaseUserRoleRelationService baseUserRoleRelationService;
+    private final GlobalUserRoleRelationService globalUserRoleRelationService;
+
+    public UserRoleRelationController(@Qualifier("globalUserRoleRelationService") GlobalUserRoleRelationService globalUserRoleRelationService) {
+        this.globalUserRoleRelationService = globalUserRoleRelationService;
+    }
 
     /**
      * 保存用户组关系。
      *
-     * @param userRoleRelation 用户组关系
-     * @return {@code true} 保存成功，{@code false} 保存失败
+     * @param request 用户组关系
      */
     @PostMapping("save")
-    @Operation(description="保存用户组关系")
-    public boolean save(@RequestBody @Parameter(description="用户组关系")UserRoleRelation userRoleRelation) {
-        return baseUserRoleRelationService.save(userRoleRelation);
+    @Operation(description = "保存用户组关系")
+    public void save(@RequestBody @Parameter(description = "用户组关系") @Validated({Created.class}) UserRoleRelationUpdateRequest request) {
+        request.setCreateUser(SessionUtils.getCurrentUserId());
+        globalUserRoleRelationService.add(request);
     }
 
     /**
@@ -50,9 +54,9 @@ public class UserRoleRelationController {
      * @return {@code true} 删除成功，{@code false} 删除失败
      */
     @DeleteMapping("remove/{id}")
-    @Operation(description="根据主键删除用户组关系")
-    public boolean remove(@PathVariable @Parameter(description="用户组关系主键") String id) {
-        return baseUserRoleRelationService.removeById(id);
+    @Operation(description = "根据主键删除用户组关系")
+    public boolean remove(@PathVariable @Parameter(description = "用户组关系主键") String id) {
+        return globalUserRoleRelationService.removeById(id);
     }
 
     /**
@@ -62,9 +66,9 @@ public class UserRoleRelationController {
      * @return {@code true} 更新成功，{@code false} 更新失败
      */
     @PutMapping("update")
-    @Operation(description="根据主键更新用户组关系")
-    public boolean update(@RequestBody @Parameter(description="用户组关系主键") UserRoleRelation userRoleRelation) {
-        return baseUserRoleRelationService.updateById(userRoleRelation);
+    @Operation(description = "根据主键更新用户组关系")
+    public boolean update(@RequestBody @Parameter(description = "用户组关系主键") UserRoleRelation userRoleRelation) {
+        return globalUserRoleRelationService.updateById(userRoleRelation);
     }
 
     /**
@@ -73,9 +77,9 @@ public class UserRoleRelationController {
      * @return 所有数据
      */
     @GetMapping("list")
-    @Operation(description="查询所有用户组关系")
+    @Operation(description = "查询所有用户组关系")
     public List<UserRoleRelation> list() {
-        return baseUserRoleRelationService.list();
+        return globalUserRoleRelationService.list();
     }
 
     /**
@@ -85,9 +89,9 @@ public class UserRoleRelationController {
      * @return 用户组关系详情
      */
     @GetMapping("getInfo/{id}")
-    @Operation(description="根据主键获取用户组关系")
-    public UserRoleRelation getInfo(@PathVariable @Parameter(description="用户组关系主键") String id) {
-        return baseUserRoleRelationService.getById(id);
+    @Operation(description = "根据主键获取用户组关系")
+    public UserRoleRelation getInfo(@PathVariable @Parameter(description = "用户组关系主键") String id) {
+        return globalUserRoleRelationService.getById(id);
     }
 
     /**
@@ -97,9 +101,18 @@ public class UserRoleRelationController {
      * @return 分页对象
      */
     @GetMapping("page")
-    @Operation(description="分页查询用户组关系")
-    public Page<UserRoleRelation> page(@Parameter(description="分页信息") Page<UserRoleRelation> page) {
-        return baseUserRoleRelationService.page(page);
+    @Operation(description = "分页查询用户组关系")
+    public Page<UserRoleRelation> page(@Parameter(description = "分页信息") Page<UserRoleRelation> page) {
+        return globalUserRoleRelationService.page(page);
     }
 
+    @GetMapping("/user/option/{roleCode}")
+    @Operation(summary = "系统设置-系统-用户组-用户关联关系-获取需要关联的用户选项")
+    @PreAuthorize("@rpe.hasPermission('SYSTEM_USER_ROLE:READ')")
+    public List<UserExcludeOptionDTO> getSelectOption(@Schema(description = "用户组ID", requiredMode = Schema.RequiredMode.REQUIRED)
+                                                      @PathVariable String roleCode,
+                                                      @Schema(description = "查询关键字，根据邮箱和用户名查询", requiredMode = Schema.RequiredMode.REQUIRED)
+                                                      @RequestParam(value = "keyword", required = false) String keyword) {
+        return globalUserRoleRelationService.getExcludeSelectOption(roleCode, keyword);
+    }
 }

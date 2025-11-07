@@ -196,7 +196,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .orElseThrow(() -> new CustomException("<项目不存在>"));
         List<Row> sensorFromRedis;
         List<Row> sensorList;
-        List<SensorSelectOptionDTO> options = new ArrayList<>();
+        List<SensorSelectOptionDTO> options;
         switch (request.getSensorType()) {
             case "pls":
                 sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_PSL, false);
@@ -263,11 +263,11 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
 
                 sensorList = sensorFromRedis.stream()
                         .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
-                        .filter(row -> {
-                            // 排除传感器类型为1003、1008和1010的数据
-                            String sensorType = row.getString("sensor_type");
-                            return !("1003".equals(sensorType) || "1008".equals(sensorType) || "1010".equals(sensorType));
-                        })
+//                        .filter(row -> {
+//                            // 排除传感器类型为1003、1008和1010的数据
+//                            String sensorType = row.getString("sensor_type");
+//                            return !("1003".equals(sensorType) || "1008".equals(sensorType) || "1010".equals(sensorType));
+//                        })
                         .toList();
                 options = sensorList.stream()
                         .map(row -> new SensorSelectOptionDTO(row.getString("sensor_location"),

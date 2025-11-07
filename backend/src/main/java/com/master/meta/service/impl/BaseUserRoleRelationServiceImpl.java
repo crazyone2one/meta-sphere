@@ -2,6 +2,7 @@ package com.master.meta.service.impl;
 
 import com.master.meta.constants.InternalUserRole;
 import com.master.meta.constants.UserRoleScope;
+import com.master.meta.dto.system.UserExcludeOptionDTO;
 import com.master.meta.dto.system.UserTableResponse;
 import com.master.meta.entity.SystemUser;
 import com.master.meta.entity.UserRole;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.master.meta.entity.table.SystemUserTableDef.SYSTEM_USER;
 import static com.master.meta.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
 import static com.master.meta.entity.table.UserRoleTableDef.USER_ROLE;
 import static com.master.meta.handle.result.CommonResultCode.USER_ROLE_RELATION_REMOVE_ADMIN_USER_PERMISSION;
@@ -29,7 +31,7 @@ import static com.master.meta.handle.result.CommonResultCode.USER_ROLE_RELATION_
  * @author 11's papa
  * @since 2025-10-24
  */
-@Service
+@Service("baseUserRoleRelationService")
 public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelationMapper, UserRoleRelation> implements BaseUserRoleRelationService {
 
     @Override
@@ -136,6 +138,23 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
             }
         }
         return returnMap;
+    }
+
+    @Override
+    public List<UserExcludeOptionDTO> getExcludeSelectOptionWithLimit(String roleId, String keyword) {
+        List<UserExcludeOptionDTO> selectOptions = QueryChain.of(SystemUser.class)
+                .select(SYSTEM_USER.ID, SYSTEM_USER.NAME, SYSTEM_USER.EMAIL).from(SYSTEM_USER)
+                .where(SYSTEM_USER.NAME.like(keyword).or(SYSTEM_USER.EMAIL.like(keyword))).limit(1000)
+                .listAs(UserExcludeOptionDTO.class);
+        // 查询已经关联的用户ID
+        Set<String> excludeUserIds = new HashSet<>(getUserIdByRoleId(roleId));
+        // 标记已经关联的用户
+        selectOptions.forEach(excludeOption -> {
+            if (excludeUserIds.contains(excludeOption.getId())) {
+                excludeOption.setDisabled(true);
+            }
+        });
+        return selectOptions;
     }
 
     private void checkAdminPermissionRemove(String userId, String roleId) {

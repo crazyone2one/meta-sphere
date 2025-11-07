@@ -19,7 +19,7 @@ public class RestPermissionEvaluator {
     private static final String SUPER_ADMIN = "admin";
 
     public boolean hasPermission(String permission) {
-        if (StringUtils.isNoneBlank(permission)) {
+        if (StringUtils.isEmpty(permission)) {
             return false;
         }
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

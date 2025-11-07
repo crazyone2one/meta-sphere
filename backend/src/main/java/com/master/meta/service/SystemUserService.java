@@ -15,13 +15,17 @@ import com.master.meta.entity.SystemUser;
  */
 public interface SystemUserService extends IService<SystemUser> {
 
-    UserInfoDTO getUserInfo();
+    UserDTO getUserInfo();
+
+    UserDTO getUserDTO(String userId);
 
     UserDTO getUserDTOByKeyword(String keyword);
 
     UserBatchCreateResponse addUser(UserBatchCreateRequest request, String source, String operator);
 
     UserEditRequest updateUser(UserEditRequest request);
+
+    void updateUser(SystemUser user);
 
     Page<UserTableResponse> pageUserTable(BasePageRequest request);
 

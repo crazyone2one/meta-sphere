@@ -1,9 +1,9 @@
 package com.master.meta.service.impl;
 
+import com.master.meta.constants.UserRoleType;
 import com.master.meta.dto.BasePageRequest;
-import com.master.meta.dto.UserInfoDTO;
 import com.master.meta.dto.system.*;
-import com.master.meta.entity.SystemUser;
+import com.master.meta.entity.*;
 import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.result.SystemResultCode;
@@ -14,11 +14,12 @@ import com.master.meta.service.SystemUserService;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,7 +29,12 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.master.meta.entity.table.OrganizationTableDef.ORGANIZATION;
+import static com.master.meta.entity.table.SystemProjectTableDef.SYSTEM_PROJECT;
 import static com.master.meta.entity.table.SystemUserTableDef.SYSTEM_USER;
+import static com.master.meta.entity.table.UserRolePermissionTableDef.USER_ROLE_PERMISSION;
+import static com.master.meta.entity.table.UserRoleRelationTableDef.USER_ROLE_RELATION;
+import static com.master.meta.entity.table.UserRoleTableDef.USER_ROLE;
 
 /**
  * 用户 服务层实现。
@@ -42,7 +48,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     private final BaseUserRoleService userRoleService;
     private final PasswordEncoder passwordEncoder;
 
-    public SystemUserServiceImpl(BaseUserRoleRelationService userRoleRelationService,
+    public SystemUserServiceImpl(@Qualifier("baseUserRoleRelationService") BaseUserRoleRelationService userRoleRelationService,
                                  @Qualifier("baseUserRoleService") BaseUserRoleService userRoleService,
                                  PasswordEncoder passwordEncoder) {
         this.userRoleRelationService = userRoleRelationService;
@@ -51,28 +57,282 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     }
 
     @Override
-    public UserInfoDTO getUserInfo() {
+    public UserDTO getUserInfo() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        return queryChain().where(SYSTEM_USER.NAME.eq(name)).oneAs(UserInfoDTO.class);
+        UserDTO user = queryChain().where(SYSTEM_USER.NAME.eq(name)).oneAs(UserDTO.class);
+        autoSwitch(user);
+        return user;
+    }
+
+    @Override
+    public UserDTO getUserDTO(String userId) {
+        UserDTO userDTO = mapper.selectOneWithRelationsByIdAs(userId, UserDTO.class);
+        if (userDTO == null) {
+            return null;
+        }
+        UserRolePermissionDTO dto = getUserRolePermission(userId);
+        userDTO.setUserRoleRelations(dto.getUserRoleRelations());
+        userDTO.setUserRoles(dto.getUserRoles());
+        userDTO.setUserRolePermissions(dto.getList());
+        return userDTO;
+    }
+
+    private UserRolePermissionDTO getUserRolePermission(String userId) {
+        UserRolePermissionDTO permissionDTO = new UserRolePermissionDTO();
+        List<UserRoleResourceDTO> list = new ArrayList<>();
+        List<UserRoleRelation> userRoleRelations = userRoleRelationService.selectByUserId(userId);
+        if (CollectionUtils.isEmpty(userRoleRelations)) {
+            return permissionDTO;
+        }
+        permissionDTO.setUserRoleRelations(userRoleRelations);
+        List<String> roleList = userRoleRelations.stream().map(UserRoleRelation::getRoleCode).toList();
+        List<UserRole> userRoles = QueryChain.of(UserRole.class).where(USER_ROLE.CODE.in(roleList)).list();
+        permissionDTO.setUserRoles(userRoles);
+        for (UserRole gp : userRoles) {
+            UserRoleResourceDTO dto = new UserRoleResourceDTO();
+            dto.setUserRole(gp);
+            List<UserRolePermission> userRolePermissions = QueryChain.of(UserRolePermission.class)
+                    .where(USER_ROLE_PERMISSION.ROLE_CODE.eq(gp.getCode()))
+                    .list();
+            dto.setUserRolePermissions(userRolePermissions);
+            list.add(dto);
+        }
+        permissionDTO.setList(list);
+        return permissionDTO;
+    }
+
+    private void autoSwitch(UserDTO user) {
+        // 判断是否是系统管理员
+        if (isSystemAdmin(user)) {
+            return;
+        }
+        // 用户有 last_project_id 权限
+        if (hasLastProjectPermission(user)) {
+            return;
+        }
+        // 用户有 last_organization_id 权限
+        if (hasLastOrganizationPermission(user)) {
+            return;
+        }
+        // 判断其他权限
+        checkNewOrganizationAndProject(user);
+    }
+
+    private void checkNewOrganizationAndProject(UserDTO user) {
+        List<UserRoleRelation> userRoleRelations = user.getUserRoleRelations();
+        List<String> projectRoleIds = user.getUserRoles()
+                .stream().filter(ug -> Objects.equals(ug.getType(), UserRoleType.PROJECT.name()))
+                .map(UserRole::getCode)
+                .toList();
+        List<UserRoleRelation> project = userRoleRelations.stream().filter(ug -> projectRoleIds.contains(ug.getRoleCode()))
+                .toList();
+        if (CollectionUtils.isEmpty(project)) {
+            List<String> organizationIds = user.getUserRoles()
+                    .stream()
+                    .filter(ug -> Objects.equals(ug.getType(), UserRoleType.ORGANIZATION.name()))
+                    .map(UserRole::getCode)
+                    .toList();
+            List<UserRoleRelation> organizations = userRoleRelations.stream().filter(ug -> organizationIds.contains(ug.getRoleCode()))
+                    .toList();
+            if (CollectionUtils.isNotEmpty(organizations)) {
+                //获取所有的组织
+                List<String> orgIds = organizations.stream().map(UserRoleRelation::getSourceId).toList();
+                List<Organization> organizationsList = QueryChain.of(Organization.class).where(ORGANIZATION.ID.in(orgIds)
+                        .and(ORGANIZATION.ENABLE.eq(true))).list();
+                if (org.apache.commons.collections.CollectionUtils.isNotEmpty(organizationsList)) {
+                    String wsId = organizationsList.getFirst().getId();
+                    switchUserResource(wsId, user);
+                }
+            } else {
+                // 用户登录之后没有项目和组织的权限就把值清空
+                user.setLastOrganizationId(StringUtils.EMPTY);
+                user.setLastProjectId(StringUtils.EMPTY);
+                updateUser(user);
+            }
+        } else {
+            UserRoleRelation userRoleRelation = project.stream().filter(p -> StringUtils.isNotBlank(p.getSourceId()))
+                    .toList().getFirst();
+            String projectId = userRoleRelation.getSourceId();
+            SystemProject p = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(projectId)).one();
+            String wsId = p.getOrganizationId();
+            user.setId(user.getId());
+            user.setLastProjectId(projectId);
+            user.setLastOrganizationId(wsId);
+            updateUser(user);
+        }
+    }
+
+    private void switchUserResource(String sourceId, UserDTO user) {
+        UserDTO userDTO = getUserDTO(user.getId());
+        SystemUser newUser = new SystemUser();
+        userDTO.setLastOrganizationId(sourceId);
+        userDTO.setLastProjectId(StringUtils.EMPTY);
+        List<SystemProject> projects = getProjectListByWsAndUserId(user.getId(), sourceId);
+        if (CollectionUtils.isNotEmpty(projects)) {
+            userDTO.setLastProjectId(projects.getFirst().getId());
+        }
+        BeanUtils.copyProperties(userDTO, newUser);
+        mapper.insertOrUpdateSelective(newUser);
+    }
+
+    private boolean hasLastOrganizationPermission(UserDTO user) {
+        if (StringUtils.isNotBlank(user.getLastOrganizationId())) {
+            List<Organization> organizations = QueryChain.of(Organization.class).where(ORGANIZATION.ID.eq(user.getLastOrganizationId())
+                    .and(ORGANIZATION.ENABLE.eq(true))).list();
+            if (org.apache.commons.collections.CollectionUtils.isEmpty(organizations)) {
+                return false;
+            }
+            List<UserRoleRelation> userRoleRelations = user.getUserRoleRelations().stream()
+                    .filter(ug -> Objects.equals(user.getLastOrganizationId(), ug.getSourceId()))
+                    .toList();
+            if (CollectionUtils.isNotEmpty(userRoleRelations)) {
+                List<SystemProject> projects = QueryChain.of(SystemProject.class)
+                        .where(SYSTEM_PROJECT.ORGANIZATION_ID.eq(user.getLastOrganizationId())
+                                .and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
+                // 组织下没有项目
+                if (CollectionUtils.isEmpty(projects)) {
+                    user.setLastProjectId(StringUtils.EMPTY);
+                    updateUser(user);
+                    return true;
+                }
+                // 组织下有项目，选中有权限的项目
+                List<String> projectIds = projects.stream()
+                        .map(SystemProject::getId)
+                        .toList();
+
+                List<UserRoleRelation> roleRelations = user.getUserRoleRelations();
+                List<String> projectRoleIds = user.getUserRoles()
+                        .stream().filter(ug -> Objects.equals(ug.getType(), UserRoleType.PROJECT.name()))
+                        .map(UserRole::getCode)
+                        .toList();
+                List<String> projectIdsWithPermission = roleRelations.stream().filter(ug -> projectRoleIds.contains(ug.getRoleCode()))
+                        .map(UserRoleRelation::getSourceId)
+                        .filter(StringUtils::isNotBlank)
+                        .filter(projectIds::contains)
+                        .toList();
+
+                List<String> intersection = projectIds.stream().filter(projectIdsWithPermission::contains).toList();
+                // 当前组织下的所有项目都没有权限
+                if (org.apache.commons.collections.CollectionUtils.isEmpty(intersection)) {
+                    user.setLastProjectId(StringUtils.EMPTY);
+                    updateUser(user);
+                    return true;
+                }
+                Optional<SystemProject> first = projects.stream().filter(p -> Objects.equals(intersection.getFirst(), p.getId())).findFirst();
+                if (first.isPresent()) {
+                    SystemProject project = first.get();
+                    String wsId = project.getOrganizationId();
+                    user.setId(user.getId());
+                    user.setLastProjectId(project.getId());
+                    user.setLastOrganizationId(wsId);
+                    updateUser(user);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean hasLastProjectPermission(UserDTO user) {
+        if (StringUtils.isNotBlank(user.getLastProjectId())) {
+            List<UserRoleRelation> userRoleRelations = user.getUserRoleRelations().stream()
+                    .filter(ug -> Objects.equals(user.getLastProjectId(), ug.getSourceId()))
+                    .toList();
+            if (CollectionUtils.isNotEmpty(userRoleRelations)) {
+                List<SystemProject> projects = QueryChain.of(SystemProject.class)
+                        .where(SYSTEM_PROJECT.ID.eq(user.getLastProjectId())
+                                .and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
+                if (org.apache.commons.collections.CollectionUtils.isNotEmpty(projects)) {
+                    SystemProject project = projects.getFirst();
+                    if (Objects.equals(project.getOrganizationId(), user.getLastOrganizationId())) {
+                        return true;
+                    }
+                    // last_project_id 和 last_organization_id 对应不上了
+                    user.setLastOrganizationId(project.getOrganizationId());
+                    updateUser(user);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private boolean isSystemAdmin(UserDTO user) {
+        if (isSuperUser(user.getId())) {
+            // 如果是系统管理员，判断是否有项目权限
+            if (StringUtils.isNotBlank(user.getLastProjectId())) {
+                List<SystemProject> projects = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.ID.eq(user.getLastProjectId())
+                        .and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
+                if (CollectionUtils.isNotEmpty(projects)) {
+                    SystemProject project = projects.getFirst();
+                    if (Objects.equals(project.getOrganizationId(), user.getLastOrganizationId())) {
+                        return true;
+                    }
+                    // last_project_id 和 last_organization_id 对应不上了
+                    user.setLastOrganizationId(project.getOrganizationId());
+                    updateUser(user);
+                    return true;
+                }
+            }
+            // 项目没有权限  则取当前组织下的第一个项目
+            if (StringUtils.isNotBlank(user.getLastOrganizationId())) {
+                List<Organization> organizations = QueryChain.of(Organization.class).where(ORGANIZATION.ID.eq(user.getLastOrganizationId())
+                        .and(ORGANIZATION.ENABLE.eq(true))).list();
+                if (CollectionUtils.isNotEmpty(organizations)) {
+                    Organization organization = organizations.getFirst();
+                    List<SystemProject> projects = QueryChain.of(SystemProject.class)
+                            .where(SYSTEM_PROJECT.ORGANIZATION_ID.eq(organization.getId())
+                                    .and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
+                    if (CollectionUtils.isNotEmpty(projects)) {
+                        SystemProject project = projects.getFirst();
+                        user.setLastProjectId(project.getId());
+                        updateUser(user);
+                        return true;
+                    } else {
+                        // 组织下无项目, 走前端逻辑, 跳转到无项目的路由
+                        updateUser(user);
+                        return true;
+                    }
+                }
+            }
+            //项目和组织都没有权限
+            SystemProject project = getEnableProjectAndOrganization();
+            if (project != null) {
+                user.setLastProjectId(project.getId());
+                user.setLastOrganizationId(project.getOrganizationId());
+                updateUser(user);
+                return true;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isSuperUser(String id) {
+        return QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(id)
+                .and(USER_ROLE_RELATION.ROLE_CODE.eq("admin"))).exists();
+    }
+
+    private SystemProject getEnableProjectAndOrganization() {
+        return QueryChain.of(SystemProject.class).select(SYSTEM_PROJECT.ALL_COLUMNS)
+                .from(SYSTEM_PROJECT).leftJoin(ORGANIZATION).on(ORGANIZATION.ID.eq(SYSTEM_PROJECT.ORGANIZATION_ID))
+                .where(SYSTEM_PROJECT.ENABLE.eq(true).and(ORGANIZATION.ENABLE.eq(true)))
+                .one();
     }
 
     @Override
     public UserDTO getUserDTOByKeyword(String keyword) {
         UserDTO userDTO = queryChain().where(SYSTEM_USER.EMAIL.like(keyword).or(SYSTEM_USER.NAME.like(keyword))).oneAs(UserDTO.class);
         if (userDTO != null) {
-            userDTO.setUserRoleRelations(
-                    userRoleRelationService.selectByUserId(userDTO.getId())
-            );
-            userDTO.setUserRoles(
-                    userRoleService.selectByUserRoleRelations(userDTO.getUserRoleRelations())
-            );
+            userDTO.setUserRoleRelations(userRoleRelationService.selectByUserId(userDTO.getId()));
+            userDTO.setUserRoles(userRoleService.selectByUserRoleRelations(userDTO.getUserRoleRelations()));
         }
         return userDTO;
     }
 
     @Override
     public UserBatchCreateResponse addUser(UserBatchCreateRequest request, String source, String operator) {
-        userRoleService.checkRoleIsGlobalAndHaveMember(request.getUserRoleIdList(), true);
+        userRoleService.checkRoleIsGlobalAndHaveMember(request.getUserRoleIdList(), false);
         UserBatchCreateResponse response = new UserBatchCreateResponse();
         //检查用户邮箱的合法性
         Map<String, String> errorEmails = validateUserInfo(request.getUserInfoList().stream().map(UserCreateInfo::getEmail).toList());
@@ -96,6 +356,46 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         mapper.insertOrUpdateSelective(user);
         userRoleRelationService.updateUserSystemGlobalRole(user, user.getUpdateUser(), request.getUserRoleIdList());
         return request;
+    }
+
+    @Override
+    public void updateUser(SystemUser user) {
+        if (StringUtils.isNotBlank(user.getEmail())) {
+            boolean exists = queryChain().where(SYSTEM_USER.EMAIL.eq(user.getEmail()).and(SYSTEM_USER.ID.ne(user.getId()))).exists();
+            if (exists) {
+                throw new CustomException(Translator.get("user_email_already_exists"));
+            }
+        }
+        SystemUser userFromDB = mapper.selectOneById(user.getId());
+        if (user.getLastOrganizationId() != null && !Objects.equals(user.getLastOrganizationId(), userFromDB.getLastOrganizationId())
+                && !isSuperUser(user.getId())) {
+            List<SystemProject> projects = getProjectListByWsAndUserId(user.getId(), user.getLastOrganizationId());
+            if (!projects.isEmpty()) {
+                // 如果传入的 last_project_id 是 last_organization_id 下面的
+                boolean present = projects.stream().anyMatch(p -> Objects.equals(p.getId(), user.getLastProjectId()));
+                if (!present) {
+                    user.setLastProjectId(projects.getFirst().getId());
+                }
+            } else {
+                user.setLastProjectId(StringUtils.EMPTY);
+            }
+        }
+        mapper.insertOrUpdateSelective(user);
+    }
+
+    private List<SystemProject> getProjectListByWsAndUserId(String userId, String organizationId) {
+        List<SystemProject> projects = QueryChain.of(SystemProject.class)
+                .where(SYSTEM_PROJECT.ENABLE.eq(true).and(SYSTEM_PROJECT.ORGANIZATION_ID.eq(organizationId)))
+                .list();
+        List<UserRoleRelation> userRoleRelations = userRoleRelationService.selectByUserId(userId);
+        List<SystemProject> projectList = new ArrayList<>();
+        userRoleRelations.forEach(userRoleRelation -> projects.forEach(project -> {
+            if (Objects.equals(userRoleRelation.getSourceId(), project.getId()) && !projectList.contains(project)) {
+                projectList.add(project);
+            }
+
+        }));
+        return projectList;
     }
 
     @Override

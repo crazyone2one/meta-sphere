@@ -5,6 +5,7 @@ export interface UserGroupItem {
     id: string;
     // 组名称
     name: string;
+    code: string;
     // 组描述
     description: string;
     // 是否是内置用户组
@@ -26,6 +27,7 @@ export interface CurrentUserGroupItem {
     id: string;
     // 组名称
     name: string;
+    code: string;
     // 所属类型
     type: AuthScopeEnumType;
     // 是否是内置用户组
