@@ -3,3 +3,7 @@ spring:
     active: dev
   application:
     name: meta-sphere
+  servlet:
+    multipart:
+      max-request-size: 100MB
+      max-file-size: 20MB
