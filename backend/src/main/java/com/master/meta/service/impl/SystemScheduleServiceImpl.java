@@ -198,7 +198,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
         List<Row> sensorList;
         List<SensorSelectOptionDTO> options;
         switch (request.getSensorType()) {
-            case "pls":
+            case "psl":
                 sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_PSL, false);
                 if (CollectionUtils.isEmpty(sensorFromRedis)) {
                     return new ArrayList<>();
@@ -252,6 +252,25 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                                 row.getString("type"),
                                 row.getString("sensor_value_type"),
                                 row.getString("sensor_value_unit"),
+                                row.getBoolean("deleted"))
+                        ).toList();
+                break;
+            case "dblc":
+                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), "DBLC","sf_ky_dblc", false);
+                if (CollectionUtils.isEmpty(sensorFromRedis)) {
+                    return new ArrayList<>();
+                }
+                sensorList = sensorFromRedis.stream()
+                        .filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted")))
+                        .toList();
+                options = sensorList.stream()
+                        .map(row -> new SensorSelectOptionDTO(row.getString("point_name"),
+                                row.getString("sensor_id"),
+                                row.getString("sensor_id"),
+                                row.getString("point_name"),
+                                "",
+                                "",
+                                "",
                                 row.getBoolean("deleted"))
                         ).toList();
                 break;
