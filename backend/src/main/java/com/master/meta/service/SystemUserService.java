@@ -1,11 +1,11 @@
 package com.master.meta.service;
 
 import com.master.meta.dto.BasePageRequest;
-import com.master.meta.dto.UserInfoDTO;
+import com.master.meta.dto.TableBatchProcessDTO;
 import com.master.meta.dto.system.*;
+import com.master.meta.entity.SystemUser;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
-import com.master.meta.entity.SystemUser;
 
 /**
  * 用户 服务层。
@@ -30,4 +30,10 @@ public interface SystemUserService extends IService<SystemUser> {
     Page<UserTableResponse> pageUserTable(BasePageRequest request);
 
     TableBatchProcessResponse updateUserEnable(UserChangeEnableRequest request, String userName);
+
+    TableBatchProcessResponse deleteUser(TableBatchProcessDTO request, String operatorId, String operatorName);
+
+    int deleteUserById(String id);
+
+    TableBatchProcessResponse resetPassword(TableBatchProcessDTO request, String currentUserId);
 }

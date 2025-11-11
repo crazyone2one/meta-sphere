@@ -13,7 +13,6 @@ import com.master.meta.service.BaseUserRoleRelationService;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.Strings;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,8 +120,8 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
         List<String> sourceIdList = userRoleRelationList.stream().map(UserRoleRelation::getSourceId).distinct().toList();
         Map<String, UserRole> userRoleMap = new HashMap<>();
         if (CollectionUtils.isNotEmpty(userRoleIdList)) {
-            List<UserRole> userRoles = QueryChain.of(UserRole.class).where(USER_ROLE.ID.in(userRoleIdList).and(USER_ROLE.SCOPE_ID.eq("global"))).list();
-            userRoleMap = userRoles.stream().collect(Collectors.toMap(UserRole::getId, item -> item));
+            List<UserRole> userRoles = QueryChain.of(UserRole.class).where(USER_ROLE.CODE.in(userRoleIdList).and(USER_ROLE.SCOPE_ID.eq("global"))).list();
+            userRoleMap = userRoles.stream().collect(Collectors.toMap(UserRole::getCode, item -> item));
         }
         Map<String, UserTableResponse> returnMap = new HashMap<>();
         for (UserRoleRelation userRoleRelation : userRoleRelationList) {
@@ -133,7 +132,7 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
                 returnMap.put(userRoleRelation.getUserId(), userInfo);
             }
             UserRole userRole = userRoleMap.get(userRoleRelation.getRoleCode());
-            if (userRole != null && Strings.CS.equals(userRole.getType(), UserRoleScope.SYSTEM)) {
+            if (userRole != null && userRole.getType().equalsIgnoreCase(UserRoleScope.SYSTEM)) {
                 userInfo.setUserRole(userRole);
             }
         }
@@ -155,6 +154,12 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
             }
         });
         return selectOptions;
+    }
+
+    @Override
+    public void deleteByUserIdList(List<String> userIdList) {
+        QueryChain<UserRoleRelation> userRoleRelationQueryChain = queryChain().where(USER_ROLE_RELATION.USER_ID.in(userIdList));
+        mapper.deleteByQuery(userRoleRelationQueryChain);
     }
 
     private void checkAdminPermissionRemove(String userId, String roleId) {

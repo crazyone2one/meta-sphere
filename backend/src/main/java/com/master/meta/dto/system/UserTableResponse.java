@@ -14,7 +14,7 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class UserTableResponse extends SystemUser {
+public class UserTableResponse extends UserResponseDTO {
     @Schema(description = "用户所属用户组")
     private List<UserRole> userRoleList = new ArrayList<>();
 

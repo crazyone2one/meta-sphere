@@ -1,3 +1,5 @@
+import type {BatchActionQueryParams} from "/@/api/types.ts";
+
 export interface UserListItem {
     id: string;
     name: string;
@@ -16,11 +18,14 @@ export interface UserListItem {
     organizationList: OrganizationListItem[]; // 用户所属组织
     userRoleList: UserRoleListItem[]; // 用户所属用户组
     userRoles?: UserRoleListItem[]; // 用户所属用户组
+    selectUserGroupVisible?: boolean;
 }
+
 // 用户所属用户组模型
 export interface UserRoleListItem {
     id: string;
     name: string;
+    code: string;
     description: string;
     internal: boolean; // 是否内置用户组
     type: string; // 所属类型 SYSTEM ORGANIZATION PROJECT
@@ -29,6 +34,7 @@ export interface UserRoleListItem {
     createUser: string;
     scopeId: string; // 应用范围
 }
+
 // 用户所属组织模型
 export interface OrganizationListItem {
     id: string;
@@ -44,9 +50,39 @@ export interface OrganizationListItem {
     deleteTime: number;
     enable: boolean; // 是否启用
 }
+
 export interface SystemRole {
     id: string;
     name: string;
     selected: boolean; // 是否可选
     closeable: boolean; // 是否可取消
+}
+
+export interface SimpleUserInfo {
+    id?: string;
+    name: string;
+    email: string;
+    phone?: string;
+    enable?: boolean;
+}
+export interface UserForm {
+    list: SimpleUserInfo[];
+    userGroup: string[];
+}
+export interface CreateUserParams {
+    userInfoList: SimpleUserInfo[];
+    userRoleIdList: string[];
+}
+export interface UpdateUserInfoParams extends SimpleUserInfo {
+    id: string;
+    userRoleIdList: string[];
+}
+
+export interface UpdateUserStatusParams extends BatchActionQueryParams{
+    enable: boolean;
+}
+
+export interface CreateUserResult {
+    errorEmails: Record<string, any>;
+    successList: any[];
 }

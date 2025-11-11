@@ -2,6 +2,7 @@ package com.master.meta.service.impl;
 
 import com.master.meta.constants.UserRoleType;
 import com.master.meta.dto.BasePageRequest;
+import com.master.meta.dto.TableBatchProcessDTO;
 import com.master.meta.dto.system.*;
 import com.master.meta.entity.*;
 import com.master.meta.handle.Translator;
@@ -25,7 +26,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -57,6 +60,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserDTO getUserInfo() {
         String name = SecurityContextHolder.getContext().getAuthentication().getName();
         UserDTO user = queryChain().where(SYSTEM_USER.NAME.eq(name)).oneAs(UserDTO.class);
@@ -331,6 +335,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserBatchCreateResponse addUser(UserBatchCreateRequest request, String source, String operator) {
         userRoleService.checkRoleIsGlobalAndHaveMember(request.getUserRoleIdList(), false);
         UserBatchCreateResponse response = new UserBatchCreateResponse();
@@ -346,6 +351,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public UserEditRequest updateUser(UserEditRequest request) {
         userRoleService.checkRoleIsGlobalAndHaveMember(request.getUserRoleIdList(), true);
         //检查用户邮箱的合法性
@@ -359,6 +365,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUser(SystemUser user) {
         if (StringUtils.isNotBlank(user.getEmail())) {
             boolean exists = queryChain().where(SYSTEM_USER.EMAIL.eq(user.getEmail()).and(SYSTEM_USER.ID.ne(user.getId()))).exists();
@@ -400,9 +407,12 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
 
     @Override
     public Page<UserTableResponse> pageUserTable(BasePageRequest request) {
-        Page<UserTableResponse> responsePage = queryChain().pageAs(new Page<>(request.getPage(), request.getPageSize()), UserTableResponse.class);
+        Page<UserTableResponse> responsePage = queryChain()
+                .where(SYSTEM_USER.EMAIL.like(request.getKeyword()).or(SYSTEM_USER.NAME.like(request.getKeyword()))
+                        .or(SYSTEM_USER.PHONE.like(request.getKeyword())))
+                .pageAs(new Page<>(request.getPage(), request.getPageSize()), UserTableResponse.class);
         List<UserTableResponse> records = responsePage.getRecords();
-        List<String> userIdList = records.stream().map(SystemUser::getId).toList();
+        List<String> userIdList = records.stream().map(UserResponseDTO::getId).toList();
         Map<String, UserTableResponse> roleAndOrganizationMap = userRoleRelationService.selectGlobalUserRoleAndOrganization(userIdList);
         records.forEach(user -> {
             UserTableResponse roleOrgModel = roleAndOrganizationMap.get(user.getId());
@@ -414,9 +424,11 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public TableBatchProcessResponse updateUserEnable(UserChangeEnableRequest request, String userName) {
         checkUserInDb(request.getSelectIds());
-        boolean update = updateChain().set(SYSTEM_USER.ENABLE, request.isEnable()).update();
+        boolean update = updateChain().set(SYSTEM_USER.ENABLE, request.isEnable())
+                .where(SYSTEM_USER.ID.in(request.getSelectIds())).update();
         if (update) {
             TableBatchProcessResponse response = new TableBatchProcessResponse();
             response.setTotalCount(request.getSelectIds().size());
@@ -424,6 +436,70 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
             return response;
         }
         return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TableBatchProcessResponse deleteUser(TableBatchProcessDTO request, String operatorId, String operatorName) {
+        List<String> userIdList = getBatchUserIds(request);
+        checkUserInDb(userIdList);
+        checkProcessUserAndThrowException(userIdList, operatorId, operatorName, Translator.get("user.not.delete"));
+        mapper.deleteBatchByIds(userIdList);
+        //删除用户角色关系
+        userRoleRelationService.deleteByUserIdList(userIdList);
+        return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int deleteUserById(String id) {
+        checkUserInDb(Collections.singletonList(id));
+        checkProcessUserAndThrowException(Collections.singletonList(id), SessionUtils.getCurrentUserId(), SessionUtils.getUserName(), Translator.get("user.not.delete"));
+        //删除用户角色关系
+        userRoleRelationService.deleteByUserIdList(Collections.singletonList(id));
+        return mapper.deleteById(id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public TableBatchProcessResponse resetPassword(TableBatchProcessDTO request, String currentUserId) {
+        request.setSelectIds(getBatchUserIds(request));
+        checkUserInDb(request.getSelectIds());
+        List<SystemUser> systemUsers = mapper.selectListByIds(request.getSelectIds());
+        systemUsers.forEach(user -> updateChain().set(SYSTEM_USER.PASSWORD, passwordEncoder.encode(user.getEmail()))
+                .set(SYSTEM_USER.UPDATE_USER, currentUserId)
+                .where(SYSTEM_USER.ID.eq(user.getId())).update());
+        TableBatchProcessResponse response = new TableBatchProcessResponse();
+        response.setTotalCount(request.getSelectIds().size());
+        response.setSuccessCount(request.getSelectIds().size());
+        return response;
+    }
+
+    private void checkProcessUserAndThrowException(List<String> userIdList, String operatorId, String operatorName, String exceptionMessage) {
+        for (String userId : userIdList) {
+            //当前用户或admin不能被操作
+            if (Objects.equals(userId, operatorId)) {
+                throw new CustomException(exceptionMessage + ":" + operatorName);
+            } else if ("admin".equals(userId)) {
+                throw new CustomException(exceptionMessage + ": admin");
+            }
+        }
+    }
+
+    private List<String> getBatchUserIds(TableBatchProcessDTO request) {
+        if (request.isSelectAll()) {
+            List<SystemUser> userList = queryChain()
+                    .where(SYSTEM_USER.EMAIL.like(request.getCondition().getKeyword())
+                            .or(SYSTEM_USER.NAME.like(request.getCondition().getKeyword()))
+                            .or(SYSTEM_USER.PHONE.like(request.getCondition().getKeyword()))).list();
+            List<String> userIdList = userList.stream().map(SystemUser::getId).collect(Collectors.toList());
+            if (CollectionUtils.isNotEmpty(request.getExcludeIds())) {
+                userIdList.removeAll(request.getExcludeIds());
+            }
+            return userIdList;
+        } else {
+            return request.getSelectIds();
+        }
     }
 
     private void checkUserInDb(@Valid List<String> userIdList) {

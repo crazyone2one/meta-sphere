@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import initOptionsFunc, {UserRequestTypeEnum} from "/@/components/user-selector/utils.ts";
-import {onBeforeMount, ref, type VNodeChild, watch} from "vue";
+import {onBeforeMount, ref, watch} from "vue";
 import type {SelectOption} from "naive-ui";
 
 const props = withDefaults(

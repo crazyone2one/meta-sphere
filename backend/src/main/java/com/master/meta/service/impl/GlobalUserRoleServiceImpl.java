@@ -67,7 +67,7 @@ public class GlobalUserRoleServiceImpl extends BaseUserRoleServiceImpl implement
         List<UserRole> userRoles = queryChain().where(USER_ROLE.SCOPE_ID.eq("global")).list();
         userRoles.forEach(userRole -> {
             UserSelectOption userRoleOption = new UserSelectOption();
-            userRoleOption.setId(userRole.getId());
+            userRoleOption.setId(userRole.getCode());
             userRoleOption.setName(userRole.getName());
             userRoleOption.setSelected(Objects.equals(userRole.getCode(), MEMBER.getValue()));
             userRoleOption.setCloseable(!Objects.equals(userRole.getCode(), MEMBER.getValue()));

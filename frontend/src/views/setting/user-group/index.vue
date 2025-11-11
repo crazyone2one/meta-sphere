@@ -15,14 +15,15 @@ const currentUserGroupItem = ref<CurrentUserGroupItem>({
   name: '',
   type: AuthScopeEnum.SYSTEM,
   internal: true,
+  code: ''
 });
 const handleSelect = (item: CurrentUserGroupItem) => {
   currentUserGroupItem.value = item;
 };
 const couldShowUser = computed(() => currentUserGroupItem.value.type === AuthScopeEnum.SYSTEM);
 watchEffect(() => {
-  if (!couldShowUser.value) {
-    currentTable.value = 'auth';
+  if (couldShowUser.value) {
+    currentTable.value = 'user';
   } else {
     currentTable.value = 'auth';
   }
@@ -47,7 +48,8 @@ onMounted(() => {
                 <n-radio value="user" class="p-[2px]">成员</n-radio>
               </n-radio-group>
               <div class="flex items-center">
-                <n-input v-if="currentTable === 'user'" class="w-[240px]" placeholder="通过姓名/邮箱/手机搜索" clearable/>
+                <n-input v-if="currentTable === 'user'" class="w-[240px]" placeholder="通过姓名/邮箱/手机搜索"
+                         clearable/>
               </div>
             </div>
           </div>

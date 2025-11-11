@@ -33,4 +33,6 @@ public interface BaseUserRoleRelationService extends IService<UserRoleRelation> 
     Map<String, UserTableResponse> selectGlobalUserRoleAndOrganization(@Valid @NotEmpty List<String> userIdList);
 
     List<UserExcludeOptionDTO> getExcludeSelectOptionWithLimit(String roleId, String keyword);
+
+    void deleteByUserIdList(List<String> userIdList);
 }
