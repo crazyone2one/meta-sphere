@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -64,7 +65,7 @@ public class CDSSInfo extends BaseScheduleJob {
                 continue;
             }
             String sensorValue;
-            String sensorState = "0";
+            String sensorState;
             if ("KG".equals(row.getString("sensor_value_type"))) {
                 sensorValue = "1";
             } else {
@@ -82,17 +83,19 @@ public class CDSSInfo extends BaseScheduleJob {
                     default -> RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
                 };
             }
-            if (customFlag) {
-                // 超过阈值
-                if (customConfig.getSuperthreshold()) {
-                    if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
-                        sensorValue = RandomUtil.generateRandomDoubleString(customConfig.getThresholdInterval().getFirst(), customConfig.getThresholdInterval().getLast());
-                    }
+            if (customFlag && Boolean.TRUE.equals(customConfig.getSuperthreshold())) {
+                if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
+                    List<Double> thresholdInterval = customConfig.getThresholdInterval();
+                    sensorValue = RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast());
                 }
             }
-            if (configDTO.isTuningFlag()) {
-                sensorState = "4";
+            assert customConfig != null;
+            if (customConfig.getSensorIds().equals(sensorInfoCode)) {
+                sensorState = Optional.ofNullable(super.config.getAdditionalFields().get("sensorState").toString()).orElse("0");
+            } else {
+                sensorState = "0";
             }
+
             String sensorContent = sensorInfoCode + ";"
                     + sensor.getString("sensor_type_name") + ";"
                     + sensor.getString("sensor_location") + ";"

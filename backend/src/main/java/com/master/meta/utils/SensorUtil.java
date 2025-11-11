@@ -25,6 +25,8 @@ public class SensorUtil {
     private String activeProfile;
     private final RedisService redisService;
 
+    private static final Long TIMEOUT = 60 * 60 * 24L;
+
     public SensorUtil(RedisService redisService) {
         this.redisService = redisService;
     }
@@ -34,7 +36,7 @@ public class SensorUtil {
         try {
             DataSourceKey.use("ds-slave1");
             Map<String, Object> map = new LinkedHashMap<>();
-            if (deleted) {
+            if (Boolean.TRUE.equals(deleted)) {
                 map.put("deleted", "0");
             }
             rows = Db.selectListByMap(tableName, map);
@@ -50,7 +52,7 @@ public class SensorUtil {
             return JSON.parseArray(rainDefineInRedis, Row.class);
         } else {
             List<Row> sensorList = getRainDefineList(tableName, deleted);
-            redisService.storeSensor(projectNum, key, sensorList, 60 * 60 * 24);
+            redisService.storeSensor(projectNum, key, sensorList, TIMEOUT);
             return sensorList;
         }
     }
@@ -61,7 +63,7 @@ public class SensorUtil {
             return JSON.parseArray(rainDefineInRedis, Row.class);
         } else {
             List<Row> sensorList = getRainDefineList(sensorMNType.getTableName(), deleted);
-            redisService.storeSensor(projectNum, sensorMNType.getKey(), sensorList, 60 * 60 * 24);
+            redisService.storeSensor(projectNum, sensorMNType.getKey(), sensorList, TIMEOUT);
             return sensorList;
         }
     }
@@ -75,23 +77,20 @@ public class SensorUtil {
      * @return 传感器列表
      */
     public List<Row> getCDSSSensorFromRedis(String projectNum, SensorMNType sensorMNType, Boolean deleted) {
-        String sensorListInRedis = redisService.getSensor(projectNum, sensorMNType.getKey());
-        if (sensorListInRedis != null) {
-            return JSON.parseArray(sensorListInRedis, Row.class);
-        } else {
-            List<Row> sensorList = getCDSSList(sensorMNType.getTableName(), deleted);
-            redisService.storeSensor(projectNum, sensorMNType.getKey(), sensorList, 60 * 60 * 24);
-            return sensorList;
-        }
+        return getRows(projectNum, deleted, sensorMNType.getKey(), sensorMNType.getTableName());
     }
 
     public List<Row> getCDSSSensorFromRedis(String projectNum, SensorKGType sensorKGType, Boolean deleted) {
-        String sensorListInRedis = redisService.getSensor(projectNum, sensorKGType.getKey());
+        return getRows(projectNum, deleted, sensorKGType.getKey(), sensorKGType.getTableName());
+    }
+
+    private List<Row> getRows(String projectNum, Boolean deleted, String key, String tableName) {
+        String sensorListInRedis = redisService.getSensor(projectNum, key);
         if (sensorListInRedis != null) {
             return JSON.parseArray(sensorListInRedis, Row.class);
         } else {
-            List<Row> sensorList = getCDSSList(sensorKGType.getTableName(), deleted);
-            redisService.storeSensor(projectNum, sensorKGType.getKey(), sensorList, 60 * 60 * 24);
+            List<Row> sensorList = getCDSSList(tableName, deleted);
+            redisService.storeSensor(projectNum, key, sensorList, TIMEOUT);
             return sensorList;
         }
     }
@@ -101,7 +100,7 @@ public class SensorUtil {
         try {
             DataSourceKey.use("ds-slave1");
             Map<String, Object> map = new LinkedHashMap<>();
-            if (deleted) {
+            if (Boolean.TRUE.equals(deleted)) {
                 map.put("is_delete", "0");
             }
             rows = Db.selectListByMap(tableName, map);
@@ -116,24 +115,17 @@ public class SensorUtil {
             log.info("{}", content);
             return;
         }
-        FileWriter fw = null;
         try {
             File file = new File(filePath);
             if (!file.exists()) {
                 boolean newFile = file.createNewFile();
             }
-            fw = new FileWriter(filePath);
-            fw.write(content);
-            log.info("{} created successfully", type);
+            try (FileWriter fw = new FileWriter(filePath)) {
+                fw.write(content);
+                log.info("{} created successfully", type);
+            }
         } catch (Exception e) {
             log.error("", e);
-        } finally {
-            try {
-                assert fw != null;
-                fw.close();
-            } catch (Exception e) {
-                log.error("", e);
-            }
         }
     }
 }

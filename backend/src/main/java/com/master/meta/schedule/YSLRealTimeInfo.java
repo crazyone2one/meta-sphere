@@ -13,7 +13,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -57,9 +56,9 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
             // 测点编码、测点状态
             content.append(sensorId).append(";").append("0").append(";");
             //涌水量
-            if (super.config.getCustomConfig().getAlarmFlag() && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
-                double average = sensorService.averageForTheLastDays(sensorId, SensorMNType.SENSOR_SHFZ_YSL, Duration.ofDays(7));
-                content.append(RandomUtil.generateRandomDoubleString(average, average + 0.5)).append(";");
+            if (super.config.getCustomConfig().getSuperthreshold() && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
+                List<Double> thresholdInterval = super.config.getCustomConfig().getThresholdInterval();
+                content.append(RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast())).append(";");
             } else {
                 content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_YSL)).append(";");
             }

@@ -23,7 +23,7 @@ import java.util.List;
 @Slf4j
 public class RainDefineBasicInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private static final String END_FLAG = "||";
 
     public RainDefineBasicInfo(SensorUtil sensorUtil) {
         this.sensorUtil = sensorUtil;

@@ -12,7 +12,6 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -54,8 +53,9 @@ public class CGKRealTimeInfo extends BaseScheduleJob {
             content.append(sensorId).append(";")
                     .append("0").append(";");
             //水位测点值
-            if (super.config.getCustomConfig().getSuperthreshold() && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
-                content.append(RandomUtil.generateRandomDoubleString(super.config.getCustomConfig().getThresholdInterval().getFirst(), super.config.getCustomConfig().getThresholdInterval().getLast())).append(";");
+            if (Boolean.TRUE.equals(super.config.getCustomConfig().getSuperthreshold()) && sensorId.equals(super.config.getCustomConfig().getSensorIds())) {
+                List<Double> thresholdInterval = super.config.getCustomConfig().getThresholdInterval();
+                content.append(RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast())).append(";");
             } else {
                 content.append(RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_SHFZ_0502)).append(";");
             }

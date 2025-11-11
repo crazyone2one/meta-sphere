@@ -124,9 +124,9 @@ class MetaSphereApplicationTests {
     @Test
     void deleteDataByTimeRange() {
         String measurement = "sf_shfz_ysl_cdss";
-        String sensorId = "150622004499YSLaJaSWaErG";
-        OffsetDateTime startTime = OffsetDateTime.parse("2025-10-23T00:00:00Z");
-        OffsetDateTime endTime = OffsetDateTime.parse("2025-10-30T23:59:59Z");
+        String sensorId = "150622004499YSLAAEoacbZl";
+        OffsetDateTime startTime = OffsetDateTime.parse("2025-11-03T00:00:00Z");
+        OffsetDateTime endTime = OffsetDateTime.parse("2025-11-03T15:00:00Z");
         influxDbUtils.deleteDataByTimeRange(measurement, sensorId, startTime, endTime);
     }
 }
