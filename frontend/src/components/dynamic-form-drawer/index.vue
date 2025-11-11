@@ -115,9 +115,9 @@ const toggleFieldDisabled = (field: FormField) => {
 const resetForm = () => {
   formFields.value = [];
   // 清空表单数据
-  Object.keys(formData).forEach(key => {
+  for (const key of Object.keys(formData)) {
     delete formData[key];
-  });
+  }
   resetNewFieldForm();
 };
 const handleUpdateConfig = (config: ICustomConfig, key: string) => {
@@ -149,9 +149,9 @@ watch(
               formData[field.key] = originalValue;
             } else if (typeof originalValue === 'string') {
               const lowerValue = originalValue.toLowerCase();
-              if (['yes', 'true', '1'].includes(lowerValue)) {
+              if (['yes', 'true'].includes(lowerValue)) {
                 formData[field.key] = true;
-              } else if (['no', 'false', '0'].includes(lowerValue)) {
+              } else if (['no', 'false'].includes(lowerValue)) {
                 formData[field.key] = false;
               } else {
                 formData[field.key] = false; // 默认值
@@ -181,9 +181,9 @@ watch(() => config, (newValue) => {
       // 处理非标准布尔值（如'yes'/'no'）
       if (typeof config[key] === 'string') {
         const lowerValue = config[key].toLowerCase();
-        if (lowerValue === 'yes' || lowerValue === 'true' || lowerValue === '1') {
+        if (lowerValue === 'yes' || lowerValue === 'true') {
           formData[key] = true;
-        } else if (lowerValue === 'no' || lowerValue === 'false' || lowerValue === '0') {
+        } else if (lowerValue === 'no' || lowerValue === 'false') {
           formData[key] = false;
         }
       }
@@ -194,7 +194,7 @@ watch(() => config, (newValue) => {
       } else if (Array.isArray(config[key])) {
         fieldType = key === 'range' ? 'date' : 'select';
       } else if (typeof config[key] === 'boolean' ||
-          (typeof config[key] === 'string' && ['yes', 'no', 'true', 'false', '1', '0'].includes(config[key].toLowerCase()))) {
+          (typeof config[key] === 'string' && ['yes', 'no', 'true', 'false'].includes(config[key].toLowerCase()))) {
         fieldType = 'radio'; // 布尔值用复选框表示
       } else if (typeof config[key] === 'string' && (key.includes('Ids') || key.includes('type') || key.includes('category'))) {
         // 通过key的命名规则推断可能是select类型
