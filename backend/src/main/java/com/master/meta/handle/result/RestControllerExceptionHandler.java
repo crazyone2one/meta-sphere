@@ -1,9 +1,13 @@
 package com.master.meta.handle.result;
 
+import com.master.meta.handle.Translator;
+import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.exception.RefreshTokenExpiredException;
+import com.master.meta.utils.ServiceUtils;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -17,6 +21,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Created by 11's papa on 2025/10/11
@@ -72,8 +77,43 @@ public class RestControllerExceptionHandler {
                         getStackTraceAsString(ex)));
     }
 
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ResultHolder> handleCustomException(CustomException ex) {
+        IResultCode errorCode = ex.getErrorCode();
+        if (Objects.isNull(errorCode)) {
+            return ResponseEntity.internalServerError()
+                    .body(ResultHolder.error(ResultCode.FAILED.getCode(), ex.getMessage()));
+        }
+        int code = errorCode.getCode();
+        String message = errorCode.getMessage();
+        message = Translator.get(message, message);
+        if (errorCode instanceof ResultCode) {
+            // 如果是 MsHttpResultCode，则设置响应的状态码，取状态码的后三位
+            if (errorCode.equals(ResultCode.NOT_FOUND)) {
+                message = getNotFoundMessage(message);
+            }
+            return ResponseEntity.status(code % 1000).body(ResultHolder.error(code, message, ex.getMessage()));
+        } else {
+            // 响应码返回 500，设置业务状态码
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResultHolder.error(code, Translator.get(message, message), ex.getMessage()));
+        }
+    }
+
+    private static String getNotFoundMessage(String message) {
+        String resourceName = ServiceUtils.getResourceName();
+        if (StringUtils.isNotBlank(resourceName)) {
+            message = String.format(message, Translator.get(resourceName, resourceName));
+        } else {
+            message = String.format(message, Translator.get("resource.name"));
+        }
+        ServiceUtils.clearResourceName();
+        return message;
+    }
+
     @ExceptionHandler({Exception.class})
     public ResponseEntity<ResultHolder> handleException(Exception e) {
+
         return ResponseEntity.internalServerError()
                 .body(ResultHolder.error(ResultCode.FAILED.getCode(),
                         e.getMessage(), getStackTraceAsString(e)));
