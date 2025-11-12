@@ -1,7 +1,9 @@
 package com.master.meta.controller;
 
+import com.master.meta.dto.system.GlobalUserRoleRelationQueryRequest;
 import com.master.meta.dto.system.UserExcludeOptionDTO;
 import com.master.meta.dto.system.UserRoleRelationUpdateRequest;
+import com.master.meta.dto.system.UserRoleRelationUserDTO;
 import com.master.meta.entity.UserRoleRelation;
 import com.master.meta.handle.validation.Created;
 import com.master.meta.service.GlobalUserRoleRelationService;
@@ -97,13 +99,13 @@ public class UserRoleRelationController {
     /**
      * 分页查询用户组关系。
      *
-     * @param page 分页对象
+     * @param request 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
-    @Operation(description = "分页查询用户组关系")
-    public Page<UserRoleRelation> page(@Parameter(description = "分页信息") Page<UserRoleRelation> page) {
-        return globalUserRoleRelationService.page(page);
+    @PostMapping("page")
+    @Operation(description = "系统设置-系统-用户组-用户关联关系-获取全局用户组对应的用户列表")
+    public Page<UserRoleRelationUserDTO> page(@Validated @RequestBody GlobalUserRoleRelationQueryRequest request) {
+        return globalUserRoleRelationService.page(request);
     }
 
     @GetMapping("/user/option/{roleCode}")
@@ -114,5 +116,13 @@ public class UserRoleRelationController {
                                                       @Schema(description = "查询关键字，根据邮箱和用户名查询", requiredMode = Schema.RequiredMode.REQUIRED)
                                                       @RequestParam(value = "keyword", required = false) String keyword) {
         return globalUserRoleRelationService.getExcludeSelectOption(roleCode, keyword);
+    }
+
+    @GetMapping("/delete/{id}")
+    @Operation(summary = "系统设置-系统-用户组-用户关联关系-删除全局用户组和用户的关联关系")
+//    @RequiresPermissions(PermissionConstants.SYSTEM_USER_ROLE_UPDATE)
+//    @Log(type = OperationLogType.DELETE, expression = "#msClass.deleteLog(#id)", msClass = GlobalUserRoleRelationLogService.class)
+    public void delete(@PathVariable String id) {
+        globalUserRoleRelationService.delete(id);
     }
 }

@@ -25,8 +25,7 @@ import java.util.*;
 import static com.master.meta.constants.InternalUserRole.MEMBER;
 import static com.master.meta.entity.table.UserRoleTableDef.USER_ROLE;
 import static com.master.meta.handle.result.CommonResultCode.ADMIN_USER_ROLE_PERMISSION;
-import static com.master.meta.handle.result.SystemResultCode.GLOBAL_USER_ROLE_EXIST;
-import static com.master.meta.handle.result.SystemResultCode.GLOBAL_USER_ROLE_PERMISSION;
+import static com.master.meta.handle.result.SystemResultCode.*;
 
 /**
  * @author Created by 11's papa on 2025/10/24
@@ -76,6 +75,13 @@ public class GlobalUserRoleServiceImpl extends BaseUserRoleServiceImpl implement
         return returnList;
     }
 
+    @Override
+    public void checkSystemUserGroup(UserRole userRole) {
+        if (!UserRoleType.SYSTEM.name().equalsIgnoreCase(userRole.getType())) {
+            throw new CustomException(GLOBAL_USER_ROLE_RELATION_SYSTEM_PERMISSION);
+        }
+    }
+
     private int getInternal(Boolean internal) {
         return BooleanUtils.isTrue(internal) ? 0 : 1;
     }
@@ -108,7 +114,7 @@ public class GlobalUserRoleServiceImpl extends BaseUserRoleServiceImpl implement
 
     @Override
     public void checkGlobalUserRole(UserRole userRole) {
-        if (!Objects.equals(userRole.getScopeId(), UserRoleScope.GLOBAL)) {
+        if (!UserRoleScope.GLOBAL.equalsIgnoreCase(userRole.getScopeId())) {
             throw new CustomException(GLOBAL_USER_ROLE_PERMISSION);
         }
     }

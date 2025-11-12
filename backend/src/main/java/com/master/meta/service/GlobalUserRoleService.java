@@ -28,4 +28,6 @@ public interface GlobalUserRoleService extends BaseUserRoleService {
     List<UserRole> list();
 
     List<UserSelectOption> getGlobalSystemRoleList();
+
+    void checkSystemUserGroup(UserRole userRole);
 }

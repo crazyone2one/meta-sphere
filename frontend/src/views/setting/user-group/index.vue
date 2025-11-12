@@ -5,11 +5,13 @@ import {AuthScopeEnum} from "/@/enums/common-enum.ts";
 import type {CurrentUserGroupItem} from "/@/api/modules/setting/types.ts";
 import {useRouter} from "vue-router";
 import AuthTable from "/@/views/setting/user-group/components/AuthTable.vue";
+import UserTable from "/@/views/setting/user-group/components/UserTable.vue";
 
 const router = useRouter();
 const userGroupLeftRef = ref<InstanceType<typeof UserGroupLeft>>()
 provide('systemType', AuthScopeEnum.SYSTEM);
 const currentTable = ref('auth');
+const currentKeyword = ref('');
 const currentUserGroupItem = ref<CurrentUserGroupItem>({
   id: '',
   name: '',
@@ -54,7 +56,8 @@ onMounted(() => {
             </div>
           </div>
           <div class="flex-1 overflow-hidden">
-            <auth-table v-if="currentTable === 'auth'"
+            <auth-table v-if="currentTable === 'auth'" :current="currentUserGroupItem"/>
+            <user-table v-if="currentTable === 'user'" v-model:keyword="currentKeyword"
                         :current="currentUserGroupItem"/>
           </div>
         </div>

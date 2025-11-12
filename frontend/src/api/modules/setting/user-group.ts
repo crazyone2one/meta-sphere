@@ -6,6 +6,8 @@ import type {
     UserGroupParams
 } from "/@/api/modules/setting/types.ts";
 import type {SelectOption} from "naive-ui";
+import type {IPageResponse, ITableQueryParams} from "/@/api/types.ts";
+import type {SimpleUserInfo} from "/@/api/modules/user/types.ts";
 
 export const userGroupApi = {
     /**
@@ -29,4 +31,8 @@ export const userGroupApi = {
         userIds: string[];
         organizationId: string
     }) => post('/user/role/organization/add-member', data),
+    // 系统-获取用户组对应的用户列表
+    fetchUserByUserGroup: (data: ITableQueryParams) => post<IPageResponse<SimpleUserInfo>>('/user/role/relation/global/page', data),
+    // 系统-删除用户组对应的用户
+    deleteUserFromUserGroup: (id: string) => get(`/user/role/relation/global/delete/${id}`),
 }

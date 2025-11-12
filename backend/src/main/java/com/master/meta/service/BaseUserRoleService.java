@@ -1,9 +1,9 @@
 package com.master.meta.service;
 
 import com.master.meta.dto.permission.PermissionDefinitionItem;
+import com.master.meta.entity.UserRole;
 import com.master.meta.entity.UserRoleRelation;
 import com.mybatisflex.core.service.IService;
-import com.master.meta.entity.UserRole;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 
@@ -31,5 +31,6 @@ public interface BaseUserRoleService extends IService<UserRole> {
     void checkRoleIsGlobalAndHaveMember(@Valid @NotEmpty List<String> roleIdList, boolean isSystem);
 
     UserRole getWithCheck(String roleId);
+
     UserRole getWithCheckByCode(String roleCode);
 }

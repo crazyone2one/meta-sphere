@@ -3,6 +3,7 @@ package com.master.meta.service;
 import com.master.meta.dto.system.UserExcludeOptionDTO;
 import com.master.meta.dto.system.UserTableResponse;
 import com.master.meta.entity.SystemUser;
+import com.master.meta.entity.UserRole;
 import com.master.meta.entity.UserRoleRelation;
 import com.mybatisflex.core.service.IService;
 import jakarta.validation.Valid;
@@ -35,4 +36,8 @@ public interface BaseUserRoleRelationService extends IService<UserRoleRelation> 
     List<UserExcludeOptionDTO> getExcludeSelectOptionWithLimit(String roleId, String keyword);
 
     void deleteByUserIdList(List<String> userIdList);
+
+    UserRole getUserRole(String id);
+
+    void delete(String id);
 }

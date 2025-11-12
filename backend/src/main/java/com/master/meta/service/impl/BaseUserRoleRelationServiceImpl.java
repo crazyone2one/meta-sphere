@@ -162,6 +162,20 @@ public class BaseUserRoleRelationServiceImpl extends ServiceImpl<UserRoleRelatio
         mapper.deleteByQuery(userRoleRelationQueryChain);
     }
 
+    @Override
+    public UserRole getUserRole(String id) {
+        UserRoleRelation userRoleRelation = mapper.selectOneById(id);
+        return userRoleRelation == null ? null : QueryChain.of(UserRole.class).where(USER_ROLE.CODE.eq(userRoleRelation.getRoleCode())).one();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String id) {
+        UserRoleRelation userRoleRelation = mapper.selectOneById(id);
+        checkAdminPermissionRemove(userRoleRelation.getUserId(), userRoleRelation.getRoleCode());
+        mapper.deleteById(id);
+    }
+
     private void checkAdminPermissionRemove(String userId, String roleId) {
         if (Objects.equals(roleId, InternalUserRole.ADMIN.getValue()) && Objects.equals(userId, InternalUserRole.ADMIN.getValue())) {
             throw new CustomException(USER_ROLE_RELATION_REMOVE_ADMIN_USER_PERMISSION);

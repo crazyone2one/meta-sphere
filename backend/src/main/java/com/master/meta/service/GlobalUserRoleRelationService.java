@@ -1,7 +1,10 @@
 package com.master.meta.service;
 
+import com.master.meta.dto.system.GlobalUserRoleRelationQueryRequest;
 import com.master.meta.dto.system.UserExcludeOptionDTO;
 import com.master.meta.dto.system.UserRoleRelationUpdateRequest;
+import com.master.meta.dto.system.UserRoleRelationUserDTO;
+import com.mybatisflex.core.paginate.Page;
 
 import java.util.List;
 
@@ -12,4 +15,8 @@ public interface GlobalUserRoleRelationService extends BaseUserRoleRelationServi
     List<UserExcludeOptionDTO> getExcludeSelectOption(String roleCode, String keyword);
 
     void add(UserRoleRelationUpdateRequest request);
+
+    Page<UserRoleRelationUserDTO> page(GlobalUserRoleRelationQueryRequest request);
+
+    void delete(String id);
 }
