@@ -8,6 +8,7 @@ import com.master.meta.entity.*;
 import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.handle.result.SystemResultCode;
+import com.master.meta.handle.security.CustomUserDetails;
 import com.master.meta.mapper.SystemUserMapper;
 import com.master.meta.service.BaseUserRoleRelationService;
 import com.master.meta.service.BaseUserRoleService;
@@ -23,12 +24,12 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -62,8 +63,10 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     @Override
     @Transactional(rollbackFor = Exception.class)
     public UserDTO getUserInfo() {
-        String name = SecurityContextHolder.getContext().getAuthentication().getName();
-        UserDTO user = queryChain().where(SYSTEM_USER.NAME.eq(name)).oneAs(UserDTO.class);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
+        String userId = customUserDetails.getUserId();
+        UserDTO user = getUserDTO(userId);
         autoSwitch(user);
         return user;
     }

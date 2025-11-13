@@ -13,6 +13,9 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/11
  */
 public record CustomUserDetails(SystemUser user, List<String> roles) implements UserDetails {
+    public String getUserId() {
+        return this.user.getId();
+    }
     public String getUserProjectId() {
         return this.user.getLastProjectId();
     }
