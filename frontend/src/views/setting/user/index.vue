@@ -4,9 +4,9 @@ import {h, onMounted, ref} from "vue";
 import type {SystemRole, UserForm, UserListItem} from "/@/api/modules/user/types.ts";
 import AddUserModal from "/@/views/setting/user/components/AddUserModal.vue";
 import {
-  NButton,
   type DataTableColumns,
   type DataTableRowKey,
+  NButton,
   NFlex,
   NSelect,
   NSwitch,
@@ -18,6 +18,7 @@ import {userApi} from "/@/api/modules/user";
 import BasePagination from "/@/components/BasePagination.vue";
 import TagGroup from '/@/components/tag-group/index.vue'
 import TableMoreAction from '/@/components/table-more-action/index.vue'
+import {hasAnyPermission} from "/@/utils/permission.ts";
 
 export type UserModalMode = 'create' | 'edit';
 
@@ -100,13 +101,24 @@ const columns: DataTableColumns<UserListItem> = [
     render(record) {
       if (record.enable) {
         return h(NFlex, {}, {
-          default: () => [
-            h(NButton, {text: true, onClick: () => showUserModal('edit', record)}, {default: () => '编辑'}),
-            h(TableMoreAction, {options: tableActions, onSelect: (key) => handleSelect(key, record)}, {}),
-          ]
+          default: () => {
+            const result = [];
+            if (hasAnyPermission(['SYSTEM_USER:READ+UPDATE'])) {
+              result.push(h(NButton, {
+                text: true,
+                onClick: () => showUserModal('edit', record)
+              }, {default: () => '编辑'}),);
+            }
+            if (hasAnyPermission(['SYSTEM_USER:READ+UPDATE', 'SYSTEM_USER:READ+DELETE'])) {
+              result.push(h(TableMoreAction, {options: tableActions, onSelect: (key) => handleSelect(key, record)}, {}))
+            }
+            return result;
+          }
         })
       }
-      return h(NButton, {text: true}, {default: () => '删除'})
+      if (hasAnyPermission(['SYSTEM_USER:READ+DELETE'])) {
+        return h(NButton, {text: true}, {default: () => '删除'});
+      }
     }
   }
 ];
@@ -257,7 +269,7 @@ onMounted(() => {
 <template>
   <n-card>
     <template #header>
-      <n-button type="primary" text @click="showUserModal('create')">
+      <n-button v-permission.all="['SYSTEM_USER:READ+ADD']" type="primary" text @click="showUserModal('create')">
         <n-icon :size="24">
           <div class="i-ant-design:plus-circle-filled"/>
         </n-icon>
