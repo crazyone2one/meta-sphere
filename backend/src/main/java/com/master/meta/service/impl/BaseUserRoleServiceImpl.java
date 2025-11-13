@@ -193,6 +193,11 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
         return checkResourceExist(queryChain().where(USER_ROLE.CODE.eq(roleCode)).one());
     }
 
+    @Override
+    public List<UserRole> listByCode(List<String> roleCodeList) {
+        return queryChain().where(USER_ROLE.CODE.in(roleCodeList)).list();
+    }
+
     protected void updatePermissionSetting(PermissionSettingUpdateRequest request) {
         baseUserRolePermissionService.updatePermissionSetting(request);
     }

@@ -55,7 +55,7 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <n-select :options="options" :placeholder="props.placeholder||'请选择成员'" multiple clearable
+  <n-select v-model:value="innerValue" :options="options" :placeholder="props.placeholder||'请选择成员'" multiple clearable
             :label-field="props.firstLabelKey" :value-field="props.valueKey"
             :render-label="renderLabel"/>
 </template>

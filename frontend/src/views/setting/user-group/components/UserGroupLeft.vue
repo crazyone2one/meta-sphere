@@ -5,13 +5,15 @@ import {AuthScopeEnum, type AuthScopeEnumType} from "/@/enums/common-enum.ts";
 import type {CurrentUserGroupItem, UserGroupItem} from "/@/api/modules/setting/types.ts";
 import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
 import AddUserModal from "/@/views/setting/user-group/components/AddUserModal.vue";
+import TableMoreAction from '/@/components/table-more-action/index.vue'
+import {hasAnyPermission} from "/@/utils/permission.ts";
 
 const systemType = inject<AuthScopeEnumType>('systemType');
 const emit = defineEmits<{
   (e: 'handleSelect', element: UserGroupItem): void;
   (e: 'addUserSuccess', id: string): void;
 }>();
-const {isGlobalDisable = false} = defineProps<{
+const {isGlobalDisable = false, updatePermission = []} = defineProps<{
   addPermission?: string[];
   updatePermission?: string[];
   isGlobalDisable: boolean;
@@ -19,7 +21,13 @@ const {isGlobalDisable = false} = defineProps<{
 const systemToggle = ref(true);
 const systemUserGroupVisible = ref(false);
 const userGroupList = ref<UserGroupItem[]>([]);
-const currentItem = ref<CurrentUserGroupItem>({id: '', name: '', internal: false, type: AuthScopeEnum.SYSTEM, code: ''});
+const currentItem = ref<CurrentUserGroupItem>({
+  id: '',
+  name: '',
+  internal: false,
+  type: AuthScopeEnum.SYSTEM,
+  code: ''
+});
 const currentId = ref('');
 const userModalVisible = ref(false);
 
@@ -28,8 +36,12 @@ const handleCreateUG = (scoped: string) => {
     systemUserGroupVisible.value = true;
   }
 }
+const showSystem = computed(() => systemType === AuthScopeEnum.SYSTEM);
 const systemUserGroupList = computed(() => {
   return userGroupList.value.filter((ele) => ele.type === AuthScopeEnum.SYSTEM);
+});
+const isSystemShowAll = computed(() => {
+  return hasAnyPermission([...updatePermission, 'SYSTEM_USER_ROLE:READ+DELETE']);
 });
 const handleListItemClick = (element: UserGroupItem) => {
   const {id, name, type, internal, code} = element;
@@ -62,7 +74,8 @@ const initData = async (id?: string, isSelect = true) => {
 const handleCreateUserGroup = (id: string) => {
   initData(id);
 };
-const handleAddMember = () => {
+const handleAddMember = (element: UserGroupItem) => {
+  handleListItemClick(element)
   userModalVisible.value = true;
 };
 const handleAddUserCancel = (shouldSearch: boolean) => {
@@ -70,6 +83,15 @@ const handleAddUserCancel = (shouldSearch: boolean) => {
   if (shouldSearch) {
     emit('addUserSuccess', currentId.value);
   }
+};
+const tableActions = [{label: '重命名', key: 'rename'}, {type: 'divider', key: 'd1'}, {label: '删除', key: 'delete'},]
+const handleMoreAction = (v: string, id: string, authScope: AuthScopeEnumType) => {
+  const tmpObj = userGroupList.value.filter((ele) => ele.id === id)[0];
+  if (v === 'rename') {
+
+  }
+  console.log(tmpObj);
+  console.log(authScope)
 };
 defineExpose({
   initData,
@@ -81,7 +103,7 @@ defineExpose({
     <div class="sticky top-0 z-[999] bg-[var(--color-text-fff)] pb-[8px] pt-[16px]">
       <n-input placeholder="请输入用户组名称" clearable/>
     </div>
-    <div class="mt-2">
+    <div v-if="showSystem" v-permission="['SYSTEM_USER_ROLE:READ']" class="mt-2">
       <div class="flex items-center justify-between px-[4px] py-[7px]">
         <div class="flex flex-row items-center gap-1">
           <div v-if="systemToggle" class="cursor-pointer i-ant-design:down-outlined text-[12px]"
@@ -94,12 +116,12 @@ defineExpose({
                                      :list="systemUserGroupList"
                                      @cancel="systemUserGroupVisible = false"
                                      @submit="handleCreateUserGroup">
-          <n-tooltip trigger="hover">
+          <n-tooltip trigger="hover" placement="right">
             <template #trigger>
               <div class="i-ant-design:plus-circle-outlined cursor-pointer text-[20px]"
                    @click="handleCreateUG('SYSTEM')"/>
             </template>
-            添加系统用户组
+            创建系统用户组
           </n-tooltip>
         </create-or-update-user-group>
       </div>
@@ -126,10 +148,13 @@ defineExpose({
                      class="list-item-action flex flex-row items-center gap-[8px] opacity-0"
                      :class="{ '!opacity-100': element.id === currentId }">
                   <div v-if="element.type === systemType">
-                    <n-button text @click="handleAddMember">
+                    <n-button text @click="handleAddMember(element)">
                       <div class="i-ant-design:plus-outlined cursor-pointer text-[16px]"/>
                     </n-button>
                   </div>
+                  <table-more-action v-if="isSystemShowAll &&
+                      !element.internal &&  (element.scopeId !== 'global' || !isGlobalDisable)" :options="tableActions"
+                                     @select="(v)=>handleMoreAction(v, element.id,AuthScopeEnum.SYSTEM)"/>
                 </div>
               </div>
             </create-or-update-user-group>
@@ -138,7 +163,7 @@ defineExpose({
       </Transition>
     </div>
   </div>
-  <add-user-modal v-model:show-modal="userModalVisible" :current-id="currentItem.code" @cancel="handleAddUserCancel"/>
+  <add-user-modal v-model:show-modal="userModalVisible" :current-code="currentItem.code" @cancel="handleAddUserCancel"/>
 </template>
 
 <style scoped>

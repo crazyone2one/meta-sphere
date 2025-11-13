@@ -14,6 +14,7 @@ import com.master.meta.handle.exception.CustomException;
 import com.master.meta.service.BaseUserRoleService;
 import com.master.meta.service.GlobalUserRoleRelationService;
 import com.master.meta.service.GlobalUserRoleService;
+import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import org.apache.commons.collections4.CollectionUtils;
@@ -52,6 +53,7 @@ public class GlobalUserRoleRelationServiceImpl extends BaseUserRoleRelationServi
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void add(UserRoleRelationUpdateRequest request) {
         checkGlobalSystemUserRoleLegality(Collections.singletonList(request.getCode()));
         checkUserLegality(request.getUserIds());
@@ -63,6 +65,7 @@ public class GlobalUserRoleRelationServiceImpl extends BaseUserRoleRelationServi
             userRoleRelation.setSourceId(UserRoleScope.SYSTEM);
             checkExist(userRoleRelation);
             userRoleRelation.setOrganizationId(UserRoleScope.SYSTEM);
+            userRoleRelation.setCreateUser(SessionUtils.getUserName());
             userRoleRelations.add(userRoleRelation);
         });
         mapper.insertBatch(userRoleRelations);
@@ -121,12 +124,12 @@ public class GlobalUserRoleRelationServiceImpl extends BaseUserRoleRelationServi
     }
 
     private void checkGlobalSystemUserRoleLegality(List<String> checkIdList) {
-        List<UserRole> userRoleList = baseUserRoleService.listByIds(checkIdList);
+        List<UserRole> userRoleList = baseUserRoleService.listByCode(checkIdList);
         if (userRoleList.size() != checkIdList.size()) {
             throw new CustomException(Translator.get("user_role_not_exist"));
         }
         userRoleList.forEach(userRole -> {
-            if (!Strings.CI.equals(userRole.getType(), UserRoleType.SYSTEM.name())) {
+            if (!userRole.getType().equalsIgnoreCase(UserRoleType.SYSTEM.name())) {
                 throw new CustomException(GLOBAL_USER_ROLE_RELATION_SYSTEM_PERMISSION);
             }
             if (!Strings.CI.equals(userRole.getScopeId(), UserRoleScope.GLOBAL)) {

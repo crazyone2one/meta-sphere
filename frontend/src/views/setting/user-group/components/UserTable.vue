@@ -3,7 +3,7 @@ import type {CurrentUserGroupItem} from "/@/api/modules/setting/types.ts";
 import {usePagination, useRequest} from "alova/client";
 import type {ITableQueryParams} from "/@/api/types.ts";
 import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
-import {h, inject, ref, watchEffect} from "vue";
+import {h, inject, watchEffect} from "vue";
 import {type DataTableColumns} from "naive-ui";
 import type {SimpleUserInfo} from "/@/api/modules/user/types.ts";
 import BasePagination from "/@/components/BasePagination.vue";
@@ -59,6 +59,7 @@ watchEffect(() => {
     fetchData();
   }
 })
+defineExpose({fetchData})
 </script>
 
 <template>

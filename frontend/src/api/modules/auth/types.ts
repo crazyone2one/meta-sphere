@@ -32,6 +32,7 @@ export interface UserRoleRelation {
     id: string;
     userId: string;
     roleId: string;
+    roleCode: string;
     sourceId: string;
     organizationId: string;
     createTime: number;

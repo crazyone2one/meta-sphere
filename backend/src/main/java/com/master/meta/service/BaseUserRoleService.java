@@ -33,4 +33,6 @@ public interface BaseUserRoleService extends IService<UserRole> {
     UserRole getWithCheck(String roleId);
 
     UserRole getWithCheckByCode(String roleCode);
+
+    List<UserRole> listByCode(List<String> roleCodeList);
 }

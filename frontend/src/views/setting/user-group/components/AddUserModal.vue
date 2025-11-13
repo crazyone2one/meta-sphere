@@ -6,12 +6,12 @@ import {computed, inject, ref} from "vue";
 import {AuthScopeEnum, type AuthScopeEnumType} from "/@/enums/common-enum.ts";
 import {UserRequestTypeEnum} from "/@/components/user-selector/utils.ts";
 import {useAppStore} from "/@/store";
-import type {FormInst} from "naive-ui";
+import type {FormInst, FormRules} from "naive-ui";
 
 const systemType = inject<AuthScopeEnumType>('systemType');
 const appStore = useAppStore()
 const showModal = defineModel<boolean>('showModal', {type: Boolean, default: false});
-const {currentId = ''} = defineProps<{ currentId: string }>()
+const {currentCode = ''} = defineProps<{ currentCode: string }>()
 const formRef = ref<FormInst | null>(null)
 const currentOrgId = computed(() => appStore.currentOrgId);
 const userSelectorProps = computed(() => {
@@ -19,7 +19,7 @@ const userSelectorProps = computed(() => {
     return {
       type: UserRequestTypeEnum.SYSTEM_USER_GROUP,
       loadOptionParams: {
-        roleId: currentId,
+        roleId: currentCode,
       },
       disabledKey: 'exclude',
     };
@@ -27,7 +27,7 @@ const userSelectorProps = computed(() => {
   return {
     type: UserRequestTypeEnum.ORGANIZATION_USER_GROUP,
     loadOptionParams: {
-      roleId: currentId,
+      roleId: currentCode,
       organizationId: currentOrgId.value,
     },
     disabledKey: 'checkRoleFlag',
@@ -39,13 +39,14 @@ const handleCancel = (shouldSearch = false) => {
 }
 const {form, send, loading} = useForm(formData => {
   if (systemType === AuthScopeEnum.SYSTEM) {
+    formData.code = currentCode;
     return userGroupApi.addUserToUserGroup(formData);
   } else {
     return userGroupApi.addOrgUserToUserGroup({...formData, organizationId: currentOrgId.value});
   }
 }, {
   initialForm: {
-    roleId: currentId,
+    code: currentCode,
     userIds: []
   },
   immediate: false,
@@ -61,13 +62,8 @@ const handleSubmit = () => {
     }
   })
 }
-const rules = {
-  userIds: [
-    {
-      required: true,
-      message: '请选择成员',
-    }
-  ]
+const rules: FormRules = {
+  userIds: {type: 'array', required: true, trigger: ['blur', 'change'], message: '请选择成员',}
 }
 </script>
 

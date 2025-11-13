@@ -12,6 +12,9 @@ const useUserStore = defineStore('user', {
         lastOrganizationId: '',
         email: '',
         phone: '',
+        userRolePermissions: [],
+        userRoles: [],
+        userRoleRelations: [],
     }),
     getters: {
         userInfo(state: UserState): UserState {
@@ -23,16 +26,14 @@ const useUserStore = defineStore('user', {
             systemPermissions: string[];
         } {
             const appStore = useAppStore();
-
             state.userRoleRelations?.forEach((ug) => {
                 state.userRolePermissions?.forEach((gp) => {
-                    if (gp.userRole.id === ug.roleId) {
+                    if (gp.userRole.code === ug.roleCode) {
                         ug.userRolePermissions = gp.userRolePermissions;
                         ug.userRole = gp.userRole;
                     }
                 });
             });
-
             return {
                 projectPermissions: composePermissions(state.userRoleRelations || [], 'PROJECT', appStore.currentProjectId),
                 orgPermissions: composePermissions(state.userRoleRelations || [], 'ORGANIZATION', appStore.currentOrgId),
@@ -47,6 +48,7 @@ const useUserStore = defineStore('user', {
     actions: {
         // 设置用户信息
         setInfo(partial: Partial<UserState>) {
+            console.log('setInfo', partial);
             this.$patch(partial);
         },
         // 重置用户信息
