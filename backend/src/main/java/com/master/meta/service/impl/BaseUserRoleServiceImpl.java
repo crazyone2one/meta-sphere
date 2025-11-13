@@ -97,7 +97,7 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
     @Override
     public List<PermissionDefinitionItem> getPermissionSetting(UserRole userRole) {
         // 获取该用户组拥有的权限
-        Set<String> permissionIds = baseUserRolePermissionService.getPermissionIdSetByRoleId(userRole.getId());
+        Set<String> permissionIds = baseUserRolePermissionService.getPermissionIdSetByRoleId(userRole.getCode());
         // 获取所有的权限
         List<PermissionDefinitionItem> permissionDefinition = permissionCache.getPermissionDefinition();
         // 深拷贝
