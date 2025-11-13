@@ -10,7 +10,7 @@ const emit = defineEmits<(e: 'click') => void>();
   <n-space>
     <div v-if="tagList.length>0" @click="emit('click')">
       <n-tag v-for="tag in tagList" :key="tag.id" :bordered="false" type="info" size="small">
-        {{ tag.name }}
+        {{ tag.name ?? '-' }}
       </n-tag>
     </div>
     <div v-else @click="emit('click')">
