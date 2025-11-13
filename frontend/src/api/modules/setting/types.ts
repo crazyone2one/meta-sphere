@@ -96,11 +96,25 @@ export interface UserGroupAuthSetting {
     perChecked?: string[];
     indeterminate?: boolean;
 }
+
 export interface SavePermissions {
     id: string;
     enable: boolean;
 }
+
 export interface SaveGlobalUSettingData {
     userRoleId: string;
     permissions: SavePermissions[];
+}
+
+export interface PopVisibleItem {
+    id?: string;
+    visible: boolean;
+    authScope: AuthScopeEnumType;
+    defaultName: string;
+    defaultCode: string;
+}
+
+export interface PopVisible {
+    [key: string]: PopVisibleItem;
 }

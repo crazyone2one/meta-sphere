@@ -2,7 +2,7 @@
 import {computed, inject, ref} from "vue";
 import CreateOrUpdateUserGroup from "/@/views/setting/user-group/components/CreateOrUpdateUserGroup.vue";
 import {AuthScopeEnum, type AuthScopeEnumType} from "/@/enums/common-enum.ts";
-import type {CurrentUserGroupItem, UserGroupItem} from "/@/api/modules/setting/types.ts";
+import type {CurrentUserGroupItem, PopVisible, UserGroupItem} from "/@/api/modules/setting/types.ts";
 import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
 import AddUserModal from "/@/views/setting/user-group/components/AddUserModal.vue";
 import TableMoreAction from '/@/components/table-more-action/index.vue'
@@ -30,7 +30,8 @@ const currentItem = ref<CurrentUserGroupItem>({
 });
 const currentId = ref('');
 const userModalVisible = ref(false);
-
+// 气泡弹窗
+const popVisible = ref<PopVisible>({});
 const handleCreateUG = (scoped: string) => {
   if (scoped === "SYSTEM") {
     systemUserGroupVisible.value = true;
@@ -67,6 +68,18 @@ const initData = async (id?: string, isSelect = true) => {
             handleListItemClick(res[0] as UserGroupItem);
           }
         }
+        // 弹窗赋值
+        const tmpObj: PopVisible = {};
+        res.forEach((element) => {
+          tmpObj[element.id] = {
+            visible: false,
+            authScope: element.type,
+            defaultName: '',
+            id: element.id,
+            defaultCode: ''
+          };
+        });
+        popVisible.value = tmpObj;
       }
     })
   }
@@ -88,11 +101,24 @@ const tableActions = [{label: '重命名', key: 'rename'}, {type: 'divider', key
 const handleMoreAction = (v: string, id: string, authScope: AuthScopeEnumType) => {
   const tmpObj = userGroupList.value.filter((ele) => ele.id === id)[0];
   if (v === 'rename') {
-
+    popVisible.value[id] = {
+      visible: true,
+      authScope,
+      defaultName: tmpObj?.name ?? '',
+      id,
+      defaultCode: tmpObj?.code ?? ''
+    };
   }
-  console.log(tmpObj);
-  console.log(authScope)
 };
+const handleRenameCancel = (element: UserGroupItem, id?: string) => {
+  if (id) {
+    initData(id, true);
+  }
+  const tmp = popVisible.value[element.id];
+  if (tmp) {
+    tmp.visible = false;
+  }
+}
 defineExpose({
   initData,
 });
@@ -132,7 +158,15 @@ defineExpose({
                class="list-item"
                :class="{ '!bg-green-50': element.id === currentId }"
                @click="handleListItemClick(element)">
-            <create-or-update-user-group :list="systemUserGroupList" :auth-scope="element.type" :visible="false">
+            <create-or-update-user-group :list="systemUserGroupList"
+                                         :visible="popVisible[element.id]?.visible || false"
+                                         :id="popVisible[element.id]?.id"
+                                         :auth-scope="popVisible[element.id]?.authScope || AuthScopeEnum.SYSTEM"
+                                         :default-name="popVisible[element.id]?.defaultName"
+                                         :default-code="popVisible[element.id]?.defaultCode"
+                                         @cancel="handleRenameCancel(element)"
+                                         @submit="handleRenameCancel(element, element.id)"
+            >
               <div class="flex max-w-[100%] grow flex-row items-center justify-between">
                 <div
                     class="one-line-text"
@@ -149,11 +183,12 @@ defineExpose({
                      :class="{ '!opacity-100': element.id === currentId }">
                   <div v-if="element.type === systemType">
                     <n-button text @click="handleAddMember(element)">
-                      <div class="i-ant-design:plus-outlined cursor-pointer text-[16px]"/>
+                      <div class="i-ant-design:plus-outlined cursor-pointer text-[18px]"/>
                     </n-button>
                   </div>
                   <table-more-action v-if="isSystemShowAll &&
                       !element.internal &&  (element.scopeId !== 'global' || !isGlobalDisable)" :options="tableActions"
+                                     :class-name="'text-green'" :size="20"
                                      @select="(v)=>handleMoreAction(v, element.id,AuthScopeEnum.SYSTEM)"/>
                 </div>
               </div>

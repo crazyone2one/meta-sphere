@@ -7,11 +7,19 @@ import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
 import {AuthScopeEnum, type AuthScopeEnumType} from "/@/enums/common-enum.ts";
 
 const systemType = inject<AuthScopeEnumType>('systemType');
-const {visible = false, id = undefined, authScope = AuthScopeEnum.SYSTEM, defaultName = '', list = []} = defineProps<{
+const {
+  visible = false,
+  id = undefined,
+  authScope = AuthScopeEnum.SYSTEM,
+  defaultName = '',
+  defaultCode = '',
+  list = []
+} = defineProps<{
   visible: boolean,
   id?: string,
   list: UserGroupItem[],
   defaultName?: string
+  defaultCode?: string
   // 权限范围
   authScope: AuthScopeEnumType;
 }>()
@@ -46,8 +54,8 @@ const rules = {
   ]
 }
 const handleCancel = () => {
-  form.value.name = '';
-  form.value.code = '';
+  form.value.name = defaultName || '';
+  form.value.code = defaultCode || '';
   emit('cancel', false);
 };
 const {form, send, loading} = useForm(formData => userGroupApi.updateOrAddUserGroup(formData), {
@@ -79,6 +87,7 @@ const handleOutsideClick = () => {
 }
 watchEffect(() => {
   form.value.name = defaultName || '';
+  form.value.code = defaultCode || '';
 });
 </script>
 
