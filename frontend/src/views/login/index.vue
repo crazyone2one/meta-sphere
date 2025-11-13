@@ -52,9 +52,15 @@ const handleLogin = () => {
           appStore.setCurrentProjectId(res.lastProjectId || '');
         })
         window.$message.success('登录成功');
-        const route = router.currentRoute.value
-        const redirect = route.query.redirect?.toString()
-        router.replace(redirect ?? route.redirectedFrom?.fullPath ?? '/')
+        const {redirect, ...othersQuery} = router.currentRoute.value.query;
+        router.push({
+          name: redirect as string || 'home',
+          query: {
+            ...othersQuery,
+            orgId: appStore.currentOrgId,
+            pId: appStore.currentProjectId,
+          }
+        })
       })
     }
   })
