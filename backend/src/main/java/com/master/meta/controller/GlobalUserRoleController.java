@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +48,7 @@ public class GlobalUserRoleController {
 
     @GetMapping("remove/{id}")
     @Operation(description = "系统设置-系统-用户组-删除自定义全局用户组")
+    @PreAuthorize("@rpe.hasPermission('SYSTEM_USER_ROLE:READ+DELETE')")
     public void remove(@PathVariable @Parameter(description = "用户组主键") String id) {
         globalUserRoleService.delete(id);
     }

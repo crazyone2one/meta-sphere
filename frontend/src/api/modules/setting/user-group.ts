@@ -35,4 +35,8 @@ export const userGroupApi = {
     fetchUserByUserGroup: (data: ITableQueryParams) => post<IPageResponse<SimpleUserInfo>>('/user/role/relation/global/page', data),
     // 系统-删除用户组对应的用户
     deleteUserFromUserGroup: (id: string) => get(`/user/role/relation/global/delete/${id}`),
+    // 系统-删除用户组
+    deleteUserGroup: (id: string) => get(`/user/role/global/remove/${id}`),
+    // 组织-删除用户组
+    deleteOrgUserGroup: (id: string) => get(`/user/role/organization/delete/${id}`),
 }

@@ -7,6 +7,7 @@ import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
 import AddUserModal from "/@/views/setting/user-group/components/AddUserModal.vue";
 import TableMoreAction from '/@/components/table-more-action/index.vue'
 import {hasAnyPermission} from "/@/utils/permission.ts";
+import {useRequest} from "alova/client";
 
 const systemType = inject<AuthScopeEnumType>('systemType');
 const emit = defineEmits<{
@@ -98,6 +99,12 @@ const handleAddUserCancel = (shouldSearch: boolean) => {
   }
 };
 const tableActions = [{label: '重命名', key: 'rename'}, {type: 'divider', key: 'd1'}, {label: '删除', key: 'delete'},]
+const {send: removeUg} = useRequest((id) => {
+  if (systemType === AuthScopeEnum.SYSTEM) {
+    return userGroupApi.deleteUserGroup(id)
+  }
+  return userGroupApi.deleteOrgUserGroup(id)
+}, {immediate: false})
 const handleMoreAction = (v: string, id: string, authScope: AuthScopeEnumType) => {
   const tmpObj = userGroupList.value.filter((ele) => ele.id === id)[0];
   if (v === 'rename') {
@@ -108,6 +115,32 @@ const handleMoreAction = (v: string, id: string, authScope: AuthScopeEnumType) =
       id,
       defaultCode: tmpObj?.code ?? ''
     };
+  }
+  if (v === 'delete') {
+    let content = '';
+    switch (authScope) {
+      case AuthScopeEnum.SYSTEM:
+        content = '删除后，该系统下的项目数据将一起删除，请谨慎操作！';
+        break;
+      case AuthScopeEnum.ORGANIZATION:
+        content = '删除后，组织下用户组数据将一起删除，请谨慎操作！';
+        break;
+      default:
+        content = '删除后，项目下用户组数据将一起删除，请谨慎操作！';
+        break
+    }
+    window.$dialog.error({
+      title: `是否删除: ${tmpObj?.name} ? `,
+      content,
+      positiveText: '确认删除',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        removeUg(id).then(() => {
+          window.$message.success('删除成功');
+          initData();
+        })
+      },
+    })
   }
 };
 const handleRenameCancel = (element: UserGroupItem, id?: string) => {
