@@ -1,7 +1,6 @@
-package com.master.meta.handle;
+package com.master.meta.handle.permission;
 
 import com.master.meta.constants.Logical;
-import com.master.meta.handle.annotation.RequiresPermissions;
 import com.master.meta.handle.security.RestPermissionEvaluator;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -24,7 +23,7 @@ public class RequiresPermissionsAspect {
         this.permissionEvaluator = permissionEvaluator;
     }
 
-    @Around("@annotation(com.master.meta.handle.annotation.RequiresPermissions)")
+    @Around("@annotation(com.master.meta.handle.permission.RequiresPermissions)")
     public Object checkHasPermission(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();

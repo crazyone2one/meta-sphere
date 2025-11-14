@@ -1,12 +1,10 @@
 package com.master.meta.controller;
 
-import com.master.meta.constants.PermissionConstants;
 import com.master.meta.constants.UserSource;
 import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.TableBatchProcessDTO;
 import com.master.meta.dto.system.*;
 import com.master.meta.entity.SystemUser;
-import com.master.meta.handle.annotation.RequiresPermissions;
 import com.master.meta.handle.validation.Updated;
 import com.master.meta.service.GlobalUserRoleService;
 import com.master.meta.service.SystemUserService;

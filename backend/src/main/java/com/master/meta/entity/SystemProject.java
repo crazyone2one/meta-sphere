@@ -14,6 +14,7 @@ import java.util.List;
 import com.mybatisflex.core.handler.JacksonTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -125,4 +126,7 @@ public class SystemProject implements Serializable {
     @Column(typeHandler = JacksonTypeHandler.class)
     private List<String> moduleSetting;
 
+    @Schema(description = "全部资源池", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "{project.all_resource_pool.not_blank}", groups = {Created.class})
+    private Boolean allResourcePool;
 }

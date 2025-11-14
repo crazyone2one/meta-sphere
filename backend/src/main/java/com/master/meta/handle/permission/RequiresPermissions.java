@@ -1,4 +1,4 @@
-package com.master.meta.handle.annotation;
+package com.master.meta.handle.permission;
 
 import com.master.meta.constants.Logical;
 import org.springframework.lang.NonNull;
