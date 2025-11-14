@@ -2,7 +2,6 @@ package com.master.meta.schedule.pressure;
 
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,7 @@ public class DBLCSSInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
     Random random = new Random();
+
     private DBLCSSInfo(SensorUtil sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
@@ -41,6 +41,8 @@ public class DBLCSSInfo extends BaseScheduleJob {
         String filePath = "/app/files/ky/" + fileName;
         sensorUtil.generateFile(filePath, content, "顶板离层实时数据[" + fileName + "]");
     }
+
+
 
     private String bodyContent(List<Row> sensorList, LocalDateTime localDateTime) {
         StringBuilder content = new StringBuilder();
