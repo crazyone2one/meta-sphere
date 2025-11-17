@@ -44,7 +44,7 @@
                 <version>1.15.0</version>
                 <configuration>
                     <!-- change the directory to your local node path -->
-                    <installDirectory>F:\env\node-versions\22</installDirectory>
+                    <installDirectory>C:\Program Files\</installDirectory>
                 </configuration>
                 <executions>
                     <execution>
@@ -56,8 +56,8 @@
                         <!-- optional: default phase is "generate-resources" -->
                         <phase>generate-resources</phase>
                         <configuration>
-                            <nodeVersion>v22.18.0</nodeVersion>
-                            <pnpmVersion>10.15.0</pnpmVersion>
+                            <nodeVersion>v24.11.1</nodeVersion>
+                            <pnpmVersion>10.22.0</pnpmVersion>
                         </configuration>
                     </execution>
                     <execution>
