@@ -303,6 +303,18 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
         return userRoleRelationMapper.deleteByQuery(userRoleRelationQueryChain);
     }
 
+    @Override
+    public void rename(UpdateProjectNameRequest request, String userName) {
+        checkProjectNotExist(request.getId());
+        SystemProject project = new SystemProject();
+        project.setId(request.getId());
+        project.setName(request.getName());
+        project.setOrganizationId(request.getOrganizationId());
+        checkProjectExistByName(project);
+        project.setUpdateUser(userName);
+        mapper.update(project);
+    }
+
     private List<UserExtendDTO> getProjectAdminList(List<String> projectIds) {
         return QueryChain.of(UserRoleRelation.class)
                 .select(SYSTEM_USER.NAME, USER_ROLE_RELATION.SOURCE_ID)

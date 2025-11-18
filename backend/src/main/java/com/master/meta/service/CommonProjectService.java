@@ -38,4 +38,6 @@ public interface CommonProjectService extends IService<SystemProject> {
     void addProjectUser(ProjectAddMemberRequest request, String createUser, String path, String type, String content, String module);
 
     int removeProjectMember(String projectId, String userId, String createUser, String module, String path);
+
+    void rename(UpdateProjectNameRequest request, String userName);
 }

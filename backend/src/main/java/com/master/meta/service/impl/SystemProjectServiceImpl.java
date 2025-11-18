@@ -1,6 +1,7 @@
 package com.master.meta.service.impl;
 
 import com.master.meta.dto.ProjectSwitchRequest;
+import com.master.meta.dto.system.OptionDTO;
 import com.master.meta.dto.system.project.*;
 import com.master.meta.dto.system.user.UserExtendDTO;
 import com.master.meta.dto.system.user.UserRoleOptionDto;
@@ -162,6 +163,19 @@ public class SystemProjectServiceImpl extends CommonProjectServiceImpl implement
                 .where(SYSTEM_USER.NAME.like(keyword).or(SYSTEM_USER.EMAIL.like(keyword)))
                 .orderBy(SYSTEM_USER.CREATE_TIME, false).limit(1000)
                 .list();
+    }
+
+    @Override
+    public void rename(UpdateProjectNameRequest request, String userName) {
+        super.rename(request, userName);
+    }
+
+    @Override
+    public List<OptionDTO> listOptions(String keyword) {
+        return queryChain().select(SYSTEM_PROJECT.ID, SYSTEM_PROJECT.NAME)
+                .where(SYSTEM_PROJECT.ENABLE.eq(true).and(SYSTEM_PROJECT.NAME.like(keyword)))
+                .orderBy(SYSTEM_PROJECT.CREATE_TIME, false).limit(1000)
+                .listAs(OptionDTO.class);
     }
 
     private void checkProjectExistByName(SystemProject request) {

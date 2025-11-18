@@ -2,6 +2,7 @@ package com.master.meta.controller;
 
 import com.master.meta.constants.PermissionConstants;
 import com.master.meta.dto.ProjectSwitchRequest;
+import com.master.meta.dto.system.OptionDTO;
 import com.master.meta.dto.system.project.*;
 import com.master.meta.dto.system.user.UserExtendDTO;
 import com.master.meta.entity.SystemProject;
@@ -168,5 +169,19 @@ public class SystemProjectController {
     public List<SystemUser> getUserList(@Schema(description = "查询关键字，根据邮箱和用户名查询")
                                         @RequestParam(value = "keyword", required = false) String keyword) {
         return systemProjectService.getUserList(keyword);
+    }
+
+    @PostMapping("/rename")
+    @Operation(summary = "系统设置-系统-组织与项目-项目-修改项目名称")
+    @RequiresPermissions(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ_UPDATE)
+    @Log(type = OperationLogType.UPDATE, expression = "#msClass.renameLog(#request)", msClass = SystemProjectLogService.class)
+    public void rename(@RequestBody @Validated({Updated.class}) UpdateProjectNameRequest request) {
+        systemProjectService.rename(request, SessionUtils.getUserName());
+    }
+    @GetMapping("/list")
+    @Operation(summary = "系统设置-系统-组织与项目-项目-获取所有项目")
+    @RequiresPermissions(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ)
+    public List<OptionDTO> getProjectList(@Schema(description = "查询关键字，根据项目名查询", requiredMode = Schema.RequiredMode.REQUIRED) @RequestParam(value = "keyword", required = false) String keyword) {
+        return systemProjectService.listOptions(keyword);
     }
 }

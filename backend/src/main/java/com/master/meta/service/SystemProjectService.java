@@ -1,6 +1,7 @@
 package com.master.meta.service;
 
 import com.master.meta.dto.ProjectSwitchRequest;
+import com.master.meta.dto.system.OptionDTO;
 import com.master.meta.dto.system.project.*;
 import com.master.meta.dto.system.user.UserExtendDTO;
 import com.master.meta.entity.SystemProject;
@@ -46,4 +47,8 @@ public interface SystemProjectService extends CommonProjectService {
     int removeProjectMember(String projectId, String userId, String userName);
 
     List<SystemUser> getUserList(String keyword);
+
+    void rename(UpdateProjectNameRequest request, String userName);
+
+    List<OptionDTO> listOptions(String keyword);
 }
