@@ -33,6 +33,7 @@ import {
     NSpace,
     NRadioGroup,
     NRadio,
+    NRadioButton,
     NText,
     NTooltip,
     NSelect,
@@ -45,7 +46,8 @@ import {
     NSpin,
     NFlex,
     NSplit,
-    NSwitch
+    NSwitch, NDrawer,
+    NDrawerContent, NCheckbox, NCheckboxGroup
 } from 'naive-ui'
 
 export default create({
@@ -82,6 +84,7 @@ export default create({
         NDialogProvider,
         NMessageProvider,
         NLoadingBarProvider, NSelect, NDivider, NSplit,
-        NNotificationProvider, NDataTable, NModal, NGrid, NFormItemGi, NScrollbar, NSpin, NFlex, NSwitch
+        NNotificationProvider, NDataTable, NModal, NGrid, NFormItemGi, NScrollbar, NSpin, NFlex, NSwitch, NDrawer,
+        NDrawerContent, NRadioButton, NCheckbox, NCheckboxGroup
     ]
 })
