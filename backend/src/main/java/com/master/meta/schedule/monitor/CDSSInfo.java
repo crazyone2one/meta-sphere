@@ -1,7 +1,6 @@
 package com.master.meta.schedule.monitor;
 
 import com.master.meta.constants.SensorMNType;
-import com.master.meta.constants.SensorKGType;
 import com.master.meta.dto.CustomConfig;
 import com.master.meta.dto.ScheduleConfigDTO;
 import com.master.meta.handle.schedule.BaseScheduleJob;
@@ -10,6 +9,7 @@ import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -51,23 +52,33 @@ public class CDSSInfo extends BaseScheduleJob {
     private String bodyContent(List<Row> rows, LocalDateTime localDateTime) {
         ScheduleConfigDTO configDTO = super.config;
         CustomConfig customConfig = configDTO.getCustomConfig();
-        // 判断CustomConfig不为空
-        boolean customFlag = customConfig != null && customConfig.isNotEmpty();
+        assert customConfig != null;
+
         StringBuilder content = new StringBuilder();
         Map<String, Row> sensorMap = rows.stream()
                 .collect(Collectors.toMap(row -> row.getString("sensor_code"), row -> row));
+        val unRealInfoCode = super.config.getAdditionalFields().get("unRealInfoCode");
         for (Row row : rows) {
             String sensorInfoCode = row.getString("sensor_code");
+            // 指定的测点不生成测点数据
+            if (sensorInfoCode.equals(unRealInfoCode)) {
+                continue;
+            }
             Row sensor = sensorMap.get(sensorInfoCode);
             String sensorType = sensor.getString("sensor_type");
             // 排除对 主通风机(1010) 风筒(1003) 烟雾(1008)
-            if ("1010".equals(sensorType) || "1003".equals(sensorType) || "1008".equals(sensorType)) {
+            if ("1010".equals(sensorType) || "1008".equals(sensorType)) {
                 continue;
             }
             String sensorValue;
-            String sensorState;
+            String sensorState = "0";
             if ("KG".equals(row.getString("sensor_value_type"))) {
-                sensorValue = "1";
+                Object ftCode = config.getAdditionalFields().get("ftCode");
+                if (ftCode != null && ftCode.equals(sensorInfoCode)) {
+                    sensorValue = "0";
+                } else {
+                    sensorValue = "1";
+                }
             } else {
                 sensorValue = switch (sensorType) {
                     case "0043" -> // SENSOR_CH4
@@ -83,19 +94,23 @@ public class CDSSInfo extends BaseScheduleJob {
                     default -> RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
                 };
             }
-            if (customFlag && Boolean.TRUE.equals(customConfig.getSuperthreshold())) {
-                if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
-                    List<Double> thresholdInterval = customConfig.getThresholdInterval();
-                    sensorValue = RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast());
+            if (Boolean.TRUE.equals(customConfig.getSuperthreshold())) {
+                if (Objects.nonNull(customConfig.getSensorIds())) {
+                    if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
+                        List<Double> thresholdInterval = customConfig.getThresholdInterval();
+                        sensorValue = RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast());
+                    }
                 }
             }
-            assert customConfig != null;
-            if (customConfig.getSensorIds().equals(sensorInfoCode)) {
-                sensorState = Optional.ofNullable(super.config.getAdditionalFields().get("sensorState").toString()).orElse("0");
-            } else {
-                sensorState = "0";
-            }
 
+            if (Objects.nonNull(customConfig.getSensorIds())) {
+                if (customConfig.getSensorIds().equals(sensorInfoCode)) {
+                    // 指定测点生成标校数据
+                    sensorState = Optional.ofNullable(super.config.getAdditionalFields().get("sensorState").toString()).orElse("0");
+                } else {
+                    sensorState = "0";
+                }
+            }
             String sensorContent = sensorInfoCode + ";"
                     + sensor.getString("sensor_type_name") + ";"
                     + sensor.getString("sensor_location") + ";"
