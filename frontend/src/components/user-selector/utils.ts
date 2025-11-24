@@ -1,4 +1,5 @@
 import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
+import {orgAndProjectApi} from "/@/api/modules/setting/org-project";
 
 export const UserRequestTypeEnum = {
     SYSTEM_USER_GROUP: 'SYSTEM_USER_GROUP',
@@ -20,8 +21,12 @@ export const UserRequestTypeEnum = {
 } as const;
 
 export type UserRequestTypeEnum = typeof UserRequestTypeEnum[keyof typeof UserRequestTypeEnum];
-export default function  initOptionsFunc (type: string, params: Record<string, any>) {
+export default function initOptionsFunc(type: string, params: Record<string, any>) {
     if (type === UserRequestTypeEnum.SYSTEM_USER_GROUP) {
         return userGroupApi.getSystemUserGroupOption(params.roleId, params.keyword);
+    }
+    if (type === UserRequestTypeEnum.SYSTEM_ORGANIZATION_ADMIN || type === UserRequestTypeEnum.SYSTEM_PROJECT_ADMIN) {
+        // 系统 - 【组织 或 项目】-添加管理员-下拉选项
+        return orgAndProjectApi.getAdminByOrganizationOrProject(params.keyword);
     }
 }
