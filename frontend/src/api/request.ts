@@ -86,7 +86,7 @@ const showResultMessage = (code: number, message: string) => {
 
     const codeInfo = RESULT_CODE_MAP[code];
     if (codeInfo) {
-        window.$message[codeInfo.type](code === 100500 ? codeInfo.message : message ?? codeInfo.message);
+        window.$message[codeInfo.type](message ?? codeInfo.message);
     } else {
         // 默认使用 error 类型提示
         window.$message.error(message || '未知错误');
