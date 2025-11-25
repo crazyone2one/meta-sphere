@@ -16,9 +16,9 @@ import com.master.meta.mapper.SystemUserMapper;
 import com.master.meta.mapper.UserRoleRelationMapper;
 import com.master.meta.service.OperationLogService;
 import com.master.meta.service.SystemProjectService;
+import com.master.meta.utils.ServiceUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
-import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.core.update.UpdateChain;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Strings;
@@ -115,8 +115,8 @@ public class SystemProjectServiceImpl extends CommonProjectServiceImpl implement
     }
 
     @Override
-    public int delete(String id, String userName) {
-        return super.delete(id, userName);
+    public void delete(String id, String userName) {
+        super.delete(id, userName);
     }
 
     @Override
@@ -159,7 +159,7 @@ public class SystemProjectServiceImpl extends CommonProjectServiceImpl implement
     @Override
     public List<SystemUser> getUserList(String keyword) {
         return QueryChain.of(SystemUser.class)
-                .select(QueryMethods.distinct(SYSTEM_USER.ID, SYSTEM_USER.NAME, SYSTEM_USER.EMAIL))
+                .select(SYSTEM_USER.ID, SYSTEM_USER.NAME, SYSTEM_USER.EMAIL)
                 .where(SYSTEM_USER.NAME.like(keyword).or(SYSTEM_USER.EMAIL.like(keyword)))
                 .orderBy(SYSTEM_USER.CREATE_TIME, false).limit(1000)
                 .list();
@@ -176,6 +176,16 @@ public class SystemProjectServiceImpl extends CommonProjectServiceImpl implement
                 .where(SYSTEM_PROJECT.ENABLE.eq(true).and(SYSTEM_PROJECT.NAME.like(keyword)))
                 .orderBy(SYSTEM_PROJECT.CREATE_TIME, false).limit(1000)
                 .listAs(OptionDTO.class);
+    }
+
+    @Override
+    public SystemProject checkResourceExist(String id) {
+        return ServiceUtils.checkResourceExist(mapper.selectOneById(id), "permission.project.name");
+    }
+
+    @Override
+    public void revoke(String id, String updateUser) {
+        super.revoke(id, updateUser);
     }
 
     private void checkProjectExistByName(SystemProject request) {

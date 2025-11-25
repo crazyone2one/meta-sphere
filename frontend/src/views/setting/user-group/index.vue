@@ -6,6 +6,7 @@ import type {CurrentUserGroupItem} from "/@/api/modules/setting/types.ts";
 import {useRouter} from "vue-router";
 import AuthTable from "/@/views/setting/user-group/components/AuthTable.vue";
 import UserTable from "/@/views/setting/user-group/components/UserTable.vue";
+import {hasAnyPermission} from "/@/utils/permission.ts";
 
 const router = useRouter();
 const userGroupLeftRef = ref<InstanceType<typeof UserGroupLeft>>()
@@ -58,6 +59,7 @@ onMounted(() => {
       <template #1>
         <user-group-left ref="userGroupLeftRef" :is-global-disable="false"
                          :update-permission="['SYSTEM_USER_ROLE:READ+UPDATE']"
+                         :add-permission="['SYSTEM_USER_ROLE:READ+ADD']"
                          @handle-select="handleSelect"
                          @add-user-success="handleAddMember"/>
       </template>
@@ -78,9 +80,14 @@ onMounted(() => {
             </div>
           </div>
           <div class="flex-1 overflow-hidden">
-            <auth-table v-if="currentTable === 'auth'" ref="authTableRef" :current="currentUserGroupItem"/>
+            <auth-table v-if="currentTable === 'auth'" ref="authTableRef" :current="currentUserGroupItem"
+                        :save-permission="['SYSTEM_USER_ROLE:READ+UPDATE']"
+                        :disabled="!hasAnyPermission(['SYSTEM_USER_ROLE:READ+UPDATE'])"/>
             <user-table v-if="currentTable === 'user'" ref="userTableRef" v-model:keyword="currentKeyword"
-                        :current="currentUserGroupItem"/>
+                        :current="currentUserGroupItem"
+                        :delete-permission="['SYSTEM_USER_ROLE:READ+DELETE']"
+                        :read-permission="['SYSTEM_USER_ROLE:READ']"
+                        :update-permission="['SYSTEM_USER_ROLE:READ+UPDATE']"/>
           </div>
         </div>
       </template>

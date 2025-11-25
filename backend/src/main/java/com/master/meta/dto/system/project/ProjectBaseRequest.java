@@ -27,6 +27,10 @@ public class ProjectBaseRequest {
     @NotBlank(message = "{project.name.not_blank}", groups = {Created.class, Updated.class})
     @Size(min = 1, max = 255, message = "{project.name.length_range}", groups = {Created.class, Updated.class})
     private String name;
+    @Schema(description = "项目num", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "{project.name.not_blank}", groups = {Created.class, Updated.class})
+    @Size(min = 1, max = 255, message = "{project.name.length_range}", groups = {Created.class, Updated.class})
+    private String num;
 
     @Schema(description = "项目描述")
     @Size(min = 0, max = 1000, message = "{project.description.length_range}", groups = {Created.class, Updated.class})

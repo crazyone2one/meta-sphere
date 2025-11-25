@@ -25,7 +25,7 @@ public interface CommonProjectService extends IService<SystemProject> {
 
     boolean update(UpdateProjectRequest request, String updateUser, String updateProject, String settingSystemOrganization);
 
-    int delete(String id, String deleteUser);
+    void delete(String id, String deleteUser);
 
     void enable(String id, String updateUser);
 
@@ -40,4 +40,6 @@ public interface CommonProjectService extends IService<SystemProject> {
     int removeProjectMember(String projectId, String userId, String createUser, String module, String path);
 
     void rename(UpdateProjectNameRequest request, String userName);
+
+    void revoke(String id, String updateUser);
 }

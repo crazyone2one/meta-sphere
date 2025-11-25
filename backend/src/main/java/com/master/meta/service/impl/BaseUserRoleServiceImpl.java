@@ -147,7 +147,7 @@ public class BaseUserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRol
         // *******
         Set<String> excludeIds = Set.of("SYSTEM_PLUGIN", "SYSTEM_AUTHORIZATION_MANAGEMENT", "SYSTEM_TEST_RESOURCE_POOL", "SYSTEM_PARAMETER_SETTING");
         Set<String> excludePermissionIds = Set.of("SYSTEM_USER:READ+INVITE", "SYSTEM_ORGANIZATION_PROJECT:READ+RECOVER");
-        permissionDefinition = permissionDefinition.stream().filter(item -> item.getId().equals("SYSTEM")).toList();
+//        permissionDefinition = permissionDefinition.stream().filter(item -> item.getId().equals("SYSTEM")).toList();
         permissionDefinition.forEach(p -> {
             List<PermissionDefinitionItem> children = p.getChildren().stream()
                     .filter(c -> !excludeIds.contains(c.getId()))

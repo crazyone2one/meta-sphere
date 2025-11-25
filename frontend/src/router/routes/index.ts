@@ -37,21 +37,21 @@ export const mainRoutes: RouteRecordRaw[] = [
                 },
             },
             {
-                path: 'user', name: 'settingOrgProject',
-                component: () => import('/@/views/setting/org-project/index.vue'),
-                meta: {
-                    title: 'SettingOrgProject',
-                    roles: ['SYSTEM_USER_ROLE:READ'],
-                },
-            },
-            {
                 path: 'user-group', name: 'settingUserGroup',
                 component: () => import('/@/views/setting/user-group/index.vue'),
                 meta: {
                     title: 'UserGroup',
                     roles: ['SYSTEM_USER_ROLE:READ'],
                 },
-            }
+            },
+            {
+                path: 'organization-and-project', name: 'settingOrgProject',
+                component: () => import('/@/views/setting/org-project/index.vue'),
+                meta: {
+                    title: 'SettingOrgProject',
+                    roles: ['SYSTEM_USER_ROLE:READ'],
+                },
+            },
         ]
     },
     {
@@ -64,8 +64,16 @@ export const mainRoutes: RouteRecordRaw[] = [
         component: null,
         children: [
             {
+                name: 'CustomField',
+                path: 'custom-field',
+                component: () => import('/@/views/template/custom-field/index.vue'),
+                meta: {
+                    title: 'CustomField',
+                }
+            },
+            {
                 name: 'DynamicForm',
-                path: '/dynamic-form',
+                path: 'dynamic-form',
                 component: () => import('/@/views/template/dynamic-form/index.vue'),
                 meta: {
                     title: 'Dynamic Form',

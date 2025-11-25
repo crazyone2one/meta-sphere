@@ -56,6 +56,21 @@ public class InfluxDbUtils {
             throw new CustomException("删除InfluxDB数据失败: " + e.getMessage(), e);
         }
     }
+    public void deleteCdssByTimeRange(String measurement, String sensorId, OffsetDateTime startTime, OffsetDateTime endTime) {
+        DeleteApi deleteApi = influxDBClient.getDeleteApi();
+        DeletePredicateRequest request = new DeletePredicateRequest();
+        // 构造删除条件，根据measurement和sensorId进行过滤
+        String predicate = "_measurement=\"" + measurement + "\" AND sensor_code=\"" + sensorId + "\"";
+        request.setPredicate(predicate);
+        // 设置时间范围
+        request.setStart(startTime);
+        request.setStop(endTime);
+        try {
+            deleteApi.delete(request, bucket, "admin");
+        } catch (Exception e) {
+            throw new CustomException("删除InfluxDB数据失败: " + e.getMessage(), e);
+        }
+    }
     /**
      * 更新指定传感器在特定时间点的数据（InfluxDB通过写入新数据点来实现更新）
      *

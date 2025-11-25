@@ -65,14 +65,13 @@ public class SystemProjectController {
      * 根据主键删除项目。
      *
      * @param id 主键
-     * @return {@code true} 删除成功，{@code false} 删除失败
      */
     @GetMapping("remove/{id}")
     @Operation(description = "系统设置-系统-组织与项目-项目-删除")
     @RequiresPermissions(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ_DELETE)
     @Log(type = OperationLogType.DELETE, expression = "#msClass.deleteLog(#id)", msClass = SystemProjectLogService.class)
-    public int remove(@PathVariable @Parameter(description = "项目主键") String id) {
-        return systemProjectService.delete(id, SessionUtils.getUserName());
+    public void remove(@PathVariable @Parameter(description = "项目主键") String id) {
+        systemProjectService.delete(id, SessionUtils.getUserName());
     }
 
     @PostMapping("update")
@@ -178,10 +177,20 @@ public class SystemProjectController {
     public void rename(@RequestBody @Validated({Updated.class}) UpdateProjectNameRequest request) {
         systemProjectService.rename(request, SessionUtils.getUserName());
     }
+
     @GetMapping("/list")
     @Operation(summary = "系统设置-系统-组织与项目-项目-获取所有项目")
     @RequiresPermissions(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ)
     public List<OptionDTO> getProjectList(@Schema(description = "查询关键字，根据项目名查询", requiredMode = Schema.RequiredMode.REQUIRED) @RequestParam(value = "keyword", required = false) String keyword) {
         return systemProjectService.listOptions(keyword);
+    }
+
+    @GetMapping("/revoke/{id}")
+    @Operation(summary = "系统设置-系统-组织与项目-项目-撤销删除")
+    @RequiresPermissions(PermissionConstants.SYSTEM_ORGANIZATION_PROJECT_READ_RECOVER)
+    @Log(type = OperationLogType.UPDATE, expression = "#msClass.recoverLog(#id)", msClass = SystemProjectLogService.class)
+    @Parameter(name = "id", description = "项目", schema = @Schema(requiredMode = Schema.RequiredMode.REQUIRED))
+    public void revokeProject(@PathVariable String id) {
+        systemProjectService.revoke(id, SessionUtils.getUserName());
     }
 }

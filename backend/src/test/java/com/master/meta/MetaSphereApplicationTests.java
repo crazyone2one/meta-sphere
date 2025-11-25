@@ -17,6 +17,10 @@ import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -128,5 +132,45 @@ class MetaSphereApplicationTests {
         OffsetDateTime startTime = OffsetDateTime.parse("2025-11-03T00:00:00Z");
         OffsetDateTime endTime = OffsetDateTime.parse("2025-11-03T15:00:00Z");
         influxDbUtils.deleteDataByTimeRange(measurement, sensorId, startTime, endTime);
+    }
+
+    @Test
+    void testFile() throws IOException {
+        Path startPath = Paths.get("C:\\Users\\the2n\\Desktop\\1122");
+        Files.walk(startPath)
+                .filter(Files::isRegularFile)
+                .forEach(filePath -> {
+                    try {
+                        String content = new String(Files.readAllBytes(filePath));
+
+                        // Split content by ~ and get the second part (index 1)
+                        String[] parts = content.split("~");
+                        if (parts.length > 1) {
+                            String secondPart = parts[1];
+                            // Search for the specific field value in segments
+                            String targetValue = "150622B001200020009201MN0004027A06";
+                            boolean found = false;
+                            // Split secondPart by ; and get 13th and 14th elements (index 12 and 13)
+                            String[] segments = secondPart.split(";");
+                            for (int i = 0; i < segments.length; i++) {
+                                if (targetValue.equals(segments[i])) {
+                                    System.out.println("Found target value at segment index: " + i);
+                                    System.out.println("Target value: " + segments[i]);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (found) {
+                                System.out.println("File: " + filePath.getFileName());
+                                System.out.println("content: " + content);
+                            }
+
+                        } else {
+                            System.out.println("Content does not contain ~ separator or has no second part");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
     }
 }

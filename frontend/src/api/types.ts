@@ -31,6 +31,7 @@ export interface IResponse<T> {
     messageDetail: string;
     data: T;
 }
+
 export interface BatchActionQueryParams {
     excludeIds?: string[]; // 排除的id
     selectedIds?: string[];
@@ -39,4 +40,30 @@ export interface BatchActionQueryParams {
     currentSelectCount?: number; // 当前选中的数量
     condition?: any; // 查询条件
     [key: string]: any;
+}
+
+export type FormItemType =
+    | 'INPUT'
+    | 'TEXTAREA'
+    | 'SELECT'
+    | 'MULTIPLE_SELECT'
+    | 'RADIO'
+    | 'CHECKBOX'
+    | 'MEMBER'
+    | 'MULTIPLE_MEMBER'
+    | 'DATE'
+    | 'DATETIME'
+    | 'INT'
+    | 'FLOAT'
+    | 'MULTIPLE_INPUT'
+    | 'NUMBER'
+    | 'PassWord'
+    | 'CASCADER'
+    | undefined;
+
+
+export interface iLoadOptionParams {
+    keyword?: string;
+    roleId?: string;
+    organizationId?: string;
 }

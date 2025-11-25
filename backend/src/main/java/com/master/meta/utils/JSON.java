@@ -118,7 +118,9 @@ public class JSON {
             throw new RuntimeException(e);
         }
     }
-
+    public static List parseArray(String content) {
+        return parseArray(content, Object.class);
+    }
     public static Map<String, Object> parseMap(String jsonObject) {
         try {
             return objectMapper.readValue(jsonObject, new TypeReference<>() {

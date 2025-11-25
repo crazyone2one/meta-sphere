@@ -6,6 +6,7 @@ import com.master.meta.constants.OperationLogConstants;
 import com.master.meta.dto.system.project.*;
 import com.master.meta.dto.system.user.UserExtendDTO;
 import com.master.meta.dto.system.user.UserRoleOptionDto;
+import com.master.meta.dto.system.user.UserVO;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.SystemUser;
 import com.master.meta.entity.UserRoleRelation;
@@ -21,9 +22,11 @@ import com.master.meta.mapper.UserRoleRelationMapper;
 import com.master.meta.service.CommonProjectService;
 import com.master.meta.service.OperationLogService;
 import com.master.meta.utils.JSON;
+import com.mybatisflex.core.logicdelete.LogicDeleteManager;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
 import com.mybatisflex.core.query.QueryMethods;
+import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
@@ -49,9 +52,9 @@ import static com.master.meta.entity.table.UserRoleTableDef.USER_ROLE;
 @RequiredArgsConstructor
 public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, SystemProject> implements CommonProjectService {
     private final OrganizationMapper organizationMapper;
-    private final UserRoleRelationMapper userRoleRelationMapper;
+    protected final UserRoleRelationMapper userRoleRelationMapper;
     private final OperationLogService operationLogService;
-    private final SystemUserMapper userMapper;
+    protected final SystemUserMapper userMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -59,6 +62,7 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
         SystemProject project = new SystemProject();
         ProjectDTO projectDTO = new ProjectDTO();
         project.setName(addProjectDTO.getName());
+        project.setNum(addProjectDTO.getNum());
         project.setOrganizationId(addProjectDTO.getOrganizationId());
         checkProjectExistByName(project);
         project.setUpdateUser(createUser);
@@ -73,10 +77,10 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
             project.setModuleSetting(addProjectDTO.getModuleIds());
             projectDTO.setModuleIds(addProjectDTO.getModuleIds());
         }
+        mapper.insertSelective(project);
         ProjectAddMemberBatchRequest memberRequest = new ProjectAddMemberBatchRequest();
         memberRequest.setProjectIds(List.of(project.getId()));
         memberRequest.setUserIds(addProjectDTO.getUserIds());
-        mapper.insertSelective(project);
         addProjectAdmin(memberRequest, createUser, path, OperationLogType.ADD.name(), Translator.get("add"), module);
         return projectDTO;
     }
@@ -106,9 +110,15 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
     @Override
     public List<ProjectDTO> buildUserInfo(List<ProjectDTO> projectList) {
         List<String> projectIds = projectList.stream().map(ProjectDTO::getId).toList();
-        List<UserExtendDTO> users = getProjectAdminList(projectIds);
+
+        QueryWrapper queryWrapper = QueryWrapper.create()
+                .select("`system_user`.id,`system_user`.name,user_role_relation.source_id")
+                .from(USER_ROLE_RELATION).leftJoin(SYSTEM_USER).on(USER_ROLE_RELATION.USER_ID.eq(SYSTEM_USER.ID))
+                .where(USER_ROLE_RELATION.SOURCE_ID.in(projectIds).and(USER_ROLE_RELATION.ROLE_CODE.eq("project_admin")));
+        QueryWrapper wrapper = queryWrapper.groupBy(USER_ROLE_RELATION.SOURCE_ID, SYSTEM_USER.ID);
+        List<UserVO> users = userRoleRelationMapper.selectListByQueryAs(wrapper, UserVO.class);
         //根据sourceId分组
-        Map<String, List<UserExtendDTO>> userMapList = users.stream().collect(Collectors.groupingBy(UserExtendDTO::getSourceId));
+        Map<String, List<UserVO>> userMapList = users.stream().collect(Collectors.groupingBy(UserVO::getSourceId));
         List<ProjectDTO> projectDTOList = getProjectExtendDTOList(projectIds);
         Map<String, ProjectDTO> projectMap = projectDTOList.stream().collect(Collectors.toMap(ProjectDTO::getId, projectDTO -> projectDTO));
         if (CollectionUtils.isNotEmpty(projectList)) {
@@ -117,10 +127,10 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
                     project.setModuleIds(project.getModuleSetting());
                 }
                 project.setMemberCount(projectMap.get(project.getId()).getMemberCount());
-                List<UserExtendDTO> userExtendDTOS = userMapList.get(project.getId());
+                List<UserVO> userExtendDTOS = userMapList.get(project.getId());
                 if (CollectionUtils.isNotEmpty(userExtendDTOS)) {
                     project.setAdminList(userExtendDTOS);
-                    List<String> userIdList = userExtendDTOS.stream().map(SystemUser::getName).collect(Collectors.toList());
+                    List<String> userIdList = userExtendDTOS.stream().map(UserVO::getName).collect(Collectors.toList());
                     project.setProjectCreateUserIsAdmin(CollectionUtils.isNotEmpty(userIdList) && userIdList.contains(project.getCreateUser()));
                 } else {
                     project.setAdminList(new ArrayList<>());
@@ -189,14 +199,11 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int delete(String id, String deleteUser) {
+    public void delete(String id, String deleteUser) {
         // 删除项目删除全部资源 这里的删除只是假删除
         checkProjectNotExist(id);
-        SystemProject project = new SystemProject();
-        project.setId(id);
-        project.setDeleteUser(deleteUser);
-        project.setDeleted(true);
-        return mapper.delete(project);
+        updateChain().set(SYSTEM_PROJECT.DELETE_USER, deleteUser).set(SYSTEM_PROJECT.DELETED, true)
+                .where(SYSTEM_PROJECT.ID.eq(id)).update();
     }
 
     @Override
@@ -216,7 +223,8 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
     @Override
     public Page<UserExtendDTO> getProjectMemberList(ProjectMemberRequest request) {
         QueryChain<UserRoleRelation> tempQueryChain = QueryChain.of(UserRoleRelation.class)
-                .select(USER_ROLE_RELATION.ROLE_CODE, SYSTEM_USER.ALL_COLUMNS, USER_ROLE_RELATION.CREATE_TIME.as("memberTime"))
+                .select(USER_ROLE_RELATION.ROLE_CODE, SYSTEM_USER.ID, SYSTEM_USER.NAME, SYSTEM_USER.EMAIL, SYSTEM_USER.PHONE,
+                        USER_ROLE_RELATION.CREATE_TIME.as("memberTime"))
                 .from(USER_ROLE_RELATION).leftJoin(SYSTEM_USER).on(USER_ROLE_RELATION.USER_ID.eq(SYSTEM_USER.ID))
                 .where(USER_ROLE_RELATION.SOURCE_ID.eq(request.getProjectId())
                         .and(SYSTEM_USER.NAME.like(request.getKeyword())
@@ -224,7 +232,7 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
                                 .or(SYSTEM_USER.PHONE.like(request.getKeyword()))))
                 .orderBy(USER_ROLE_RELATION.CREATE_TIME.desc());
         return queryChain()
-                .select(" temp.* , MAX( if (temp.role_id = 'project_admin', true, false)) as adminFlag, MIN(temp.memberTime) as groupTime")
+                .select(" temp.id,temp.name,temp.email,temp.phone , MAX( if (temp.role_code = 'project_admin', true, false)) as adminFlag, MIN(temp.memberTime) as groupTime")
                 .from(tempQueryChain).as("temp")
                 .groupBy("temp.id")
                 .orderBy("adminFlag", false)
@@ -315,12 +323,13 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
         mapper.update(project);
     }
 
-    private List<UserExtendDTO> getProjectAdminList(List<String> projectIds) {
-        return QueryChain.of(UserRoleRelation.class)
-                .select(SYSTEM_USER.NAME, USER_ROLE_RELATION.SOURCE_ID)
-                .from(USER_ROLE_RELATION).leftJoin(SYSTEM_USER).on(USER_ROLE_RELATION.USER_ID.eq(SYSTEM_USER.ID))
-                .where(USER_ROLE_RELATION.SOURCE_ID.in(projectIds).and(USER_ROLE_RELATION.ROLE_CODE.eq("project_admin")))
-                .listAs(UserExtendDTO.class);
+    @Override
+    public void revoke(String id, String updateUser) {
+        LogicDeleteManager.execWithoutLogicDelete(()->{
+            checkProjectNotExist(id);
+            updateChain().set(SYSTEM_PROJECT.UPDATE_USER, updateUser).set(SYSTEM_PROJECT.DELETED, false)
+                    .where(SYSTEM_PROJECT.ID.eq(id)).update();
+        });
     }
 
     private List<ProjectDTO> getProjectExtendDTOList(List<String> projectIds) {
@@ -340,7 +349,8 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
     private void checkProjectExistByName(SystemProject project) {
         boolean exists = QueryChain.of(SystemProject.class).where(SYSTEM_PROJECT.NAME.eq(project.getName())
                 .and(SYSTEM_PROJECT.ORGANIZATION_ID.eq(project.getOrganizationId()))
-                .and(SYSTEM_PROJECT.ID.ne(project.getId()))).exists();
+                .and(SYSTEM_PROJECT.ID.ne(project.getId()))
+                .and(SYSTEM_PROJECT.NUM.eq(project.getNum()))).exists();
         if (exists) {
             throw new CustomException(Translator.get("project_name_already_exists"));
         }

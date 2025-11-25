@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import initOptionsFunc, {UserRequestTypeEnum} from "/@/components/user-selector/utils.ts";
-import {onBeforeMount, ref, watch} from "vue";
+import {onBeforeMount, ref, watch, watchEffect} from "vue";
 import type {SelectOption} from "naive-ui";
 import type {iLoadOptionParams} from "/@/api/types.ts";
 
@@ -22,7 +22,7 @@ const {
   atLeastOne?: boolean; // 是否至少选择一个
 }>()
 const innerValue = ref<string[]>([]);
-const currentValue = defineModel<(string | number)[]>('modelValue', {default: []});
+const currentValue = defineModel<string[]>('modelValue', {default: []});
 const options = ref<Array<SelectOption>>([])
 const loadList = async () => {
   options.value = []
@@ -38,13 +38,18 @@ const renderLabel = (option: SelectOption): string => {
 watch(
     () => innerValue.value,
     (value) => {
-      const values: (string | number)[] = [];
+      const values: string[] = [];
       for (const item of value) {
         values.push(item);
       }
       currentValue.value = values;
     }
 );
+watchEffect(() => {
+  if (currentValue.value.length > 0 && innerValue.value.length === 0) {
+    innerValue.value = currentValue.value
+  }
+},{})
 onBeforeMount(() => {
   loadList()
 })

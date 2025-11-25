@@ -12,7 +12,7 @@ import {userGroupApi} from "/@/api/modules/setting/user-group.ts";
 import {type DataTableColumns, NCheckbox, NCheckboxGroup, NFlex} from "naive-ui";
 
 const systemType = inject<AuthScopeEnumType>('systemType');
-const {current = {id: ''}, disabled = false, showBottom = true} = defineProps<{
+const {current = {id: '',code:''}, disabled = false, showBottom = true} = defineProps<{
   current: CurrentUserGroupItem;
   disabled?: boolean,
   showBottom?: boolean
@@ -91,12 +91,11 @@ const initData = (id: string) => {
 }
 const systemAdminDisabled = computed(() => {
   const adminArr = ['admin', 'org_admin', 'project_admin'];
-  const {id} = current;
-  if (adminArr.includes(id)) {
+  const {code} = current;
+  if (adminArr.includes(code)) {
     // 系统管理员,组织管理员，项目管理员都不可编辑
     return true;
   }
-
   return disabled;
 });
 const handleAllAuthChangeByCheckbox = () => {

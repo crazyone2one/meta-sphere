@@ -35,7 +35,7 @@ public interface SystemProjectService extends CommonProjectService {
 
     boolean update(UpdateProjectRequest request, String updateUser);
 
-    int delete(String id, String userName);
+    void delete(String id, String userName);
 
     void enable(String id, String updateUser);
     void disable(String id, String updateUser);
@@ -51,4 +51,8 @@ public interface SystemProjectService extends CommonProjectService {
     void rename(UpdateProjectNameRequest request, String userName);
 
     List<OptionDTO> listOptions(String keyword);
+
+    SystemProject checkResourceExist(String id);
+
+    void revoke(String id, String userName);
 }

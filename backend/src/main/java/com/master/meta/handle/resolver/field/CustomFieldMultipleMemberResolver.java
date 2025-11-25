@@ -1,0 +1,22 @@
+package com.master.meta.handle.resolver.field;
+
+import com.master.meta.dto.system.CustomFieldDTO;
+import com.master.meta.utils.JSON;
+
+public class CustomFieldMultipleMemberResolver extends CustomFieldMemberResolver {
+    @Override
+    public void validate(CustomFieldDTO customField, Object value) {
+        validateArrayRequired(customField, value);
+        validateArray(customField.getName(), value);
+    }
+
+    @Override
+    public String parse2String(Object value) {
+        return JSON.toJSONString(value);
+    }
+
+    @Override
+    public Object parse2Value(String value) {
+        return parse2Array(value);
+    }
+}

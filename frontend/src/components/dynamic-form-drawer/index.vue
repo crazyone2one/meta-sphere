@@ -264,6 +264,7 @@ const handleSubmit = () => {
   if (!formRef.value) return;
   formRef.value.validate(errors => {
     if (!errors) {
+      console.log(formFields.value)
       emit('update', formData)
     }
   })

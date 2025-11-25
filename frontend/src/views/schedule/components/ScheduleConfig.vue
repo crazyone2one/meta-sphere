@@ -40,6 +40,7 @@ const {form: model, send: submit, loading} = useForm((formData) => scheduleApi.r
   }
 })
 const handleSubmit = () => {
+  console.log(model.value)
   submit().then(() => {
     handleClose(true);
     window.$message.success('修改成功');

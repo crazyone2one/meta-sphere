@@ -139,6 +139,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .where(SYSTEM_SCHEDULE.NAME.like(request.getKeyword()).or(SYSTEM_SCHEDULE.NUM.like(request.getKeyword())))
                 .and(SYSTEM_SCHEDULE.PROJECT_ID.eq(request.getProjectId()))
                 .and(SYSTEM_SCHEDULE.RESOURCE_TYPE.eq(request.getResourceType()))
+                .orderBy(SYSTEM_SCHEDULE.ENABLE.desc())
                 .pageAs(new Page<>(request.getPage(), request.getPageSize()), ScheduleDTO.class);
     }
 
@@ -256,7 +257,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                         ).toList();
                 break;
             case "dblc":
-                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), "DBLC","sf_ky_dblc", false);
+                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), "DBLC", "sf_ky_dblc", false);
                 if (CollectionUtils.isEmpty(sensorFromRedis)) {
                     return new ArrayList<>();
                 }

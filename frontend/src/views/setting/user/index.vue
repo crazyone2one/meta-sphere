@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {h, onMounted, ref} from "vue";
+import {computed, h, onMounted, ref} from "vue";
 import type {SystemRole, UserForm, UserListItem} from "/@/api/modules/user/types.ts";
 import AddUserModal from "/@/views/setting/user/components/AddUserModal.vue";
 import {
@@ -69,6 +69,9 @@ const tableActions = [
     key: 'delete'
   },
 ]
+const hasOperationSysUserPermission = computed(() =>
+    hasAnyPermission(['SYSTEM_USER:READ+UPDATE', 'SYSTEM_USER:READ+DELETE'])
+);
 const columns: DataTableColumns<UserListItem> = [
   {
     type: 'selection', fixed: 'left', options: ['all', 'none']
@@ -93,11 +96,18 @@ const columns: DataTableColumns<UserListItem> = [
   {
     title: '状态', key: 'enable', width: 300,
     render(record) {
-      return h(NSwitch, {value: record.enable, size: 'small', onUpdateValue: (v) => handleStatusChange(v, record)}, {})
+      return h(NSwitch, {
+        value: record.enable, size: 'small',
+        disabled: !hasAnyPermission(['SYSTEM_USER:READ+UPDATE']),
+        onUpdateValue: (v) => handleStatusChange(v, record)
+      }, {})
     }
   },
   {
-    title: '操作', key: 'actions', fixed: 'right', width: 150,
+    title: hasOperationSysUserPermission.value ? '操作' : '',
+    key: 'actions',
+    fixed: 'right',
+    width: hasOperationSysUserPermission.value ? 150 : 50,
     render(record) {
       if (record.enable) {
         return h(NFlex, {}, {

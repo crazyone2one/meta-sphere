@@ -19,6 +19,8 @@ export interface UserListItem {
     userRoleList: UserRoleListItem[]; // 用户所属用户组
     userRoles?: UserRoleListItem[]; // 用户所属用户组
     selectUserGroupVisible?: boolean;
+    adminFlag?: boolean;
+    memberFlag?: boolean;
 }
 
 // 用户所属用户组模型
@@ -65,24 +67,36 @@ export interface SimpleUserInfo {
     phone?: string;
     enable?: boolean;
 }
+
 export interface UserForm {
     list: SimpleUserInfo[];
     userGroup: string[];
 }
+
 export interface CreateUserParams {
     userInfoList: SimpleUserInfo[];
     userRoleIdList: string[];
 }
+
 export interface UpdateUserInfoParams extends SimpleUserInfo {
     id: string;
     userRoleIdList: string[];
 }
 
-export interface UpdateUserStatusParams extends BatchActionQueryParams{
+export interface UpdateUserStatusParams extends BatchActionQueryParams {
     enable: boolean;
 }
 
 export interface CreateUserResult {
     errorEmails: Record<string, any>;
     successList: any[];
+}
+
+export interface MemberUserItem {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    adminFlag: boolean;
+    memberFlag: boolean;
 }

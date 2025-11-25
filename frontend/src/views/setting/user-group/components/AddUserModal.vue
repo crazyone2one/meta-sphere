@@ -20,6 +20,8 @@ const userSelectorProps = computed(() => {
       type: UserRequestTypeEnum.SYSTEM_USER_GROUP,
       loadOptionParams: {
         roleId: currentCode,
+        keyword: '',
+        organizationId: '',
       },
       disabledKey: 'exclude',
     };
