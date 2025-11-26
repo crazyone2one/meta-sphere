@@ -3,15 +3,19 @@ import {NFlex} from "naive-ui";
 
 import ProjectSelect from "/@/layouts/header/components/ProjectSelect.vue";
 import NavEnd from "/@/layouts/header/components/NavEnd.vue";
+import TopMenu from "/@/layouts/header/components/TopMenu.vue";
 </script>
 
 <template>
-  <n-layout-header style="height: 64px; padding: 24px" bordered>
-    <n-flex>
-      <div class="flex-1 items-center mb-2">
+  <n-layout-header style="height: 64px; padding: 12px" bordered>
+    <n-flex justify="space-between" class="bg-transparent">
+      <div >
         <project-select/>
       </div>
-      <div class="items-center flex mr-[20px]">
+      <div>
+        <top-menu/>
+      </div>
+      <div class="flex mr-[20px]">
         <nav-end/>
       </div>
     </n-flex>

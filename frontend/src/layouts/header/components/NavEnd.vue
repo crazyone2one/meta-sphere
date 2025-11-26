@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import {computed} from "vue";
-import {useUserStore} from "/@/store";
+import {useAppStore, useUserStore} from "/@/store";
 import router from "/@/router";
 import {authApi} from "/@/api/modules/auth";
 
 const userStore = useUserStore()
+const appStore = useAppStore()
 const options = computed(() => {
   return [
     {
@@ -45,6 +46,7 @@ const logout = () => {
           }
         })
         userStore.resetInfo()
+        appStore.setTopMenus([])
       })
     },
   })

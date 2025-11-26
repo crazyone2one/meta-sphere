@@ -1,5 +1,6 @@
 import type {SystemScopeType, UserRole, UserRoleRelation} from "/@/api/modules/auth/types.ts";
-import {useUserStore} from "/@/store";
+import {useAppStore, useUserStore} from "/@/store";
+import type {RouteLocationNormalized, RouteRecordRaw} from "vue-router";
 
 export const composePermissions = (userRoleRelations: UserRoleRelation[], type: SystemScopeType, id: string) => {
     // 系统级别的权限
@@ -62,4 +63,25 @@ export const hasAllPermission = (permissions: string[], typeList = ['PROJECT', '
         return true;
     }
     return permissions.every((permission) => hasPermission(permission, typeList));
+}
+
+export const topLevelMenuHasPermission = (route: RouteLocationNormalized | RouteRecordRaw) => {
+    const userStore = useUserStore();
+    const appStore = useAppStore();
+    const {currentMenuConfig} = appStore;
+
+    if (userStore.lastProjectId === 'no_such_project' || userStore.lastProjectId === '') {
+        // 项目不存在, 不显示任何项目级别菜单, 展示无资源页面
+        return false;
+    }
+
+    if (currentMenuConfig.length && !currentMenuConfig.includes(route.name as string)) {
+        // 没有配置的菜单不显示
+        return false;
+    }
+    if (userStore.isAdmin) {
+        // 如果是系统管理员, 包含项目, 组织, 系统层级所有菜单权限
+        return true;
+    }
+    return hasAnyPermission(route.meta?.roles as string[] || []);
 }

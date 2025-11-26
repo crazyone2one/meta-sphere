@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {computed, h, ref, watchEffect} from "vue";
 import type {MenuOption} from "naive-ui";
-import {RouterLink, useRoute} from "vue-router";
+import {type RouteRecordRaw, RouterLink, useRoute} from "vue-router";
 import useAppStore from "../../store/modules/app";
 import {generateMenus} from "/@/layouts/sidebar/utils.ts";
-import {mainRoutes} from "/@/router/routes";
+import useMenuTree from "/@/layouts/sidebar/use-menu-tree.ts";
 
 export interface Menu {
   label: string
@@ -14,6 +14,7 @@ export interface Menu {
   children?: Menu[]
 }
 
+const {menuTree} = useMenuTree();
 const appStore = useAppStore()
 const route = useRoute()
 const currentKey = ref<string>('')
@@ -29,7 +30,7 @@ const mapping = (items: Menu[]): MenuOption[] =>
     }))
 
 const menus = computed(() => {
-  return generateMenus(mainRoutes)
+  return generateMenus(menuTree.value as RouteRecordRaw[])
 })
 const options = computed(() => (menus.value ? mapping(menus.value) : []))
 const routeMatched = (menu: Menu): boolean => {

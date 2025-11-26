@@ -2,6 +2,9 @@ import {defineStore} from "pinia";
 import type {AppState} from "/@/store/modules/app/types.ts";
 import {projectApis} from "/@/api/modules/project";
 import type {IProjectListItem} from "/@/api/modules/project/types.ts";
+import type {RouteRecordRaw} from "vue-router";
+import {cloneDeep} from "lodash-es";
+import {featureRouteMap} from "/@/router/constants.ts";
 
 const useAppStore = defineStore('app', {
     state: (): AppState => ({
@@ -11,7 +14,10 @@ const useAppStore = defineStore('app', {
         menuCollapse: false,
         loading: false,
         loadingTip: '你不知道你有多幸运...',
-        projectList: []
+        projectList: [],
+        topMenus: [],
+        currentTopMenu: {} as RouteRecordRaw,
+        currentMenuConfig: Object.keys(featureRouteMap)
     }),
 
     getters: {
@@ -26,6 +32,12 @@ const useAppStore = defineStore('app', {
         },
         getMenuCollapse(state: AppState): boolean {
             return state.menuCollapse;
+        },
+        getTopMenus(state: AppState): RouteRecordRaw[] {
+            return state.topMenus;
+        },
+        getCurrentTopMenu(state: AppState): RouteRecordRaw {
+            return state.currentTopMenu;
         },
     },
 
@@ -61,6 +73,15 @@ const useAppStore = defineStore('app', {
             } catch (error) {
                 console.log(error);
             }
+        },
+        setTopMenus(menus: RouteRecordRaw[] | undefined) {
+            this.topMenus = menus ? [...menus] : [];
+        },
+        setCurrentTopMenu(menu: RouteRecordRaw) {
+            this.currentTopMenu = cloneDeep(menu);
+        },
+        async setCurrentMenuConfig(menuConfig: string[]) {
+            this.currentMenuConfig = menuConfig;
         },
     },
     persist: true
