@@ -39,7 +39,8 @@ export default defineConfig({
                         ? svg
                         : svg.replace(/^<svg /, '<svg fill="currentColor" ');
                 }),
-                antd: () => import('@iconify-json/ant-design/icons.json').then(i => i.default)
+                antd: () => import('@iconify-json/ant-design/icons.json').then(i => i.default),
+                mdi: () => import('@iconify-json/mdi/icons.json').then(i => i.default),
             }
         }),
         presetTypography(),
