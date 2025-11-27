@@ -5,10 +5,10 @@ import Content from '/@/layouts/content/index.vue'
 </script>
 
 <template>
-  <n-layout position="absolute" has-sider>
-    <sidebar/>
-    <n-layout>
-      <Header/>
+  <n-layout position="absolute" >
+    <Header/>
+    <n-layout has-sider>
+      <sidebar/>
       <Content/>
     </n-layout>
   </n-layout>

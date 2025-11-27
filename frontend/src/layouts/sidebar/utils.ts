@@ -10,7 +10,9 @@ export const generateMenus = (routers: RouteRecordRaw[]) => {
         const menu: Menu = {
             label: (router.meta?.title as string) || (router.name as string) || '',
             name: (router.name as string) || '',
+            key: (router.name as string) || '',
             icon: router.meta?.icon as string | undefined,
+            meta: router.meta
         }
         if (router.children && router.children.length > 0) {
             menu.children = generateMenus(router.children)

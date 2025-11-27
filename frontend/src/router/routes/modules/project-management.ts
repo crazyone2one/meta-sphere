@@ -7,7 +7,7 @@ const ProjectManagement:RouteRecordRaw={
     redirect: '/project-management/permission',
     component: null,
     meta: {
-        title: '项目管理', order: 1, hideChildrenInMenu: true,
+        title: '项目管理', order: 2, hideChildrenInMenu: true,
         icon: 'i-mdi:folder-cog',
         roles: [
             'PROJECT_BASE_INFO:READ',

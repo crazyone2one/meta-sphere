@@ -1,6 +1,7 @@
 import type {SystemScopeType, UserRole, UserRoleRelation} from "/@/api/modules/auth/types.ts";
 import {useAppStore, useUserStore} from "/@/store";
 import type {RouteLocationNormalized, RouteRecordRaw} from "vue-router";
+import {mainRoutes} from "/@/router/routes";
 
 export const composePermissions = (userRoleRelations: UserRoleRelation[], type: SystemScopeType, id: string) => {
     // 系统级别的权限
@@ -84,4 +85,30 @@ export const topLevelMenuHasPermission = (route: RouteLocationNormalized | Route
         return true;
     }
     return hasAnyPermission(route.meta?.roles as string[] || []);
+}
+
+export function findRouteByName(name: string) {
+    const queue: RouteRecordRaw[] = [...mainRoutes];
+    while (queue.length > 0) {
+        const currentRoute = queue.shift();
+        if (!currentRoute) {
+            return;
+        }
+        if (currentRoute.name === name) {
+            return currentRoute;
+        }
+        if (currentRoute.children) {
+            queue.push(...(currentRoute.children));
+        }
+    }
+    return null;
+}
+
+export function getFirstRouterNameByCurrentRoute(parentName: string) {
+    const currentRoute = findRouteByName(parentName);
+    if (currentRoute) {
+        const hasAuthChildrenRouter = currentRoute.children?.find((item) => hasAnyPermission(item.meta?.roles || []));
+        return hasAuthChildrenRouter ? hasAuthChildrenRouter.name : parentName;
+    }
+    return parentName;
 }
