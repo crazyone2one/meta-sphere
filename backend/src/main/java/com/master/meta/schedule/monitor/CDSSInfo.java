@@ -46,14 +46,16 @@ public class CDSSInfo extends BaseScheduleJob {
                 bodyContent(sensorList, now) +
                 END_FLAG;
         String filePath = "/app/files/aqjk/" + fileName;
+        String ycEndTime = config.getAdditionalFields().get("ycEndTime").toString();
+        LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2(ycEndTime);
         sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
-        if (config.isYcFlag()) {
-            generateYcFile(sensorList, now);
+        // 异常报警文件
+        if (config.isYcFlag() && (now.isBefore(endTime) || now.getMinute() == endTime.getMinute())) {
+            generateYcFile(sensorList, now, ycEndTime);
         }
     }
 
-    private void generateYcFile(List<Row> sensorList, LocalDateTime now) {
-        Object ycEndTime = config.getAdditionalFields().get("ycEndTime");
+    private void generateYcFile(List<Row> sensorList, LocalDateTime now, String ycEndTime) {
         LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2((String) ycEndTime);
         Optional.ofNullable(config.getAdditionalFields().get("ycCode")).ifPresent(
                 code -> {
@@ -69,7 +71,7 @@ public class CDSSInfo extends BaseScheduleJob {
                     content.append(row.getString("sensor_value_unit")).append(";");
                     content.append(config.getAdditionalFields().get("ycType")).append(";");
                     content.append(config.getAdditionalFields().get("ycBeginTime")).append(";");
-                    content.append((now.isAfter(endTime) || now.isEqual(endTime)) ? ycEndTime : "").append(";");
+                    content.append((now.getMinute() == endTime.getMinute()) ? ycEndTime : "").append(";");
                     content.append("100").append(";");
                     content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
                     content.append("100").append(";");
@@ -77,7 +79,7 @@ public class CDSSInfo extends BaseScheduleJob {
                     content.append("100").append(";");
 
                     content.append(";");
-                    content.append(";");
+                    content.append(now.getMinute() == endTime.getMinute() ? RandomUtil.generateRandomString(8) : "").append(";");
                     content.append(";");
                     content.append(";");
 
