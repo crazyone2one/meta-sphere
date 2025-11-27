@@ -17,7 +17,7 @@ const props = defineProps({
     required: true,
   },
   permission: {
-    type: Array<String>,
+    type: Array<string>,
     required: true,
   },
 })
