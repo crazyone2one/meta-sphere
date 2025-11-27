@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vueuse/core": "^14.1.0",
     "alova": "^3.3.4",
     "dayjs": "^1.11.19",
     "echarts": "^6.0.0",

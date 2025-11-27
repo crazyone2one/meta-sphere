@@ -47,7 +47,7 @@ import {
     NFlex,
     NSplit,
     NSwitch, NDrawer,
-    NDrawerContent, NCheckbox, NCheckboxGroup
+    NDrawerContent, NCheckbox, NCheckboxGroup,NGi
 } from 'naive-ui'
 
 export default create({
@@ -85,6 +85,6 @@ export default create({
         NMessageProvider,
         NLoadingBarProvider, NSelect, NDivider, NSplit,
         NNotificationProvider, NDataTable, NModal, NGrid, NFormItemGi, NScrollbar, NSpin, NFlex, NSwitch, NDrawer,
-        NDrawerContent, NRadioButton, NCheckbox, NCheckboxGroup
+        NDrawerContent, NRadioButton, NCheckbox, NCheckboxGroup,NGi
     ]
 })

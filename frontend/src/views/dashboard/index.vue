@@ -1,45 +1,39 @@
 <script setup lang="ts">
+import {useECharts} from "/@/hook/use-charts.ts";
+import {ref} from "vue";
+import type {EChartsOption} from "echarts";
+import {barOption, lineOption, pieOption, scatterOption} from "/@/views/dashboard/utils.ts";
 
-import * as echarts from 'echarts/core';
-import {GridComponent,type GridComponentOption} from 'echarts/components';
-import {LineChart,type LineSeriesOption} from 'echarts/charts';
-import {UniversalTransition} from 'echarts/features';
-import {CanvasRenderer} from 'echarts/renderers';
-import {onMounted} from "vue";
+const mainChart = ref<HTMLElement | null>(null);
+const secondChart = ref<HTMLElement | null>(null);
+const pieChart = ref<HTMLElement | null>(null);
+const scatterChart = ref<HTMLElement | null>(null);
 
-echarts.use([GridComponent, LineChart, CanvasRenderer, UniversalTransition]);
-
-type EChartsOption = echarts.ComposeOption<
-    GridComponentOption | LineSeriesOption
->;
-
-
-onMounted(() => {
-  const chartDom = document.getElementById('main')!;
-  const myChart = echarts.init(chartDom);
-  let option: EChartsOption = {
-    xAxis: {
-      type: 'category',
-      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    },
-    yAxis: {
-      type: 'value'
-    },
-    series: [
-      {
-        data: [150, 230, 224, 218, 135, 147, 260],
-        type: 'line'
-      }
-    ]
-  };
-  option && myChart.setOption(option);
-})
+const mainChartOption = ref(barOption)
+const secondChartOption = ref(lineOption)
+const pieChartOption = ref(pieOption)
+const scatterChartOption = ref(scatterOption)
+useECharts(mainChart, mainChartOption.value as EChartsOption);
+useECharts(secondChart, secondChartOption.value as EChartsOption);
+useECharts(pieChart, pieChartOption.value as EChartsOption);
+useECharts(scatterChart, scatterChartOption.value as EChartsOption);
 </script>
 
 <template>
-  <div>
-    <div id="main" style="width: 600px;height:400px;"></div>
-  </div>
+  <n-grid x-gap="12" :cols="4">
+    <n-gi>
+      <div ref="mainChart" style="width: 100%; height: 400px;"></div>
+    </n-gi>
+    <n-gi>
+      <div ref="secondChart" style="width: 100%; height: 400px;"></div>
+    </n-gi>
+    <n-gi>
+      <div ref="pieChart" style="width: 100%; height: 400px;"></div>
+    </n-gi>
+    <n-gi>
+      <div ref="scatterChart" style="width: 100%; height: 400px;"></div>
+    </n-gi>
+  </n-grid>
 </template>
 
 <style scoped>
