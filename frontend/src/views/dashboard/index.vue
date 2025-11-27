@@ -1,33 +1,45 @@
 <script setup lang="ts">
 
-import DynamicFormModal from "/@/components/dynamic-form-modal/DynamicFormModal.vue";
-import {type FormData} from "/@/components/dynamic-form-modal/DynamicFormModal.vue";
-import {ref} from "vue";
+import * as echarts from 'echarts/core';
+import {GridComponent,type GridComponentOption} from 'echarts/components';
+import {LineChart,type LineSeriesOption} from 'echarts/charts';
+import {UniversalTransition} from 'echarts/features';
+import {CanvasRenderer} from 'echarts/renderers';
+import {onMounted} from "vue";
 
-const showDynamicFormModalVisible = ref(false);
-const dynamicFormModalRef = ref<InstanceType<typeof DynamicFormModal>>();
-const config = ref<FormData>({})
-const handleOpenDynamicFormModal = () => {
-  showDynamicFormModalVisible.value = true;
-  config.value = {k1: `${crypto.randomUUID()}`, k2: 2, k3Ids: ['1', '2'],k4: 'true',k5:false}
-}
-const handleCloseDynamicFormModal = () => {
-  showDynamicFormModalVisible.value = false;
-}
+echarts.use([GridComponent, LineChart, CanvasRenderer, UniversalTransition]);
 
-const handleSubmit = (formData: FormData) => {
-  console.log(formData)
-}
+type EChartsOption = echarts.ComposeOption<
+    GridComponentOption | LineSeriesOption
+>;
 
+
+onMounted(() => {
+  const chartDom = document.getElementById('main')!;
+  const myChart = echarts.init(chartDom);
+  let option: EChartsOption = {
+    xAxis: {
+      type: 'category',
+      data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+    },
+    yAxis: {
+      type: 'value'
+    },
+    series: [
+      {
+        data: [150, 230, 224, 218, 135, 147, 260],
+        type: 'line'
+      }
+    ]
+  };
+  option && myChart.setOption(option);
+})
 </script>
 
 <template>
-  <n-button @click="handleOpenDynamicFormModal">打开动态表单弹框</n-button>
-  <dynamic-form-modal ref="dynamicFormModalRef"
-                      v-model:show-modal="showDynamicFormModalVisible"
-                      :config="config"
-                      @close="handleCloseDynamicFormModal"
-                      @update="handleSubmit"/>
+  <div>
+    <div id="main" style="width: 600px;height:400px;"></div>
+  </div>
 </template>
 
 <style scoped>
