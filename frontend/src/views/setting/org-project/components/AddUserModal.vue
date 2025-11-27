@@ -100,7 +100,7 @@ const getUserGroupOptions = async () => {
 watch(() => showModal.value, (newValue) => {
   if (newValue) {
     fetchData();
-    if (!userGroupOptions.length > 0) {
+    if (userGroupOptions.length === 0) {
       getUserGroupOptions();
     } else {
       currentUserGroupOptions.value = userGroupOptions;
