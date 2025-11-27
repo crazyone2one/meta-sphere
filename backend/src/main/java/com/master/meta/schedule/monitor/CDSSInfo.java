@@ -47,6 +47,48 @@ public class CDSSInfo extends BaseScheduleJob {
                 END_FLAG;
         String filePath = "/app/files/aqjk/" + fileName;
         sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
+        if (config.isYcFlag()) {
+            generateYcFile(sensorList, now);
+        }
+    }
+
+    private void generateYcFile(List<Row> sensorList, LocalDateTime now) {
+        Object ycEndTime = config.getAdditionalFields().get("ycEndTime");
+        LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2((String) ycEndTime);
+        Optional.ofNullable(config.getAdditionalFields().get("ycCode")).ifPresent(
+                code -> {
+                    List<Row> list = sensorList.stream().filter(row -> row.getString("sensor_code").equals(code)).toList();
+                    Row row = list.getFirst();
+                    String fileName = super.projectNum + "_YCBJ_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+                    StringBuilder content = new StringBuilder();
+                    content.append(super.projectNum).append(";").append(super.projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
+                    // 文件体
+                    content.append(code).append(";");
+                    content.append(row.getString("sensor_type_name")).append(";");
+                    content.append(row.getString("sensor_location")).append(";");
+                    content.append(row.getString("sensor_value_unit")).append(";");
+                    content.append(config.getAdditionalFields().get("ycType")).append(";");
+                    content.append(config.getAdditionalFields().get("ycBeginTime")).append(";");
+                    content.append((now.isAfter(endTime) || now.isEqual(endTime)) ? ycEndTime : "").append(";");
+                    content.append("100").append(";");
+                    content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
+                    content.append("100").append(";");
+                    content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
+                    content.append("100").append(";");
+
+                    content.append(";");
+                    content.append(";");
+                    content.append(";");
+                    content.append(";");
+
+                    content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
+                    content.append(END_FLAG);
+                    String filePath = "/app/files/aqjk/" + fileName;
+                    log.info("生成异常报警数据文件: {}", content);
+                    sensorUtil.generateFile(filePath, content.toString(), "异常报警数据[" + fileName + "]");
+                }
+        );
+
     }
 
     private String bodyContent(List<Row> rows, LocalDateTime localDateTime) {
