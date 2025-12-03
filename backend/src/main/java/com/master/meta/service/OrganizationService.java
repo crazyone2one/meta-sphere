@@ -26,4 +26,6 @@ public interface OrganizationService extends IService<Organization> {
     void addMemberBySystem(OrganizationMemberRequest request, String createUser);
 
     Map<String, Long> getTotal(String organizationId);
+
+    List<OptionDTO> listOption(String currentUserId);
 }

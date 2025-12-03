@@ -4,12 +4,14 @@ import com.master.meta.constants.ProjectApplicationType;
 import com.master.meta.constants.TemplateScene;
 import com.master.meta.constants.TemplateScopeType;
 import com.master.meta.dto.system.TemplateDTO;
+import com.master.meta.dto.system.request.TemplateRequest;
 import com.master.meta.dto.system.request.TemplateUpdateRequest;
 import com.master.meta.entity.ProjectApplication;
 import com.master.meta.entity.SystemProject;
 import com.master.meta.entity.Template;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.service.*;
+import com.mybatisflex.core.paginate.Page;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -146,6 +148,32 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
                 .forEach(scene ->
                         templateEnableConfig.put(scene.name(), !isOrganizationTemplateEnable(project.getOrganizationId(), scene.name())));
         return templateEnableConfig;
+    }
+
+    @Override
+    public Page<Template> getTemplatePage(TemplateRequest request) {
+        projectService.checkResourceExist(request.getScopedId());
+        Page<Template> templates = super.templatePage(request);
+        // 标记默认模板
+        // 查询项目下设置中配置的默认模板
+        String defaultProjectId = getDefaultTemplateId(request.getScopedId(), request.getScene());
+        Template defaultTemplate = templates.getRecords().stream()
+                .filter(t -> Objects.equals(defaultProjectId, t.getId()))
+                .findFirst()
+                .orElse(null);
+
+        // 如果查询不到默认模板，设置内置模板为默认模板
+        if (defaultTemplate == null) {
+            Optional<Template> internalTemplate = templates.getRecords().stream()
+                    .filter(Template::getInternal).findFirst();
+            if (internalTemplate.isPresent()) {
+                defaultTemplate = internalTemplate.get();
+            }
+        }
+        if (defaultTemplate != null) {
+            defaultTemplate.setEnableDefault(true);
+        }
+        return templates;
     }
 
     private void checkDefault(Template template) {

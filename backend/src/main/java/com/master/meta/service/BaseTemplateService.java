@@ -2,8 +2,10 @@ package com.master.meta.service;
 
 import com.master.meta.dto.system.TemplateDTO;
 import com.master.meta.dto.system.request.TemplateCustomFieldRequest;
+import com.master.meta.dto.system.request.TemplateRequest;
 import com.master.meta.dto.system.request.TemplateSystemCustomFieldRequest;
 import com.master.meta.entity.Template;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 import jakarta.validation.Valid;
 
@@ -38,4 +40,6 @@ public interface BaseTemplateService extends IService<Template> {
     List<Template> getTemplates(String scopeId, String scene);
 
     TemplateDTO getTemplateDTO(Template template);
+
+    Page<Template> templatePage(TemplateRequest request);
 }

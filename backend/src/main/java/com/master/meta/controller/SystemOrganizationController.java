@@ -1,6 +1,7 @@
 package com.master.meta.controller;
 
 import com.master.meta.constants.PermissionConstants;
+import com.master.meta.dto.system.OptionDTO;
 import com.master.meta.dto.system.request.MemberRequest;
 import com.master.meta.dto.system.request.OrganizationMemberRequest;
 import com.master.meta.dto.system.user.UserExtendDTO;
@@ -80,6 +81,12 @@ public class SystemOrganizationController {
     @Operation(description = "查询所有组织")
     public List<Organization> list() {
         return organizationService.list();
+    }
+
+    @GetMapping("org-option")
+    @Operation(description = "查询所有组织")
+    public List<OptionDTO> listOption() {
+        return organizationService.listOption(SessionUtils.getCurrentUserId());
     }
 
     /**

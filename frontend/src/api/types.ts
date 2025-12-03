@@ -67,3 +67,23 @@ export interface iLoadOptionParams {
     roleId?: string;
     organizationId?: string;
 }
+
+export interface FormRuleItem {
+    type: string; // 表单类型
+    field: string; // 字段
+    title: string; // label 表单标签
+    value: string | string[] | number | number[]; // 目前的值
+    effect: {
+        required: boolean; // 是否必填
+    };
+    // 级联关联到某一个form上 可能存在多个级联
+    options: {
+        label: string;
+        value: string;
+    }[];
+    link: string[];
+    // 梳理表单所需要属性
+    control: { value: string; rule: FormRuleItem[] };
+    props: Record<string, any>;
+    [key: string]: any;
+}

@@ -103,6 +103,26 @@ public class OrganizationServiceImpl extends ServiceImpl<OrganizationMapper, Org
         return total;
     }
 
+    @Override
+    public List<OptionDTO> listOption(String currentUserId) {
+        boolean exists = QueryChain.of(UserRoleRelation.class).where(USER_ROLE_RELATION.USER_ID.eq(currentUserId)
+                .and(USER_ROLE_RELATION.ROLE_CODE.eq("admin"))).exists();
+        if (exists) {
+            return queryChain().select(ORGANIZATION.ID, ORGANIZATION.NAME)
+                    .where(ORGANIZATION.ENABLE.eq(true))
+                    .listAs(OptionDTO.class);
+        }
+        List<String> relatedOrganizationIds = QueryChain.of(UserRoleRelation.class).select(QueryMethods.distinct(ORGANIZATION.ID))
+                .from(USER_ROLE_RELATION).join(ORGANIZATION).on(ORGANIZATION.ID.eq(USER_ROLE_RELATION.ORGANIZATION_ID))
+                .where(USER_ROLE_RELATION.USER_ID.eq(currentUserId).and(ORGANIZATION.ENABLE.eq(true))).listAs(String.class);
+        if (CollectionUtils.isEmpty(relatedOrganizationIds)) {
+            return List.of();
+        }
+        return queryChain().select(ORGANIZATION.ID, ORGANIZATION.NAME)
+                .where(ORGANIZATION.ENABLE.eq(true).and(ORGANIZATION.ID.in(relatedOrganizationIds)))
+                .listAs(OptionDTO.class);
+    }
+
     private void addMemberAndGroup(OrganizationMemberRequest request, String createUser) {
         checkOrgExistByIds(List.of(request.getOrganizationId()));
         Map<String, SystemUser> userMap = checkUserExist(request.getUserIds());

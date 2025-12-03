@@ -16,25 +16,19 @@ public class JsonTest {
     @Test
     void testJson() throws Exception {
         String json = "{\"走向长度\":\"\",\"倾向长度\":\"\",\"煤层厚度\":\"\",\"煤层倾角\":\"\",\"平均采高\":\"\",\"已采长度\":\"\",\"剩余长度\":\"\",\"自然发火期\":\"\",\"是否智能化综采面\":\"\",\"工作面风量\":\"\",\"上下顺槽支护方式\":\"\",\"隐蔽到致灾因素普查情况\":\"\",\"顶板垮落 （垮落带、弯曲下沉带、裂隙带）情况\":\"\"}";
-        Map<String, Object> stringObjectMap = JSON.jsonToMap.apply(json);
-//        System.out.println(stringObjectMap);
-        Set<String> fieldsToExtract = new HashSet<>();
-        for (Map.Entry<String, Object> entry : stringObjectMap.entrySet()) {
-            fieldsToExtract.add(entry.getKey());
-        }
-//        System.out.println(fieldsToExtract);
-        String result = extractFields(json, fieldsToExtract);
-        System.out.println(result);
+        String fixed = fixEscapedJson(json);
+        System.out.println(fixed); // 输出: {"名称":"","参数":"","用途":""}
+        parseEscapedJson(json);
     }
-    public static String extractFields(String json, Set<String> requiredFields) throws Exception {
+    public static String fixEscapedJson(String escapedJson) {
+        // 去除多余的反斜杠
+        return escapedJson.replace("\\\"", "\"");
+    }
+    public static void parseEscapedJson(String escapedJson) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
-        JsonNode originalNode = mapper.readTree(json);
-
-        ObjectNode resultNode = mapper.createObjectNode();
-        for (String field : requiredFields) {
-            resultNode.set(field, originalNode.get(field));
-        }
-
-        return mapper.writeValueAsString(resultNode);
+        // 先解析为字符串，再解析为实际对象
+        String unescaped = mapper.readValue(escapedJson, String.class);
+        Object result = mapper.readTree(unescaped);
+        System.out.println(result);
     }
 }

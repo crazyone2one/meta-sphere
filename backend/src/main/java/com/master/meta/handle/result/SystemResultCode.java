@@ -18,6 +18,8 @@ public enum SystemResultCode implements IResultCode {
     PROJECT_TEMPLATE_PERMISSION(102002, "project_template_permission_error"),
     CUSTOM_FIELD_EXIST(100012, "custom_field.exist"),
     TEMPLATE_SCENE_ILLEGAL(100010, "template_scene_illegal_error"),
+    ORGANIZATION_TEMPLATE_PERMISSION(101009, "organization_template_permission_error"),
+    INTERNAL_CUSTOM_FIELD_PERMISSION(100008, "internal_custom_field_permission_error"),
     TEMPLATE_EXIST(100013, "template.exist"),
     ;
     private final int code;

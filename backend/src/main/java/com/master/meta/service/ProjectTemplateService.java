@@ -1,8 +1,10 @@
 package com.master.meta.service;
 
 import com.master.meta.dto.system.TemplateDTO;
+import com.master.meta.dto.system.request.TemplateRequest;
 import com.master.meta.dto.system.request.TemplateUpdateRequest;
 import com.master.meta.entity.Template;
+import com.mybatisflex.core.paginate.Page;
 
 import java.util.List;
 import java.util.Map;
@@ -23,4 +25,6 @@ public interface ProjectTemplateService extends BaseTemplateService {
     void setDefaultTemplate(String projectId, String id);
 
     Map<String, Boolean> getProjectTemplateEnableConfig(String projectId);
+
+    Page<Template> getTemplatePage(TemplateRequest request);
 }

@@ -1,7 +1,9 @@
 package com.master.meta.controller;
 
 import com.master.meta.constants.PermissionConstants;
+import com.master.meta.dto.BasePageRequest;
 import com.master.meta.dto.system.CustomFieldDTO;
+import com.master.meta.dto.system.request.CustomFieldRequest;
 import com.master.meta.dto.system.request.CustomFieldUpdateRequest;
 import com.master.meta.entity.CustomField;
 import com.master.meta.handle.log.annotation.Log;
@@ -110,13 +112,14 @@ public class ProjectCustomFieldController {
     /**
      * 分页查询自定义字段。
      *
-     * @param page 分页对象
+     * @param request 分页对象
      * @return 分页对象
      */
-    @GetMapping("page")
+    @PostMapping("page")
     @Operation(description = "分页查询自定义字段")
-    public Page<CustomField> page(@Parameter(description = "分页信息") Page<CustomField> page) {
-        return projectCustomFieldService.page(page);
+    @RequiresPermissions(PermissionConstants.PROJECT_TEMPLATE_READ)
+    public Page<CustomFieldDTO> page(@Validated @RequestBody CustomFieldRequest request) {
+        return projectCustomFieldService.page(request);
     }
 
 }

@@ -12,4 +12,5 @@ export interface AppState {
     topMenus: RouteRecordRaw[];
     currentTopMenu: RouteRecordRaw;
     currentMenuConfig: string[];
+    orgList: { id: string; name: string }[];
 }

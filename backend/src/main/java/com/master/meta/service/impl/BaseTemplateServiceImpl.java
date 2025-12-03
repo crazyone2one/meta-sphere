@@ -4,6 +4,7 @@ import com.master.meta.constants.TemplateScene;
 import com.master.meta.dto.system.TemplateCustomFieldDTO;
 import com.master.meta.dto.system.TemplateDTO;
 import com.master.meta.dto.system.request.TemplateCustomFieldRequest;
+import com.master.meta.dto.system.request.TemplateRequest;
 import com.master.meta.dto.system.request.TemplateSystemCustomFieldRequest;
 import com.master.meta.entity.CustomField;
 import com.master.meta.entity.CustomFieldOption;
@@ -19,6 +20,7 @@ import com.master.meta.service.BaseCustomFieldService;
 import com.master.meta.service.BaseTemplateCustomFieldService;
 import com.master.meta.service.BaseTemplateService;
 import com.master.meta.utils.ServiceUtils;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -216,6 +218,16 @@ public class BaseTemplateServiceImpl extends ServiceImpl<TemplateMapper, Templat
         templateDTO.setCustomFields(fieldDTOS);
         templateDTO.setSystemFields(systemFieldDTOS);
         return templateDTO;
+    }
+
+    @Override
+    public Page<Template> templatePage(TemplateRequest request) {
+        checkScene(request.getScene());
+        Page<Template> page = queryChain().where(TEMPLATE.SCOPE_ID.eq(request.getScopedId()).and(TEMPLATE.SCENE.eq(request.getScene())))
+                .and(TEMPLATE.NAME.like(request.getKeyword()))
+                .page(new Page<>(request.getPage(), request.getPageSize()));
+        translateInternalTemplate(page.getRecords());
+        return page;
     }
 
     private void checkUpdateExist(Template template) {

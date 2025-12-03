@@ -2,6 +2,7 @@ package com.master.meta.controller;
 
 import com.master.meta.constants.PermissionConstants;
 import com.master.meta.dto.system.TemplateDTO;
+import com.master.meta.dto.system.request.TemplateRequest;
 import com.master.meta.dto.system.request.TemplateUpdateRequest;
 import com.master.meta.entity.Template;
 import com.master.meta.handle.log.annotation.Log;
@@ -114,16 +115,10 @@ public class ProjectTemplateController {
         return projectTemplateService.getProjectTemplateEnableConfig(projectId);
     }
 
-    /**
-     * 分页查询模版。
-     *
-     * @param page 分页对象
-     * @return 分页对象
-     */
-    @GetMapping("page")
+    @PostMapping("page")
     @Operation(description = "分页查询模版")
-    public Page<Template> page(@Parameter(description = "分页信息") Page<Template> page) {
-        return projectTemplateService.page(page);
+    public Page<Template> page(@Parameter(description = "分页信息") TemplateRequest request) {
+        return projectTemplateService.getTemplatePage(request);
     }
 
 }

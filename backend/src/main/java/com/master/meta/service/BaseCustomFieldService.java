@@ -2,8 +2,10 @@ package com.master.meta.service;
 
 import com.master.meta.dto.system.CustomFieldDTO;
 import com.master.meta.dto.system.request.CustomFieldOptionRequest;
+import com.master.meta.dto.system.request.CustomFieldRequest;
 import com.master.meta.entity.CustomField;
 import com.master.meta.entity.CustomFieldOption;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.service.IService;
 
 import java.util.List;
@@ -34,4 +36,10 @@ public interface BaseCustomFieldService extends IService<CustomField> {
     CustomField getWithCheck(String fieldId);
 
     List<CustomField> getByIds(List<String> fieldIds);
+
+    void delete(String id);
+
+    CustomFieldDTO getCustomFieldDTOWithCheck(String id);
+
+    Page<CustomFieldDTO> page(CustomFieldRequest request);
 }

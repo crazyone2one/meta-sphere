@@ -51,6 +51,9 @@ const handleLogin = () => {
           appStore.setCurrentOrgId(res.lastOrganizationId || '');
           appStore.setCurrentProjectId(res.lastProjectId || '');
         })
+        authApi.getOrgOptions().then(res => {
+          appStore.setOrgList(res)
+        })
         window.$message.success('登录成功');
         const {redirect, ...othersQuery} = router.currentRoute.value.query;
         router.push({

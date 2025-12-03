@@ -107,7 +107,7 @@ const ProjectManagement:RouteRecordRaw={
             name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_TEMPLATE_FIELD_SETTING,
             component: () => import('/@/views/project-management/template/components/projectFieldSetting.vue'),
             meta: {
-                title: '字段设置', roles: ['PROJECT_TEMPLATE:READ'], isTopMenu: true,
+                title: '字段设置', roles: ['PROJECT_TEMPLATE:READ'],
             }
         },
         {
@@ -115,7 +115,15 @@ const ProjectManagement:RouteRecordRaw={
             name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT,
             component: () => import('/@/views/project-management/template/components/TemplateManagement.vue'),
             meta: {
-                title: '模板列表', roles: ['PROJECT_TEMPLATE:READ'], isTopMenu: true,
+                title: '模板列表', roles: ['PROJECT_TEMPLATE:READ'],
+            }
+        },
+        {
+            path: 'projectManagementTemplateScheduleDetail/:mode?',
+            name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT_SCHEDULE_DETAIL,
+            component: () => import('/@/views/project-management/template/components/TemplateDetail.vue'),
+            meta: {
+                title: '创建schedule模板', roles: ['PROJECT_TEMPLATE:READ+UPDATE', 'PROJECT_TEMPLATE:READ+ADD'],
             }
         }
     ]

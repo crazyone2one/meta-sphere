@@ -1,6 +1,5 @@
-import type { FormItemType } from "/@/api/types.ts";
-import type { LocationQueryValue } from "vue-router";
-import type { FormRules } from "naive-ui";
+import type {FormItemType, FormRuleItem} from "/@/api/types.ts";
+import type {LocationQueryValue} from "vue-router";
 
 export type SceneType = 'FUNCTIONAL' | 'BUG' | 'API' | 'UI' | 'TEST_PLAN' | LocationQueryValue[] | LocationQueryValue;
 
@@ -24,6 +23,7 @@ export interface AddOrUpdateField {
 
     [key: string]: any;
 }
+
 // 自定义字段
 export interface DefinedFieldItem {
     id: string;
@@ -42,11 +42,37 @@ export interface DefinedFieldItem {
     options: FieldOptions[] | null;
     required?: boolean | undefined;
     fApi?: any; // 表单值
-    formRules?: FormRules; // 表单列表
+    formRules?: FormRuleItem; // 表单列表
     [key: string]: any;
 }
+
 export interface fieldIconAndNameModal {
     value: string;
     iconName: string; // 图标名称
     label: string; // 对应标签
+}
+
+export interface CustomField {
+    fieldId: string;
+    required?: boolean; // 是否必填
+    apiFieldId?: string; // api字段名
+    defaultValue: string | (string | number)[] | number; // 默认值
+    [key: string]: any;
+}
+
+export interface ActionTemplateManage {
+    id?: string;
+    name: string;
+    remark: string;
+    scopeId: string;
+    enableThirdPart?: boolean; // 是否开启api字段名配置
+    scene?: SceneType;
+    customFields?: CustomField[];
+    fieldType?: string;
+    systemFields?: Record<string, any>[];
+    enablePlatformDefault?: boolean;
+    internal?: boolean; // 是否为系统模板
+    platForm?: string;
+    uploadImgFileIds: string[]; // 模板附件
+    [key: string]: any;
 }

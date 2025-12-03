@@ -29,7 +29,7 @@ export const ProjectManagementRouteEnum = {
     PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT_CASE_DETAIL: 'projectManagementTemplateManagementCaseDetail',
     PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT_API_DETAIL: 'projectManagementTemplateManagementApiDetail',
     PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT_BUG_DETAIL: 'projectManagementTemplateManagementBugDetail',
-    PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT_WORKFLOW: 'projectManagementTemplateManagementWorkFlow',
+    PROJECT_MANAGEMENT_TEMPLATE_MANAGEMENT_SCHEDULE_DETAIL: 'projectManagementTemplateManagementScheduleDetail',
     PROJECT_MANAGEMENT_TEMPLATE_FIELD_SETTING: 'projectManagementTemplateFiledSetting',
     PROJECT_MANAGEMENT_PERMISSION_VERSION: 'projectManagementPermissionVersion',
     PROJECT_MANAGEMENT_PERMISSION_USER_GROUP: 'projectManagementPermissionUserGroup',
@@ -37,6 +37,7 @@ export const ProjectManagementRouteEnum = {
     PROJECT_MANAGEMENT_MENU_MANAGEMENT_ERROR_REPORT_RULE: 'projectManagementMenuManagementErrorReportRule',
     PROJECT_MANAGEMENT_ENVIRONMENT_MANAGEMENT: 'projectManagementEnvironmentManagement',
 } as const
+export type ProjectManagementRouteEnumType = typeof ProjectManagementRouteEnum[keyof typeof ProjectManagementRouteEnum];
 export const SettingRouteEnum = {
     SETTING: 'setting',
     SETTING_SYSTEM: 'settingSystem',

@@ -18,4 +18,5 @@ export const authApi = {
         return method;
     },
     getUserInfo: () => get<UserState>('/system-user/get-user-info', {}, {cacheFor: 0}),
+    getOrgOptions: () => get<{ id: string; name: string }[]>('/system/organization/org-option', {}, {cacheFor: 0}),
 }

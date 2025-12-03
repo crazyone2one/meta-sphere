@@ -17,7 +17,8 @@ const useAppStore = defineStore('app', {
         projectList: [],
         topMenus: [],
         currentTopMenu: {} as RouteRecordRaw,
-        currentMenuConfig: Object.keys(featureRouteMap)
+        currentMenuConfig: Object.keys(featureRouteMap),
+        orgList: [],
     }),
 
     getters: {
@@ -82,6 +83,12 @@ const useAppStore = defineStore('app', {
         },
         async setCurrentMenuConfig(menuConfig: string[]) {
             this.currentMenuConfig = menuConfig;
+        },
+        /**
+         * 设置当前组织列表
+         */
+        setOrgList(orgList: { id: string; name: string }[]) {
+            this.orgList = orgList;
         },
     },
     persist: true

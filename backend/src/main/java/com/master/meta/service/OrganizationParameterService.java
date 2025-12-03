@@ -10,5 +10,7 @@ import com.master.meta.entity.OrganizationParameter;
  * @since 2025-11-21
  */
 public interface OrganizationParameterService extends IService<OrganizationParameter> {
+    String getValue(String orgId, String key);
 
+    String getOrgTemplateEnableKeyByScene(String scene);
 }
