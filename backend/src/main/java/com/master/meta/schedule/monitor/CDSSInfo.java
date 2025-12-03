@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -37,33 +38,36 @@ public class CDSSInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(super.projectNum, SensorMNType.SENSOR_AQJK_CO, false);
+        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(projectNum, SensorMNType.SENSOR_AQJK_CO, false);
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_CDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
-                // 文件体
-                bodyContent(sensorList, now) +
-                END_FLAG;
-        String filePath = "/app/files/aqjk/" + fileName;
+        //        异常开始时间
         String ycEndTime = config.getAdditionalFields().get("ycEndTime").toString();
         LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2(ycEndTime);
+        // 测点数据异常值
+        String ycValue = Optional.ofNullable(config.getAdditionalFields().get("ycValue")).orElse("35").toString();
+        String fileName = projectNum + "_CDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+                // 文件体
+                bodyContent(sensorList, now, endTime, ycValue) +
+                END_FLAG;
+        String filePath = "/app/files/aqjk/" + fileName;
         sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
         // 异常报警文件
         if (config.isYcFlag() && (now.isBefore(endTime) || now.getMinute() == endTime.getMinute())) {
-            generateYcFile(sensorList, now, ycEndTime);
+            generateYcFile(sensorList, now, ycEndTime, ycValue);
         }
     }
 
-    private void generateYcFile(List<Row> sensorList, LocalDateTime now, String ycEndTime) {
-        LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2((String) ycEndTime);
+    private void generateYcFile(List<Row> sensorList, LocalDateTime now, String ycEndTime, String ycValue) {
+        LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2(ycEndTime);
         Optional.ofNullable(config.getAdditionalFields().get("ycCode")).ifPresent(
                 code -> {
                     List<Row> list = sensorList.stream().filter(row -> row.getString("sensor_code").equals(code)).toList();
                     Row row = list.getFirst();
-                    String fileName = super.projectNum + "_YCBJ_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+                    String fileName = projectNum + "_YCBJ_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
                     StringBuilder content = new StringBuilder();
-                    content.append(super.projectNum).append(";").append(super.projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
+                    content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
                     // 文件体
                     content.append(code).append(";");
                     content.append(row.getString("sensor_type_name")).append(";");
@@ -72,11 +76,11 @@ public class CDSSInfo extends BaseScheduleJob {
                     content.append(config.getAdditionalFields().get("ycType")).append(";");
                     content.append(config.getAdditionalFields().get("ycBeginTime")).append(";");
                     content.append((now.getMinute() == endTime.getMinute()) ? ycEndTime : "").append(";");
-                    content.append("100").append(";");
+                    content.append(ycValue).append(";");
                     content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
-                    content.append("100").append(";");
+                    content.append(ycValue).append(";");
                     content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
-                    content.append("100").append(";");
+                    content.append(ycValue).append(";");
 
                     content.append(";");
                     content.append(now.getMinute() == endTime.getMinute() ? RandomUtil.generateRandomString(8) : "").append(";");
@@ -93,15 +97,16 @@ public class CDSSInfo extends BaseScheduleJob {
 
     }
 
-    private String bodyContent(List<Row> rows, LocalDateTime localDateTime) {
-        ScheduleConfigDTO configDTO = super.config;
+    private String bodyContent(List<Row> rows, LocalDateTime localDateTime, LocalDateTime endTime, String ycValue) {
+        ScheduleConfigDTO configDTO = config;
         CustomConfig customConfig = configDTO.getCustomConfig();
         assert customConfig != null;
 
         StringBuilder content = new StringBuilder();
         Map<String, Row> sensorMap = rows.stream()
                 .collect(Collectors.toMap(row -> row.getString("sensor_code"), row -> row));
-        val unRealInfoCode = super.config.getAdditionalFields().get("unRealInfoCode");
+        val unRealInfoCode = config.getAdditionalFields().get("unRealInfoCode");
+        boolean ycFlag = config.isYcFlag() && (localDateTime.isBefore(endTime) || localDateTime.getMinute() == endTime.getMinute());
         for (Row row : rows) {
             String sensorInfoCode = row.getString("sensor_code");
             // 指定的测点不生成测点数据
@@ -114,17 +119,17 @@ public class CDSSInfo extends BaseScheduleJob {
             if ("1010".equals(sensorType) || "1008".equals(sensorType)) {
                 continue;
             }
-            String sensorValue;
+            AtomicReference<String> sensorValue = new AtomicReference<>("");
             String sensorState = "0";
             if ("KG".equals(row.getString("sensor_value_type"))) {
                 Object ftCode = config.getAdditionalFields().get("ftCode");
                 if (ftCode != null && ftCode.equals(sensorInfoCode)) {
-                    sensorValue = "0";
+                    sensorValue.set("0");
                 } else {
-                    sensorValue = "1";
+                    sensorValue.set("1");
                 }
             } else {
-                sensorValue = switch (sensorType) {
+                sensorValue.set(switch (sensorType) {
                     case "0043" -> // SENSOR_CH4
                             RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_CH4.getMinValue(), SensorMNType.SENSOR_CH4.getMaxValue());
                     case "0004" -> // SENSOR_CO
@@ -136,13 +141,13 @@ public class CDSSInfo extends BaseScheduleJob {
                     case "0013" -> // SENSOR_0012
                             RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0013.getMinValue(), SensorMNType.SENSOR_0013.getMaxValue());
                     default -> RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
-                };
+                });
             }
             if (Boolean.TRUE.equals(customConfig.getSuperthreshold())) {
                 if (Objects.nonNull(customConfig.getSensorIds())) {
                     if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
                         List<Double> thresholdInterval = customConfig.getThresholdInterval();
-                        sensorValue = RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast());
+                        sensorValue.set(RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast()));
                     }
                 }
             }
@@ -154,6 +159,14 @@ public class CDSSInfo extends BaseScheduleJob {
                 } else {
                     sensorState = "0";
                 }
+            }
+            // 指定测点与异常数据测点值一致
+            if (ycFlag) {
+                Optional.ofNullable(config.getAdditionalFields().get("ycCode")).ifPresent(code -> {
+                    if (code.equals(sensorInfoCode)) {
+                        sensorValue.set(ycValue);
+                    }
+                });
             }
             String sensorContent = sensorInfoCode + ";"
                     + sensor.getString("sensor_type_name") + ";"
