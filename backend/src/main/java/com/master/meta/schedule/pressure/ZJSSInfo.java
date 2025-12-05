@@ -43,7 +43,7 @@ public class ZJSSInfo extends BaseScheduleJob {
                     bodyContent(sensorList, now) +
                     END_FLAG;
             String filePath = "/app/files/ky/" + fileName;
-//            sensorUtil.generateFile(filePath, content, "支架阻力测点实时数据[" + fileName + "]");
+            sensorUtil.generateFile(filePath, content, "支架阻力测点实时数据[" + fileName + "]");
         }
     }
 
