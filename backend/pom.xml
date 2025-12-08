@@ -162,6 +162,18 @@
             <artifactId>influxdb-client-java</artifactId>
             <version>7.3.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-core -->
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-core</artifactId>
+            <version>3.0.0-M2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.sshd/sshd-scp -->
+        <dependency>
+            <groupId>org.apache.sshd</groupId>
+            <artifactId>sshd-scp</artifactId>
+            <version>3.0.0-M2</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_core</artifactId>
