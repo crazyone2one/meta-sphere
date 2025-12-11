@@ -59,6 +59,7 @@ const sensorGroupOptions = computed<Array<SelectOption>>(() => {
     {label: '安全监控', value: 'aqjk'},
     {label: '矿压', value: 'ky'},
     {label: '水害防治', value: 'shfz'},
+    {label: '尾矿库', value: 'wkk'},
   ];
 });
 const handleSubmit = () => {

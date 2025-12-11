@@ -18,7 +18,11 @@ export const templateApi = {
     },
     // 获取自定义字段列表(组织)
     getProjectFieldList: (params: ITableQueryParams) => get<DefinedFieldItem[]>(`/project/custom/field/list/${params.scopedId}/${params.scene}`),
+    // 获取自定义字段详情选项(组织)
+    getOrgFieldDetail: (id: string) => get<DefinedFieldItem>(`/organization/custom/field/get/${id}`),
+    getProjectFieldDetail: (id: string) => get<DefinedFieldItem>(`/project/custom/field/get/${id}`),
     getProjectFieldPage: (params: ITableQueryParams) => post<IPageResponse<DefinedFieldItem>>(`/project/custom/field/page`, params),
+    getOrgFieldPage: (params: ITableQueryParams) => post<IPageResponse<DefinedFieldItem>>(`/organization/custom/field/page`, params),
     // 获取模板列表的状态(组织)
     getOrgTemplate: (scopedId: string) => get<Record<string, boolean>>(`/organization/template/enable/config/${scopedId}`, {}, {cacheFor: 0}),
     // 获取模板列表的状态(项目)

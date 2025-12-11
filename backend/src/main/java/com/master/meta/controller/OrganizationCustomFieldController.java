@@ -2,6 +2,7 @@ package com.master.meta.controller;
 
 import com.master.meta.constants.PermissionConstants;
 import com.master.meta.dto.system.CustomFieldDTO;
+import com.master.meta.dto.system.request.CustomFieldRequest;
 import com.master.meta.dto.system.request.CustomFieldUpdateRequest;
 import com.master.meta.entity.CustomField;
 import com.master.meta.handle.log.annotation.Log;
@@ -12,6 +13,7 @@ import com.master.meta.handle.validation.Updated;
 import com.master.meta.service.OrganizationCustomFieldService;
 import com.master.meta.service.log.OrganizationCustomFieldLogService;
 import com.master.meta.utils.SessionUtils;
+import com.mybatisflex.core.paginate.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
@@ -57,6 +59,7 @@ public class OrganizationCustomFieldController {
     public void delete(@PathVariable String id) {
         organizationCustomFieldService.delete(id);
     }
+
     @GetMapping("/get/{id}")
     @Operation(summary = "获取自定义字段详情")
     @RequiresPermissions(PermissionConstants.ORGANIZATION_TEMPLATE_READ)
@@ -64,4 +67,10 @@ public class OrganizationCustomFieldController {
         return organizationCustomFieldService.getCustomFieldDTOWithCheck(id);
     }
 
+    @PostMapping("page")
+    @Operation(description = "分页查询自定义字段")
+    @RequiresPermissions(PermissionConstants.PROJECT_TEMPLATE_READ)
+    public Page<CustomFieldDTO> page(@Validated @RequestBody CustomFieldRequest request) {
+        return organizationCustomFieldService.page(request);
+    }
 }

@@ -259,8 +259,8 @@ onMounted(() => {
 
   .preview-right {
     padding-top: 8px;
-    width: 428px;
-    min-width: 428px;
+    width: 928px;
+    min-width: 928px;
 
     .customWrapper {
       position: relative;

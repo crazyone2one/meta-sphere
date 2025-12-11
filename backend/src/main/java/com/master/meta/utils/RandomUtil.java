@@ -32,10 +32,24 @@ public class RandomUtil {
         return result.subList(0, Math.min(count, result.size()));
     }
 
+    /**
+     * 生成指定范围内的随机双精度浮点数字符串，保留两位小数
+     *
+     * @param min 随机数范围的最小整数值
+     * @param max 随机数范围的最大整数值
+     * @return 格式化后的随机双精度浮点数字符串，保留两位小数并换行
+     */
     public static String doubleTypeString(int min, int max) {
         return String.format("%.2f%n", min + ((max - min) * random.nextDouble()));
     }
 
+    /**
+     * 生成指定范围内的随机双精度浮点数字符串
+     *
+     * @param min 随机数的最小值
+     * @param max 随机数的最大值
+     * @return 格式化为两位小数的随机双精度浮点数字符串
+     */
     public static String generateRandomDoubleString(double min, double max) {
         return String.format("%.2f", min + ((max - min) * random.nextDouble()));
     }

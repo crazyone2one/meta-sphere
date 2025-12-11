@@ -213,7 +213,8 @@ public class BaseCustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, C
         }
         List<CustomFieldOption> customFieldOptions = baseCustomFieldOptionService.getByFieldIds(customFields.getRecords().stream().map(CustomField::getId).toList());
         Map<String, List<CustomFieldOption>> optionMap = customFieldOptions.stream().collect(Collectors.groupingBy(CustomFieldOption::getFieldId));
-        customFields.getRecords().forEach(item -> {
+        List<CustomFieldDTO> records = customFields.getRecords();
+        List<CustomFieldDTO> list = records.stream().map(item -> {
             CustomFieldDTO customFieldDTO = new CustomFieldDTO();
             BeanUtils.copyProperties(item, customFieldDTO);
             if (usedFieldIds.contains(item.getId())) {
@@ -242,7 +243,9 @@ public class BaseCustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, C
                 // 翻译内置字段名称
                 customFieldDTO.setName(translateInternalField(item.getName()));
             }
-        });
+            return customFieldDTO;
+        }).toList();
+        customFields.setRecords(list);
         return customFields;
     }
 

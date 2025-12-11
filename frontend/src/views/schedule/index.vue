@@ -24,6 +24,7 @@ const sensorGroupTag = computed<Record<string, { label: string, type: 'info' | '
     aqjk: {label: '安全监控', type: 'info'},
     ky: {label: '矿压', type: 'warning'},
     shfz: {label: '水害防治', type: 'success'},
+    wkk: {label: '尾矿库', type: 'success'},
   }
 });
 const columns: DataTableColumns<IScheduleInfo> = [

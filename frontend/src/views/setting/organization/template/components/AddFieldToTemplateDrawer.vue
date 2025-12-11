@@ -29,9 +29,7 @@ const isCheckCustomIdsAll = computed(() => {
   return customField.value.length === selectCustomIds.value.length;
 });
 // 计算是否全选
-const isCheckedAll = computed(() => {
-  return isCheckSystemIdsAll.value && isCheckCustomIdsAll.value;
-});
+const isCheckedAll = ref(isCheckSystemIdsAll.value && isCheckCustomIdsAll.value)
 // 计算是否半选
 const indeterminate = computed(() => {
   return isCheckSystemIdsAll.value && isCheckCustomIdsAll.value;
@@ -47,7 +45,14 @@ const handleClose = () => {
 }
 const createField = () => showFieldDrawer.value = true
 const selectedList = ref<DefinedFieldItem[]>([]);
-
+const handleCheckedChange = (checked: boolean) => {
+  if (checked) {
+    selectSystemIds.value = systemField.value.map((item) => item.id);
+    selectCustomIds.value = customField.value.map((item) => item.id);
+  } else {
+    selectCustomIds.value = [];
+  }
+}
 // 监视回显字段
 watch(
     () => props.tableSelectData,
@@ -81,7 +86,8 @@ watchEffect(() => {
         <div class="inner-wrapper">
           <div class="optional-field">
             <div class="optional-header">
-              <n-checkbox v-model:checked="isCheckedAll" :indeterminate="!indeterminate">
+              <n-checkbox v-model:checked="isCheckedAll" :indeterminate="!indeterminate"
+                          @update:checked="handleCheckedChange">
                 <span class="font-medium text-[var(--color-text-3)]">全选</span>
               </n-checkbox>
             </div>

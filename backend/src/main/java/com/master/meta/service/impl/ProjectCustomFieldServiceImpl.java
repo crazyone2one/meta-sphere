@@ -72,6 +72,13 @@ public class ProjectCustomFieldServiceImpl extends BaseCustomFieldServiceImpl im
     }
 
     @Override
+    public CustomFieldDTO getCustomFieldDTOWithCheck(String id) {
+        CustomFieldDTO customField = super.getCustomFieldDTOWithCheck(id);
+        systemProjectService.checkResourceExist(customField.getScopeId());
+        return customField;
+    }
+
+    @Override
     public List<CustomFieldDTO> list(String projectId, String scene) {
         systemProjectService.checkResourceExist(projectId);
         return super.list(projectId, scene);

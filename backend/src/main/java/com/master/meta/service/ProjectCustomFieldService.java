@@ -18,4 +18,6 @@ public interface ProjectCustomFieldService extends BaseCustomFieldService {
     List<CustomFieldDTO> list(String projectId, String scene);
 
     Page<CustomFieldDTO> page(CustomFieldRequest request);
+
+    CustomFieldDTO getCustomFieldDTOWithCheck(String id);
 }

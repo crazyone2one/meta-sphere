@@ -4,6 +4,7 @@ import type {LocationQueryValue} from "vue-router";
 export type SceneType = 'FUNCTIONAL' | 'BUG' | 'API' | 'UI' | 'TEST_PLAN' | LocationQueryValue[] | LocationQueryValue;
 
 export interface FieldOptions {
+    id?: string;
     fieldId?: string;
     value: any;
     text: string;

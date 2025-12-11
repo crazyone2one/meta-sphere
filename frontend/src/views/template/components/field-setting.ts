@@ -101,12 +101,12 @@ export const getCardList = (type: string) => {
             value: TemplateCardEnum.SCHEDULE,
             name: '定时任务模板',
         },
-        {
-            id: 1002,
-            key: 'FUNCTIONAL',
-            value: TemplateCardEnum.FUNCTIONAL,
-            name: '用例模板',
-        },
+        // {
+        //     id: 1002,
+        //     key: 'FUNCTIONAL',
+        //     value: TemplateCardEnum.FUNCTIONAL,
+        //     name: '用例模板',
+        // },
     ]);
     if (type === 'organization') {
         return dataList.value.map((item) => {

@@ -91,9 +91,9 @@ public class ProjectCustomFieldController {
     @Operation(description = "获取自定义字段列表")
     @RequiresPermissions(PermissionConstants.PROJECT_TEMPLATE_READ)
     public List<CustomFieldDTO> list(@Schema(description = "项目ID", requiredMode = Schema.RequiredMode.REQUIRED)
-                                      @PathVariable String projectId,
+                                     @PathVariable String projectId,
                                      @Schema(description = "模板的使用场景（FUNCTIONAL,BUG,API,UI,TEST_PLAN）", requiredMode = Schema.RequiredMode.REQUIRED)
-                                      @PathVariable String scene) {
+                                     @PathVariable String scene) {
         return projectCustomFieldService.list(projectId, scene);
     }
 
@@ -107,6 +107,13 @@ public class ProjectCustomFieldController {
     @Operation(description = "根据主键获取自定义字段")
     public CustomField getInfo(@PathVariable @Parameter(description = "自定义字段主键") String id) {
         return projectCustomFieldService.getById(id);
+    }
+
+    @GetMapping("/get/{id}")
+    @Operation(summary = "获取自定义字段详情")
+    @RequiresPermissions(PermissionConstants.PROJECT_TEMPLATE_READ)
+    public CustomFieldDTO get(@PathVariable String id) {
+        return projectCustomFieldService.getCustomFieldDTOWithCheck(id);
     }
 
     /**

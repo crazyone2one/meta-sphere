@@ -41,7 +41,6 @@ const isEnabledTemplate = computed(() => {
       ? templateStore.projectStatus[scene.value as string]
       : !templateStore.projectStatus[scene.value as string];
 });
-console.log('isEnabledTemplate',isEnabledTemplate.value)
 const fieldHandler = () => {
   showDrawer.value = true;
 }
@@ -80,29 +79,27 @@ const columns: DataTableColumns<DefinedFieldItem> = [
     fixed: 'right',
     width: hasOperationPermission.value ? 200 : 50,
     render(record) {
-      if (isEnabledTemplate.value) {
-        return h(NFlex, {}, {
-          default: () => {
-            const res = []
-            if (!record.internal && hasAnyPermission(props.updatePermission)) {
-              res.push(h(BasePopover, {
-                type: 'error', title: `确认更新 ${record.name} 吗？`,
-                subTitleTip: `更新后，使用该字段的${templateType.value}将同步更新`,
-                okText: '确定', onConfirm: () => handleEdit(record)
-              }, {
-                trigger: () => h(NButton, {disabled: record.internal, text: true}, {default: () => '编辑'})
-              }),)
-            }
-            if (!record.internal && hasAnyPermission(props.updatePermission) && hasAnyPermission(props.deletePermission)) {
-              res.push(h(NDivider, {vertical: true}, {}))
-            }
-            if (!record.internal) {
-              res.push(h(NButton, {disabled: record.internal, text: true}, {default: () => '删除'}))
-            }
-            return res
+      return h(NFlex, {}, {
+        default: () => {
+          const res = []
+          if (!record.internal && hasAnyPermission(props.updatePermission)) {
+            res.push(h(BasePopover, {
+              type: 'error', title: `确认更新 ${record.name} 吗？`,
+              subTitleTip: `更新后，使用该字段的${templateType.value}将同步更新`,
+              okText: '确定', onConfirm: () => handleEdit(record)
+            }, {
+              trigger: () => h(NButton, {disabled: record.internal, text: true,class:"!mr-0"}, {default: () => '编辑'})
+            }),)
           }
-        })
-      }
+          if (!record.internal && hasAnyPermission(props.updatePermission) && hasAnyPermission(props.deletePermission)) {
+            res.push(h(NDivider, {vertical: true}, {}))
+          }
+          if (!record.internal) {
+            res.push(h(NButton, {type:'error', text: true}, {default: () => '删除'}))
+          }
+          return res
+        }
+      })
     }
   }
 ]
@@ -113,7 +110,7 @@ const {send: fetchData, data, page, pageSize, total} = usePagination((page, page
     scene: scene.value as string,
     scopedId: props.mode === 'organization' ? currentOrd.value : currentProjectId.value,
   }
-  return templateApi.getProjectFieldPage(param)
+  return props.mode === 'organization' ? templateApi.getOrgFieldPage(param) : templateApi.getProjectFieldPage(param)
 }, {
   initialData: {total: 0, data: []},
   immediate: false,
@@ -131,7 +128,8 @@ onMounted(() => {
     <div class="mb-4 flex items-center justify-between">
       <span v-if="isEnabledTemplate" class="font-medium">字段列表</span>
       <n-button v-if="!isEnabledTemplate && hasAnyPermission(props.createPermission)"
-                type="primary" @click="fieldHandler">新增字段
+                type="primary" @click="fieldHandler">
+        新增字段
       </n-button>
       <div>
         <n-input placeholder="通过名称搜索" class="w-[230px]" clearable/>

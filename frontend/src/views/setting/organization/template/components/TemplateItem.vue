@@ -66,7 +66,7 @@ const handleSubmit = () => {
     <div class="innerWrapper">
       <div class="content">
         <div class="logo-img p-[4px]">
-          <!--          <svg-icon width="36px" height="36px" :name="cardItem.value"></svg-icon>-->
+          <div class="i-ant-design:schedule-outlined text-[36px]"/>
         </div>
         <div class="template-operation">
           <div class="flex items-center">
@@ -84,7 +84,7 @@ const handleSubmit = () => {
               <span @click="templateManagement">模板列表</span>
               <n-divider v-if="isShow" vertical/>
             </span>
-            <span v-if="hasEnablePermission" class="rounded p-[2px]">
+            <span v-if="hasEnablePermission && mode === 'organization' && !isEnableProject" class="rounded p-[2px]">
               <n-button type="error" text @click="handleEnableTemplate">启用项目模板</n-button>
             </span>
           </div>
@@ -121,7 +121,9 @@ const handleSubmit = () => {
 
     .content {
       @apply flex;
-
+      .logo-img {
+        @apply mr-3 flex items-center justify-center;
+      }
       .template-operation {
         .operation {
           cursor: pointer;

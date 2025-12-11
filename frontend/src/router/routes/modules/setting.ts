@@ -120,6 +120,37 @@ const Setting: RouteRecordRaw = {
                         isTopMenu: true,
                     },
                 },
+                {
+                    path: 'template',
+                    name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE,
+                    component: () => import('/@/views/setting/organization/template/index.vue'),
+                    meta: {
+                        title: '模板',
+                        roles: ['ORGANIZATION_TEMPLATE:READ'],
+                        isTopMenu: true,
+                    },
+                },
+                {
+                    path: 'templateFiledSetting',
+                    name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE_FILED_SETTING,
+                    component: () => import('/@/views/setting/organization/template/components/OrgFieldSetting.vue'),
+                    meta: {
+                        locale: '字段设置',
+                        roles: ['ORGANIZATION_TEMPLATE:READ'],
+                        breadcrumbs: [
+                            {
+                                name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE,
+                                locale: '模板',
+                            },
+                            {
+                                name: SettingRouteEnum.SETTING_ORGANIZATION_TEMPLATE_FILED_SETTING,
+                                locale: '字段设置',
+                                editLocale: '字段设置',
+                                query: ['type'],
+                            },
+                        ],
+                    },
+                },
             ]
         }
     ]

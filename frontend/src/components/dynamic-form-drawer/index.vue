@@ -246,14 +246,14 @@ watch(() => showModal.value, (show) => {
 
 const handleUpdate = (v: boolean, key: string) => {
   if (v && 'ycFlag' === key) {
-    const fieldsToAdd: Array<FormField> = [];
-    fieldsToAdd.push({
-      key: 'range',
-      label: '异常时间',
-      type: 'date',
-    })
-    formFields.value.unshift(...fieldsToAdd);
-    formData['range'] = [Date.now(), Date.now()]
+    // const fieldsToAdd: Array<FormField> = [];
+    // fieldsToAdd.push({
+    //   key: 'range',
+    //   label: '异常时间',
+    //   type: 'date',
+    // })
+    // formFields.value.unshift(...fieldsToAdd);
+    // formData['range'] = [Date.now(), Date.now()]
   }
 }
 const handleClose = () => {

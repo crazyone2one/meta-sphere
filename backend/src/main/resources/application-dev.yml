@@ -46,6 +46,10 @@ mybatis-flex:
       url: jdbc:mysql://172.16.2.10:3306/ruoyi-vue-pro?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
       username: root
       password: 3eCrAw8Ba6Tg
+    ds-slave2:
+      url: jdbc:mysql://172.16.2.15:3306/nmfm_lt?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
+      username: root
+      password: Zkah@83539595S
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 jwt:
