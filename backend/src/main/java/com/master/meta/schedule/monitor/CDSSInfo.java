@@ -65,6 +65,7 @@ public class CDSSInfo extends BaseScheduleJob {
                 code -> {
                     List<Row> list = sensorList.stream().filter(row -> row.getString("sensor_code").equals(code)).toList();
                     Row row = list.getFirst();
+                    boolean sensorValueType = "KG".equals(row.getString("sensor_value_type"));
                     String fileName = projectNum + "_YCBJ_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
                     StringBuilder content = new StringBuilder();
                     content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
@@ -76,11 +77,11 @@ public class CDSSInfo extends BaseScheduleJob {
                     content.append(config.getAdditionalFields().get("ycType")).append(";");
                     content.append(config.getAdditionalFields().get("ycBeginTime")).append(";");
                     content.append((now.getMinute() == endTime.getMinute()) ? ycEndTime : "").append(";");
-                    content.append(ycValue).append(";");
+                    content.append(sensorValueType ? "" : ycValue).append(";");
                     content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
-                    content.append(ycValue).append(";");
+                    content.append(sensorValueType ? "" : ycValue).append(";");
                     content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
-                    content.append(ycValue).append(";");
+                    content.append(sensorValueType ? "" : ycValue).append(";");
 
                     content.append(";");
                     content.append(now.getMinute() == endTime.getMinute() ? RandomUtil.generateRandomString(8) : "").append(";");
@@ -107,6 +108,7 @@ public class CDSSInfo extends BaseScheduleJob {
                 .collect(Collectors.toMap(row -> row.getString("sensor_code"), row -> row));
         val unRealInfoCode = config.getAdditionalFields().get("unRealInfoCode");
         boolean ycFlag = config.isYcFlag() && (localDateTime.isBefore(endTime) || localDateTime.getMinute() == endTime.getMinute());
+        String sensorState = Optional.ofNullable(config.getAdditionalFields().get("sensorState").toString()).orElse("0");
         for (Row row : rows) {
             String sensorInfoCode = row.getString("sensor_code");
             // 指定的测点不生成测点数据
@@ -120,28 +122,39 @@ public class CDSSInfo extends BaseScheduleJob {
                 continue;
             }
             AtomicReference<String> sensorValue = new AtomicReference<>("");
-            String sensorState = "0";
+
             if ("KG".equals(row.getString("sensor_value_type"))) {
                 Object ftCode = config.getAdditionalFields().get("ftCode");
                 if (ftCode != null && ftCode.equals(sensorInfoCode)) {
                     sensorValue.set("0");
+                    sensorState = Optional.ofNullable(config.getAdditionalFields().get("ftState")).orElse("1").toString();
                 } else {
                     sensorValue.set("1");
                 }
             } else {
-                sensorValue.set(switch (sensorType) {
-                    case "0043" -> // SENSOR_CH4
-                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_CH4.getMinValue(), SensorMNType.SENSOR_CH4.getMaxValue());
-                    case "0004" -> // SENSOR_CO
-                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_AQJK_CO.getMinValue(), SensorMNType.SENSOR_AQJK_CO.getMaxValue());
-                    case "0001" -> // SENSOR_0001
-                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0001.getMinValue(), SensorMNType.SENSOR_0001.getMaxValue());
-                    case "0012" -> // SENSOR_0012
-                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0012.getMinValue(), SensorMNType.SENSOR_0012.getMaxValue());
-                    case "0013" -> // SENSOR_0012
-                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0013.getMinValue(), SensorMNType.SENSOR_0013.getMaxValue());
-                    default -> RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
-                });
+                // 指定测点与异常数据测点值一致
+                if (ycFlag) {
+                    Optional.ofNullable(config.getAdditionalFields().get("ycCode")).ifPresent(code -> {
+                        if (code.equals(sensorInfoCode)) {
+                            sensorValue.set(ycValue);
+                        }
+                    });
+                } else {
+                    sensorValue.set(switch (sensorType) {
+                        case "0043" -> // SENSOR_CH4
+                                RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_CH4.getMinValue(), SensorMNType.SENSOR_CH4.getMaxValue());
+                        case "0004" -> // SENSOR_CO
+                                RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_AQJK_CO.getMinValue(), SensorMNType.SENSOR_AQJK_CO.getMaxValue());
+                        case "0001" -> // SENSOR_0001
+                                RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0001.getMinValue(), SensorMNType.SENSOR_0001.getMaxValue());
+                        case "0012" -> // SENSOR_0012
+                                RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0012.getMinValue(), SensorMNType.SENSOR_0012.getMaxValue());
+                        case "0013" -> // SENSOR_0012
+                                RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0013.getMinValue(), SensorMNType.SENSOR_0013.getMaxValue());
+                        default ->
+                                RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
+                    });
+                }
             }
             if (Boolean.TRUE.equals(customConfig.getSuperthreshold())) {
                 if (Objects.nonNull(customConfig.getSensorIds())) {
@@ -152,22 +165,8 @@ public class CDSSInfo extends BaseScheduleJob {
                 }
             }
 
-            if (Objects.nonNull(customConfig.getSensorIds())) {
-                if (customConfig.getSensorIds().equals(sensorInfoCode)) {
-                    // 指定测点生成标校数据
-                    sensorState = Optional.ofNullable(super.config.getAdditionalFields().get("sensorState").toString()).orElse("0");
-                } else {
-                    sensorState = "0";
-                }
-            }
-            // 指定测点与异常数据测点值一致
-            if (ycFlag) {
-                Optional.ofNullable(config.getAdditionalFields().get("ycCode")).ifPresent(code -> {
-                    if (code.equals(sensorInfoCode)) {
-                        sensorValue.set(ycValue);
-                    }
-                });
-            }
+//            sensorState = Optional.ofNullable(super.config.getAdditionalFields().get("sensorState").toString()).orElse("0")
+
             String sensorContent = sensorInfoCode + ";"
                     + sensor.getString("sensor_type_name") + ";"
                     + sensor.getString("sensor_location") + ";"
