@@ -28,8 +28,8 @@ export default defineConfig({
         presetIcons({
             // 设置全局图标默认属性
             extraProperties: {
-                width: "1em",
-                height: "1em",
+                'display': 'inline-block',
+                'vertical-align': 'middle',
             },
             collections: {
                 'local': FileSystemIconLoader('./src/assets/icons', (svg) => {
