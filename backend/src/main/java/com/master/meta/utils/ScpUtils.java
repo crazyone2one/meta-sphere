@@ -170,8 +170,7 @@ public class ScpUtils {
             }
         } catch (Exception e) {
             // 日志记录
-            log.error("Error closing SSH connection: {}", e.getMessage());
-            e.printStackTrace();
+            log.error("Error closing SSH connection: {}", e.getMessage(), e);
         } finally {
             sessionThreadLocal.remove();
             clientThreadLocal.remove();
