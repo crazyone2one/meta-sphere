@@ -51,6 +51,11 @@ public class DateFormatUtil {
         return localDateTime.format(formatter);
     }
 
+    public static String localDate2String(LocalDate localDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_PATTERN);
+        return localDate.format(formatter);
+    }
+
     /**
      * 将yyyyMMddHHmmss格式的字符串转换为LocalDateTime
      *
