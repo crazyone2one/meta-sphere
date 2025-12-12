@@ -35,15 +35,15 @@ public class GTXBasicInfo extends BaseScheduleJob {
         // 获取为删除的数据
 //        List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = projectNum + WkkSensorEnum.GTXDY.getKey() + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String fileName = projectNum + "_" + WkkSensorEnum.GTXDY.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(sensorInRedis, now) +
                 END_FLAG;
-        String filePath = "/app/files/GNSS/" + fileName;
+        String filePath = "/app/files/wkk/" + fileName;
         sensorUtil.generateFile(filePath, content, "干滩设备基础信息[" + fileName + "]");
         // todo targetPath更改为可配置
-        sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+        sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {
