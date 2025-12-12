@@ -113,7 +113,7 @@ watch(() => showModal.value, (value) => {
             <base-cron-select v-model:model-value="model.value" placeholder="xxxxx"/>
           </n-form-item-gi>
           <n-form-item-gi :span="6" label="job" path="job">
-            <n-select v-model:value="model.job" :options="jobOptions"/>
+            <n-select v-model:value="model.job" :options="jobOptions" filterable clearable/>
           </n-form-item-gi>
           <n-form-item-gi :span="4" label="资源类型" path="resourceType">
             <n-select v-model:value="model.resourceType" :options="resourceTypeOptions"/>
