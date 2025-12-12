@@ -3,6 +3,7 @@ package com.master.meta.schedule.lt;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
@@ -12,9 +13,11 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 干滩设备基础信息
@@ -33,7 +36,7 @@ public class GTXBasicInfo extends BaseScheduleJob {
     protected void businessExecute(JobExecutionContext context) {
         List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.GTXDY.getKey(), WkkSensorEnum.GTXDY.getTableName(), false);
         // 获取为删除的数据
-//        List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
+        // List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_" + WkkSensorEnum.GTXDY.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
@@ -42,18 +45,22 @@ public class GTXBasicInfo extends BaseScheduleJob {
                 END_FLAG;
         String filePath = "/app/files/wkk/" + fileName;
         sensorUtil.generateFile(filePath, content, "干滩设备基础信息[" + fileName + "]");
-        // todo targetPath更改为可配置
         sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {
         StringBuilder content = new StringBuilder();
+        Boolean newDataFlag = config.getField("newData", Boolean.class);
+        int newDataNum = Optional.ofNullable(config.getField("newDataNum", Integer.class)).orElse(5);
         if (CollectionUtils.isNotEmpty(sensorInRedis)) {
             List<Row> sensorList = RandomUtil.getRandomSubList(sensorInRedis, 35);
             sensorList.forEach(row -> {
+                String installDate = row.getString("install_date");
+                List<Integer> installDateList = JSON.parseArray(installDate, Integer.class);
+                LocalDate localDate = LocalDate.of(installDateList.get(0), installDateList.get(1), installDateList.get(2));
                 String sensor = row.getString("device_code") + ";"
                         + row.getString("device_name") + ";"
-                        + row.getString("install_date") + ";"
+                        + DateFormatUtil.localDate2String(localDate) + ";"
                         + row.getString("install_location") + ";"
                         + row.getString("manufacturer") + ";"
                         + row.getString("device_type") + ";"
@@ -65,33 +72,41 @@ public class GTXBasicInfo extends BaseScheduleJob {
                         + row.getString("warning_level1") + ";"
                         + row.getString("warning_level2") + ";"
                         + row.getString("warning_level3") + ";"
-                        + row.getString("status") + ";"
-                        + DateFormatUtil.localDateTime2StringStyle3(now) + "~";
+                        + row.getString("status") + "~";
                 content.append(sensor);
             });
         } else {
-            for (int i = 0; i < 15; i++) {
-                String randomString = RandomUtil.generateRandomString(4);
-                String deviceCode = projectNum + "GT01" + randomString;
-                content.append(deviceCode).append(";");
-                content.append("GT").append(randomString).append(";");
-                content.append(DateFormatUtil.localDateTime2StringStyle3(now)).append(";");
-                content.append(randomString).append("位置").append(";");
-                content.append("jsjkah").append(";");
-                content.append(";");
-                content.append(";");
-                content.append(";");
-                content.append("107.23517236;");
-                content.append("26.54516332;");
-                content.append("1250.68055000;");
-                content.append("100.00;");
-                content.append("120.00;");
-                content.append("140.00;");
-                content.append("1");
-                content.append("~");
-            }
+            newData(now, content, newDataNum);
         }
+        Optional.ofNullable(newDataFlag).ifPresent(flag -> {
+            if (BooleanUtils.isTrue(newDataFlag)) {
+                newData(now, content, newDataNum);
+            }
+        });
         return content.toString();
+    }
+
+    private void newData(LocalDateTime now, StringBuilder content, int count) {
+        for (int i = 0; i < count; i++) {
+            String randomString = RandomUtil.generateRandomString(4);
+            String deviceCode = projectNum + "GT01" + randomString;
+            content.append(deviceCode).append(";");
+            content.append("GT").append(randomString).append(";");
+            content.append(DateFormatUtil.localDateTime2StringStyle3(now)).append(";");
+            content.append(randomString).append("位置").append(";");
+            content.append("jszkah").append(";");
+            content.append(";");
+            content.append(";");
+            content.append(";");
+            content.append("107.23517236;");
+            content.append("26.54516332;");
+            content.append("1250.68055000;");
+            content.append("100.00;");
+            content.append("120.00;");
+            content.append("140.00;");
+            content.append("1");
+            content.append("~");
+        }
     }
 
     public static JobKey getJobKey(String resourceId) {

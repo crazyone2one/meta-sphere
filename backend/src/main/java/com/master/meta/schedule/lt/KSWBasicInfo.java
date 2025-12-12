@@ -3,6 +3,7 @@ package com.master.meta.schedule.lt;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
@@ -11,6 +12,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -35,14 +37,14 @@ public class KSWBasicInfo extends BaseScheduleJob {
         // 获取为删除的数据
 //        List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = projectNum + WkkSensorEnum.KSWDY.getKey() + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String fileName = projectNum + "_" + WkkSensorEnum.KSWDY.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(sensorInRedis, now) +
                 END_FLAG;
-        String filePath = "/app/files/GNSS/" + fileName;
+        String filePath = "/app/files/wkk/" + fileName;
         sensorUtil.generateFile(filePath, content, "库水位设备信息[" + fileName + "]");
-        sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+        sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {
@@ -50,10 +52,12 @@ public class KSWBasicInfo extends BaseScheduleJob {
         if (CollectionUtils.isNotEmpty(sensorInRedis)) {
             List<Row> sensorList = RandomUtil.getRandomSubList(sensorInRedis, 35);
             sensorList.forEach(row -> {
+                List<Integer> installDateList = JSON.parseArray(row.getString("install_date"), Integer.class);
+                LocalDate localDate = LocalDate.of(installDateList.get(0), installDateList.get(1), installDateList.get(2));
                 String sensor = row.getString("device_code") + ";"
                         + row.getString("device_name") + ";"
                         + row.getString("install_date") + ";"
-                        + row.getString("install_location") + ";"
+                        + DateFormatUtil.localDate2String(localDate) + ";"
                         + row.getString("install_height") + ";"
                         + row.getString("manufacturer") + ";"
                         + row.getString("device_type") + ";"
@@ -78,7 +82,7 @@ public class KSWBasicInfo extends BaseScheduleJob {
             content.append(DateFormatUtil.localDateTime2StringStyle3(now)).append(";");
             content.append(randomString).append("位置").append(";");
             content.append("940.00;");
-            content.append("jsjkah").append(";");
+            content.append("jszkah").append(";");
             content.append(";");
             content.append(";");
             content.append(";");
