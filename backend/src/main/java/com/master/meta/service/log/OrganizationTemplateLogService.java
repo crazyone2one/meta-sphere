@@ -1,6 +1,5 @@
 package com.master.meta.service.log;
 
-import com.alibaba.excel.util.BooleanUtils;
 import com.master.meta.constants.OperationLogConstants;
 import com.master.meta.constants.TemplateScene;
 import com.master.meta.dto.system.request.TemplateUpdateRequest;
@@ -12,7 +11,7 @@ import com.master.meta.handle.log.constants.OperationLogType;
 import com.master.meta.service.OrganizationTemplateService;
 import com.master.meta.utils.EnumValidator;
 import com.master.meta.utils.JSON;
-import jakarta.annotation.Resource;
+import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

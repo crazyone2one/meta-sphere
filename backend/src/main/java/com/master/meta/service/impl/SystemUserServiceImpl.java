@@ -142,11 +142,11 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
             List<UserRoleRelation> organizations = userRoleRelations.stream().filter(ug -> organizationIds.contains(ug.getRoleCode()))
                     .toList();
             if (CollectionUtils.isNotEmpty(organizations)) {
-                //获取所有的组织
+                // 获取所有的组织
                 List<String> orgIds = organizations.stream().map(UserRoleRelation::getSourceId).toList();
                 List<Organization> organizationsList = QueryChain.of(Organization.class).where(ORGANIZATION.ID.in(orgIds)
                         .and(ORGANIZATION.ENABLE.eq(true))).list();
-                if (org.apache.commons.collections.CollectionUtils.isNotEmpty(organizationsList)) {
+                if (CollectionUtils.isNotEmpty(organizationsList)) {
                     String wsId = organizationsList.getFirst().getId();
                     switchUserResource(wsId, user);
                 }
@@ -186,7 +186,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         if (StringUtils.isNotBlank(user.getLastOrganizationId())) {
             List<Organization> organizations = QueryChain.of(Organization.class).where(ORGANIZATION.ID.eq(user.getLastOrganizationId())
                     .and(ORGANIZATION.ENABLE.eq(true))).list();
-            if (org.apache.commons.collections.CollectionUtils.isEmpty(organizations)) {
+            if (CollectionUtils.isEmpty(organizations)) {
                 return false;
             }
             List<UserRoleRelation> userRoleRelations = user.getUserRoleRelations().stream()
@@ -220,7 +220,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
 
                 List<String> intersection = projectIds.stream().filter(projectIdsWithPermission::contains).toList();
                 // 当前组织下的所有项目都没有权限
-                if (org.apache.commons.collections.CollectionUtils.isEmpty(intersection)) {
+                if (CollectionUtils.isEmpty(intersection)) {
                     user.setLastProjectId(StringUtils.EMPTY);
                     updateUser(user);
                     return true;
@@ -249,7 +249,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
                 List<SystemProject> projects = QueryChain.of(SystemProject.class)
                         .where(SYSTEM_PROJECT.ID.eq(user.getLastProjectId())
                                 .and(SYSTEM_PROJECT.ENABLE.eq(true))).list();
-                if (org.apache.commons.collections.CollectionUtils.isNotEmpty(projects)) {
+                if (CollectionUtils.isNotEmpty(projects)) {
                     SystemProject project = projects.getFirst();
                     if (Objects.equals(project.getOrganizationId(), user.getLastOrganizationId())) {
                         return true;
@@ -302,7 +302,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
                     }
                 }
             }
-            //项目和组织都没有权限
+            // 项目和组织都没有权限
             SystemProject project = getEnableProjectAndOrganization();
             if (project != null) {
                 user.setLastProjectId(project.getId());
@@ -342,7 +342,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     public UserBatchCreateResponse addUser(UserBatchCreateRequest request, String source, String operator) {
         userRoleService.checkRoleIsGlobalAndHaveMember(request.getUserRoleIdList(), false);
         UserBatchCreateResponse response = new UserBatchCreateResponse();
-        //检查用户邮箱的合法性
+        // 检查用户邮箱的合法性
         Map<String, String> errorEmails = validateUserInfo(request.getUserInfoList().stream().map(UserCreateInfo::getEmail).toList());
         if (MapUtils.isNotEmpty(errorEmails)) {
             response.setErrorEmails(errorEmails);
@@ -357,7 +357,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     @Transactional(rollbackFor = Exception.class)
     public UserEditRequest updateUser(UserEditRequest request) {
         userRoleService.checkRoleIsGlobalAndHaveMember(request.getUserRoleIdList(), true);
-        //检查用户邮箱的合法性
+        // 检查用户邮箱的合法性
         checkUserEmail(request.getId(), request.getEmail());
         SystemUser user = new SystemUser();
         BeanUtils.copyProperties(request, user);
@@ -448,7 +448,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
         checkUserInDb(userIdList);
         checkProcessUserAndThrowException(userIdList, operatorId, operatorName, Translator.get("user.not.delete"));
         mapper.deleteBatchByIds(userIdList);
-        //删除用户角色关系
+        // 删除用户角色关系
         userRoleRelationService.deleteByUserIdList(userIdList);
         return null;
     }
@@ -458,7 +458,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     public int deleteUserById(String id) {
         checkUserInDb(Collections.singletonList(id));
         checkProcessUserAndThrowException(Collections.singletonList(id), SessionUtils.getCurrentUserId(), SessionUtils.getUserName(), Translator.get("user.not.delete"));
-        //删除用户角色关系
+        // 删除用户角色关系
         userRoleRelationService.deleteByUserIdList(Collections.singletonList(id));
         return mapper.deleteById(id);
     }
@@ -480,7 +480,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
 
     private void checkProcessUserAndThrowException(List<String> userIdList, String operatorId, String operatorName, String exceptionMessage) {
         for (String userId : userIdList) {
-            //当前用户或admin不能被操作
+            // 当前用户或admin不能被操作
             if (Objects.equals(userId, operatorId)) {
                 throw new CustomException(exceptionMessage + ":" + operatorName);
             } else if ("admin".equals(userId)) {
@@ -542,7 +542,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
     private Map<String, String> validateUserInfo(Collection<String> createEmails) {
         Map<String, String> errorMessage = new HashMap<>();
         String userEmailRepeatError = Translator.get("user.email.repeat");
-        //判断参数内是否含有重复邮箱
+        // 判断参数内是否含有重复邮箱
         List<String> emailList = new ArrayList<>();
         Map<String, String> userInDbMap = queryChain().where(SYSTEM_USER.EMAIL.in(createEmails)).list()
                 .stream().collect(Collectors.toMap(SystemUser::getEmail, SystemUser::getId));
@@ -550,7 +550,7 @@ public class SystemUserServiceImpl extends ServiceImpl<SystemUserMapper, SystemU
             if (emailList.contains(createEmail)) {
                 errorMessage.put(createEmail, userEmailRepeatError);
             } else {
-                //判断邮箱是否已存在数据库中
+                // 判断邮箱是否已存在数据库中
                 if (userInDbMap.containsKey(createEmail)) {
                     errorMessage.put(createEmail, userEmailRepeatError);
                 } else {

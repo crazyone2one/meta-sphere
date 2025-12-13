@@ -25,7 +25,7 @@ import com.mybatisflex.core.query.QueryMethods;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 

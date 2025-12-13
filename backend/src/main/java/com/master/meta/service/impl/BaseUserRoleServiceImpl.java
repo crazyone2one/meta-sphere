@@ -19,7 +19,7 @@ import com.master.meta.service.BaseUserRoleService;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.ServiceUtils;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;

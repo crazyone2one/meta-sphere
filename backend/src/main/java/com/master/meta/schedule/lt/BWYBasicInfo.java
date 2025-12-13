@@ -6,7 +6,7 @@ import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;

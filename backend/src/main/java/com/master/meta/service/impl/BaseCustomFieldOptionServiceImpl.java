@@ -6,7 +6,7 @@ import com.master.meta.mapper.CustomFieldOptionMapper;
 import com.master.meta.service.BaseCustomFieldOptionService;
 import com.mybatisflex.spring.service.impl.ServiceImpl;
 import lombok.val;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;

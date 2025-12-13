@@ -4,7 +4,7 @@ import com.master.meta.dto.system.CustomFieldDTO;
 import com.master.meta.handle.Translator;
 import com.master.meta.handle.exception.CustomException;
 import com.master.meta.utils.JSON;
-import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;

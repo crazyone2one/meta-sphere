@@ -77,6 +77,21 @@ public class ScheduleManager {
         }
     }
 
+    /**
+     * 立即执行指定的任务
+     *
+     * @param jobKey 作业的唯一标识符，包含作业名称和组名
+     */
+    public void triggerJob(JobKey jobKey) {
+        try {
+            log.info("triggerJob: {},{}", jobKey.getName(), jobKey.getGroup());
+            scheduler.triggerJob(jobKey);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public void removeJob(JobKey jobKey, TriggerKey triggerKey) {
         try {
             log.info("RemoveJob: {},{}", jobKey.getName(), jobKey.getGroup());
