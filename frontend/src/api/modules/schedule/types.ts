@@ -9,6 +9,7 @@ export interface IScheduleInfo {
     num: number;
     enable: boolean;
     value: string;
+    triggerStatus?: string;
     lastTime?: number;
     nextTime?: number;
     createUser?: string
