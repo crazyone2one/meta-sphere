@@ -93,4 +93,30 @@ public class DateFormatUtil {
         SimpleDateFormat dateFormat = new SimpleDateFormat(TIME_PATTERN);
         return dateFormat.parse(timeString);
     }
+
+    /**
+     * 根据指定的时间单位类型比较两个LocalDateTime对象是否相同
+     *
+     * @param type  时间单位类型，"min"表示按分钟比较，其他值表示按秒比较
+     * @param time1 第一个时间对象
+     * @param time2 第二个时间对象
+     * @return 如果两个时间在指定精度下相同则返回true，否则返回false
+     */
+    public static boolean isSameByType(String type, LocalDateTime time1, LocalDateTime time2) {
+        // 参数校验
+        if (type == null || time1 == null || time2 == null) {
+            return false;
+        }
+
+        // 定义时间单位常量
+        final java.time.temporal.ChronoUnit MINUTE_UNIT = java.time.temporal.ChronoUnit.MINUTES;
+        final java.time.temporal.ChronoUnit SECOND_UNIT = java.time.temporal.ChronoUnit.SECONDS;
+
+        // 根据类型进行比较
+        if ("min".equals(type)) {
+            return time1.truncatedTo(MINUTE_UNIT).equals(time2.truncatedTo(MINUTE_UNIT));
+        } else {
+            return time1.truncatedTo(SECOND_UNIT).equals(time2.truncatedTo(SECOND_UNIT));
+        }
+    }
 }
