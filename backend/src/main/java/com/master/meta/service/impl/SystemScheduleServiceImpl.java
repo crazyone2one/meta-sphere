@@ -132,6 +132,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .select(SYSTEM_PROJECT.NAME.as("projectName"))
                 .select("QRTZ_TRIGGERS.PREV_FIRE_TIME AS last_time")
                 .select("QRTZ_TRIGGERS.NEXT_FIRE_TIME AS nextTime")
+                .select("QRTZ_TRIGGERS.TRIGGER_STATE AS triggerStatus")
                 .from(SYSTEM_SCHEDULE)
                 .leftJoin(SYSTEM_PROJECT).on(SYSTEM_PROJECT.ID.eq(SYSTEM_SCHEDULE.PROJECT_ID))
                 .leftJoin("QRTZ_TRIGGERS").on("QRTZ_TRIGGERS.TRIGGER_NAME = system_schedule.resource_id");
@@ -310,6 +311,24 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
         SystemSchedule schedule = checkScheduleExit(id);
         mapper.delete(schedule);
         removeJob(schedule.getResourceId(), schedule.getJob());
+    }
+
+    @Override
+    public void executeScheduleTask(String id) {
+        SystemSchedule schedule = checkScheduleExit(id);
+        scheduleManager.triggerJob(new JobKey(schedule.getResourceId(), schedule.getJob()));
+    }
+
+    @Override
+    public void pauseScheduleTask(String id) {
+        SystemSchedule schedule = checkScheduleExit(id);
+        scheduleManager.pauseJob(new JobKey(schedule.getResourceId(), schedule.getJob()));
+    }
+
+    @Override
+    public void resumeScheduleTask(String id) {
+        SystemSchedule schedule = checkScheduleExit(id);
+        scheduleManager.resumeJob(new JobKey(schedule.getResourceId(), schedule.getJob()));
     }
 
     @Transactional(rollbackFor = Exception.class)

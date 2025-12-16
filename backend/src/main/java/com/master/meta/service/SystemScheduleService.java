@@ -40,4 +40,10 @@ public interface SystemScheduleService extends IService<SystemSchedule> {
     List<SensorSelectOptionDTO> getSensorOptions(BaseCondition request);
 
     void deleteScheduleTask(String id);
+
+    void executeScheduleTask(String id);
+
+    void pauseScheduleTask(String id);
+
+    void resumeScheduleTask(String id);
 }

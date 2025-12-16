@@ -144,6 +144,25 @@ public class SystemScheduleController {
         systemScheduleService.enable(id);
     }
 
+    @GetMapping("/execute/schedule/task/{id}")
+    @Operation(summary = "立即执行一次定时任务")
+    public void executeScheduleTask(@PathVariable String id) {
+        systemScheduleService.executeScheduleTask(id);
+    }
+
+    @GetMapping("/pause/schedule/task/{id}")
+    @Operation(summary = "暂停定时任务")
+    public void pauseScheduleTask(@PathVariable String id) {
+        systemScheduleService.pauseScheduleTask(id);
+    }
+
+
+    @GetMapping("/resume/schedule/task/{id}")
+    @Operation(summary = "恢复定时任务")
+    public void resumeScheduleTask(@PathVariable String id) {
+        systemScheduleService.resumeScheduleTask(id);
+    }
+
     @PostMapping("/sensor/option")
     @Operation(summary = "获取测点信息")
     public List<SensorSelectOptionDTO> getSensorOptions(@Validated @RequestBody BaseCondition request) {

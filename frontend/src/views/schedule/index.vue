@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, h, onMounted, ref} from "vue";
 import type {IScheduleInfo} from "/@/api/modules/schedule/types.ts";
-import {type DataTableColumns, type DataTableRowKey, NButton, NSwitch, NTag} from "naive-ui";
+import {type DataTableColumns, type DataTableRowKey, NButton, NDropdown, NSwitch, NTag} from "naive-ui";
 import type {ITableQueryParams} from "/@/api/types.ts";
 import {scheduleApi} from "/@/api/modules/schedule";
 import {usePagination} from "alova/client";
@@ -25,18 +25,30 @@ const sensorGroupTag = computed<Record<string, { label: string, type: 'info' | '
     ky: {label: '矿压', type: 'warning'},
     shfz: {label: '水害防治', type: 'success'},
     wkk: {label: '尾矿库', type: 'success'},
+    GNSS: {label: 'GNSS', type: 'success'},
   }
 });
+const moreActions = (record: IScheduleInfo) => {
+  return [
+    {label: 'resume', key: 'resume', disabled: record.triggerStatus !== 'PAUSED'},
+    {label: 'stop', key: 'stop', disabled: record.triggerStatus === 'PAUSED'},
+    {type: 'divider', key: 'd1'},
+    {label: () => h('div', {class: 'text-red'}, {default: () => 'delete'}), key: 'delete'},
+  ]
+}
 const columns: DataTableColumns<IScheduleInfo> = [
   {
     type: 'selection', fixed: 'left'
   },
   {title: '任务 ID', key: 'num', width: 100, ellipsis: {tooltip: true}},
-  {title: '任务名称', key: 'name', width: 200},
+  {title: '任务名称', key: 'name', width: 180},
   {
     title: '状态', key: 'enable', width: 80,
     render(record) {
-      return h(NSwitch, {value: record.enable, size: 'small', onUpdateValue: (v) => handleStatusChange(v, record)}, {})
+      return h(NSwitch, {value: record.triggerStatus !== 'PAUSED', disabled: true, size: 'small'}, {
+        checked: () => '开启',
+        unchecked: () => '暂停',
+      })
     }
   },
   {
@@ -83,23 +95,35 @@ const columns: DataTableColumns<IScheduleInfo> = [
           size: 'small',
           text: true,
           type: 'info',
-          class: '!mr-[12px]',
-          disabled: true
-        }, {default: () => 'once'}),
+          class: '!mr-[12px]', onClick: () => handleExecuteSchedule(record)
+        }, {default: () => 'execute'}),
         h(NButton, {
           size: 'small', text: true, type: 'primary', class: '!mr-[12px]',
           onClick: () => handleScheduleConfig(record)
-        }, {default: () => '修改配置'}),
-        h(NButton, {
-          size: 'small',
-          text: true,
-          type: 'error',
-          onClick: () => handleRemove(record)
-        }, {default: () => '删除'})
+        }, {default: () => '配置'}),
+        h(NDropdown, {
+              options: moreActions(record),
+              trigger: 'click',
+              onSelect: (k: string) => handleMoreActions(k, record)
+            },
+            {default: () => h("div", {class: 'i-mdi:chevron-down-circle-outline text-[16px] text-orange'}, {})})
       ];
     }
   },
 ]
+const handleMoreActions = (key: string, record: IScheduleInfo) => {
+  switch (key) {
+    case 'resume':
+      handleResumeSchedule(record)
+      break;
+    case 'stop':
+      handlePauseSchedule(record)
+      break;
+    case 'delete':
+      handleRemove(record);
+      break;
+  }
+}
 const checkedRowKeys = ref<DataTableRowKey[]>([])
 const handleCheck = (rowKeys: DataTableRowKey[]) => {
   checkedRowKeys.value = rowKeys
@@ -161,13 +185,51 @@ const handleScheduleConfig = (record: IScheduleInfo) => {
   showScheduleConfigVisible.value = true;
 }
 
-const handleStatusChange = async (_v: boolean, record: IScheduleInfo) => {
-  await scheduleApi.changeScheduleStatus(record.id);
-  window.$message.success('修改成功');
-  await fetchData();
+// const handleStatusChange = async (_v: boolean, record: IScheduleInfo) => {
+//   await scheduleApi.changeScheduleStatus(record.id);
+//   window.$message.success('修改成功');
+//   await fetchData();
+// }
+const handleResumeSchedule = (record: IScheduleInfo) => {
+  window.$dialog.warning({
+    title: 'Tips',
+    content: `确定恢复${record.name}任务吗？`,
+    negativeText: '取消',
+    positiveText: '确定',
+    onPositiveClick: async () => {
+      await scheduleApi.resumeScheduleTask(record.id);
+      window.$message.success('任务恢复成功');
+      await fetchData();
+    }
+  })
+}
+const handleExecuteSchedule = (record: IScheduleInfo) => {
+  window.$dialog.warning({
+    title: 'Tips',
+    content: `确定执行${record.name}任务吗？`,
+    negativeText: '取消',
+    positiveText: '确定',
+    onPositiveClick: async () => {
+      await scheduleApi.executeScheduleTask(record.id);
+      window.$message.success('任务执行成功');
+    }
+  })
+}
+const handlePauseSchedule = (record: IScheduleInfo) => {
+  window.$dialog.warning({
+    title: 'Tips',
+    content: `确定暂停${record.name}任务吗？`,
+    negativeText: '取消',
+    positiveText: '确定',
+    onPositiveClick: async () => {
+      await scheduleApi.pauseScheduleTask(record.id);
+      window.$message.success('任务暂停成功');
+      await fetchData();
+    }
+  })
 }
 const handleRemove = (record: IScheduleInfo) => {
-  window.$dialog.warning({
+  window.$dialog.error({
     title: 'Tips',
     content: `确定要删除${record.name}任务吗？`,
     negativeText: '取消',

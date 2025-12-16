@@ -92,6 +92,26 @@ public class ScheduleManager {
         }
     }
 
+    public void pauseJob(JobKey jobKey) {
+        try {
+            log.info("pauseJob: {},{}", jobKey.getName(), jobKey.getGroup());
+            scheduler.pauseJob(jobKey);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void resumeJob(JobKey jobKey) {
+        try {
+            log.info("resumeJob: {},{}", jobKey.getName(), jobKey.getGroup());
+            scheduler.resumeJob(jobKey);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
     public void removeJob(JobKey jobKey, TriggerKey triggerKey) {
         try {
             log.info("RemoveJob: {},{}", jobKey.getName(), jobKey.getGroup());

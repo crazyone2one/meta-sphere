@@ -40,7 +40,6 @@ const {form: model, send: submit, loading} = useForm((formData) => scheduleApi.r
   }
 })
 const handleSubmit = () => {
-  console.log(model.value)
   submit().then(() => {
     handleClose(true);
     window.$message.success('修改成功');
@@ -56,7 +55,7 @@ const handleSubmitConfig = (value: Record<string, any>): void => {
   Object.keys(value).forEach(key => {
     model.value.runConfig[key] = value[key];
   });
-  model.value.runConfig['customConfig'] = customConfig;
+  // model.value.runConfig['customConfig'] = customConfig;
   handleCloseDynamicFormModal()
 }
 const handleCustomConfig = (config: ICustomConfig) => {
