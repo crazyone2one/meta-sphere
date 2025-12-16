@@ -144,6 +144,9 @@ public class SensorUtil {
      * @param targetPath 远程服务器目标路径
      */
     public void uploadFile(String filePath, String targetPath) {
+        if (activeProfile.equals("dev")) {
+            return;
+        }
         File file = new File(filePath);
         if (!file.exists()) {
             log.warn("file not exists: {}", filePath);
@@ -180,6 +183,19 @@ public class SensorUtil {
     }
 
     public List<Row> getWkkFromRedis(String projectNum, String key, String tableName, Boolean deleted) {
+        String defineInRedis = redisService.getSensor(projectNum, key);
+        return Optional.ofNullable(defineInRedis).map(s -> JSON.parseArray(s, Row.class))
+                .orElseGet(() -> {
+                    List<Row> sensorList = getWkkList(tableName, deleted);
+                    if (sensorList.isEmpty()) {
+                        return sensorList;
+                    }
+                    redisService.storeSensor(projectNum, key, sensorList, TIMEOUT);
+                    return sensorList;
+                });
+    }
+
+    public List<Row> getGnssFromRedis(String projectNum, String key, String tableName, Boolean deleted) {
         String defineInRedis = redisService.getSensor(projectNum, key);
         return Optional.ofNullable(defineInRedis).map(s -> JSON.parseArray(s, Row.class))
                 .orElseGet(() -> {

@@ -63,4 +63,23 @@ public class RandomUtil {
     public static String generateRandomDoubleString(SensorMNType sensorMNType) {
         return String.format("%.2f", sensorMNType.getMinValue() + ((sensorMNType.getMaxValue() - sensorMNType.getMinValue()) * new Random().nextDouble()));
     }
+    /**
+     * 生成指定位数的随机正整数
+     *
+     * @param length 正整数的位数
+     * @return 指定位数的随机正整数
+     */
+    public static int generateRandomIntegerByLength(int length) {
+        if (length <= 0 || length > 9) {
+            throw new IllegalArgumentException("长度必须在1到9之间");
+        }
+
+        if (length == 1) {
+            return random.nextInt(9) + 1; // 1-9
+        } else {
+            int min = (int) Math.pow(10, length - 1); // 最小值，如长度为4则是1000
+            int max = (int) Math.pow(10, length) - 1; // 最大值，如长度为4则是9999
+            return min + random.nextInt(max - min + 1);
+        }
+    }
 }
