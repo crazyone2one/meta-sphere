@@ -1,5 +1,6 @@
 package com.master.meta.schedule;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorKGType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
@@ -7,6 +8,7 @@ import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
@@ -14,13 +16,16 @@ import org.quartz.TriggerKey;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 public class DrainageCdss extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
+    private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
 
-    private DrainageCdss(SensorUtil sensorUtil) {
+    private DrainageCdss(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
@@ -28,17 +33,29 @@ public class DrainageCdss extends BaseScheduleJob {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_SBCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(projectNum, SensorKGType.SENSOR_SB_0608, false);
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         StringBuilder content = new StringBuilder();
-        String filePath = "/app/files/shfz/" + fileName;
+        // String filePath = "/app/files/shfz/" + fileName;
+        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         content.append(bodyContent(sensorInRedis, now));
         content.append(END_FLAG);
         sensorUtil.generateFile(filePath, content.toString(), "水泵开停实时信息[" + fileName + "]");
+
+        Optional.ofNullable(config.getField("transfer", boolean.class)).ifPresent(t -> {
+            if (t) {
+                sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "shfz");
+            }
+        });
     }
 
     private StringBuilder bodyContent(List<Row> sensorInRedis, LocalDateTime now) {
         StringBuilder content = new StringBuilder();
+        String sensorCode = config.getField("sensorCode", String.class);
+        if (StringUtils.isBlank(sensorCode)) {
+            return content;
+        }
         if (sensorInRedis.isEmpty()) {
             for (int i = 0; i < 25; i++) {
                 String randomString = RandomUtil.generateRandomString(4);
@@ -54,11 +71,12 @@ public class DrainageCdss extends BaseScheduleJob {
         } else {
             List<Row> rows = sensorInRedis.stream().filter(s -> BooleanUtils.isFalse(s.getBoolean("deleted"))).toList();
             rows.forEach(row -> {
-                content.append(row.getString("sensor_id")).append(";");
+                String sensorId = row.getString("sensor_id");
+                content.append(sensorId).append(";");
                 content.append(row.getString("pump_name")).append(";");
                 content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
                 content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
-                content.append("1;");
+                content.append(sensorId.equals(sensorCode) ? "0" : "1").append(";");
                 content.append(DateFormatUtil.localDateTime2StringStyle2(now));
                 content.append("~");
             });

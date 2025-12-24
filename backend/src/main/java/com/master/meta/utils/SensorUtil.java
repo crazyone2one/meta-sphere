@@ -1,5 +1,6 @@
 package com.master.meta.utils;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorKGType;
 import com.master.meta.constants.SensorMNType;
 import com.mybatisflex.core.datasource.DataSourceKey;
@@ -26,11 +27,16 @@ public class SensorUtil {
     @Value("${spring.profiles.active:default}")
     private String activeProfile;
     private final RedisService redisService;
-    ScpUtils scpUtils = new ScpUtils();
+    private final ScpUtils scpUtils;
     private static final Long TIMEOUT = 60 * 60 * 24L;
 
-    public SensorUtil(RedisService redisService) {
+    public SensorUtil(FileTransferConfiguration fileTransferConfiguration, RedisService redisService) {
         this.redisService = redisService;
+        this.scpUtils = new ScpUtils(fileTransferConfiguration);
+    }
+
+    public String filePath(String filePath, String projectNum, String directoryName, String fileName) {
+        return filePath + projectNum + File.separator + directoryName + File.separator + fileName;
     }
 
     public List<Row> getRainDefineList(String tableName, Boolean deleted) {
@@ -125,8 +131,21 @@ public class SensorUtil {
         }
         try {
             File file = new File(filePath);
+            // 检查父目录是否存在，不存在则创建
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                boolean dirCreated = parentDir.mkdirs();
+                if (!dirCreated) {
+                    log.error("Failed to create directory: {}", parentDir.getAbsolutePath());
+                    return;
+                }
+            }
             if (!file.exists()) {
                 boolean newFile = file.createNewFile();
+                if (!newFile) {
+                    log.error("Failed to create file: {}", filePath);
+                    return;
+                }
             }
             try (FileWriter fw = new FileWriter(filePath)) {
                 fw.write(content);
@@ -148,17 +167,45 @@ public class SensorUtil {
             return;
         }
         File file = new File(filePath);
+        // 检查父目录是否存在，不存在则创建
+        File parentDir = file.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            boolean dirCreated = parentDir.mkdirs();
+            if (!dirCreated) {
+                log.error("Failed to create directory: {}", parentDir.getAbsolutePath());
+                return;
+            }
+        }
         if (!file.exists()) {
             log.warn("file not exists: {}", filePath);
             return;
         }
         try {
             scpUtils.initClient();
-            // 连接远程服务器 todo 从配置文件中获取
             scpUtils.connect("172.16.2.15", 8841, "root", "zkah@123");
             // 上传文件
             // scpUtils.uploadFile("C:\\Users\\the2n\\Desktop\\150622B0012000200092_CDDY_20241006163722.txt", "/home/app/luna");
             scpUtils.uploadFile(filePath, targetPath);
+            log.info("file transfer successfully");
+        } catch (IOException e) {
+            log.error(e.getMessage(), e);
+        } finally {
+            scpUtils.close();
+        }
+    }
+
+    public void uploadFile(FileTransferConfiguration.SlaveConfig slaveConfig, String localPath, String targetPath) {
+        if (activeProfile.equals("dev")) {
+            return;
+        }
+        File file = new File(localPath);
+        if (!file.exists()) {
+            log.warn("file not exists: {}", localPath);
+            return;
+        }
+        try {
+            // 上传文件
+            scpUtils.uploadFile(slaveConfig, localPath, targetPath);
             log.info("file transfer successfully");
         } catch (IOException e) {
             log.error(e.getMessage(), e);

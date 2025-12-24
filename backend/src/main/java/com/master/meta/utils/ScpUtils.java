@@ -1,10 +1,12 @@
 package com.master.meta.utils;
 
+import com.master.meta.config.FileTransferConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.scp.client.ScpClient;
 import org.apache.sshd.scp.client.ScpClientCreator;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,10 +14,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 @Slf4j
+@Component
 public class ScpUtils {
+    private final FileTransferConfiguration fileTransferConfiguration;
     private final ThreadLocal<SshClient> clientThreadLocal = new ThreadLocal<>();
     private final ThreadLocal<ClientSession> sessionThreadLocal = new ThreadLocal<>();
     private final ThreadLocal<ScpClient> scpClientThreadLocal = new ThreadLocal<>();
+
+    public ScpUtils(FileTransferConfiguration fileTransferConfiguration) {
+        this.fileTransferConfiguration = fileTransferConfiguration;
+    }
 
     /**
      * 初始化SSH客户端
@@ -118,7 +126,6 @@ public class ScpUtils {
         if (remotePath == null || remotePath.trim().isEmpty()) {
             throw new IOException("Remote path cannot be null or empty");
         }
-
         ClientSession session = sessionThreadLocal.get();
         ScpClient scpClient = scpClientThreadLocal.get();
         if (session == null || !session.isOpen()) {
@@ -135,6 +142,36 @@ public class ScpUtils {
         scpClient.upload(localPath, remotePath);
     }
 
+    /**
+     * 上传文件到远程服务器
+     *
+     * @param slaveConfig 远程服务器配置信息，包含本地文件路径、远程路径、主机地址、端口、用户名和密码等信息
+     * @throws IOException 当本地文件路径或远程路径为空、SSH会话不可用、本地文件不存在或不可读时抛出异常
+     */
+    public void uploadFile(FileTransferConfiguration.SlaveConfig slaveConfig, String localPath, String remotePath) throws IOException {
+        if (localPath == null || localPath.trim().isEmpty()) {
+            throw new IOException("Local file path cannot be null or empty");
+        }
+        if (remotePath == null || remotePath.trim().isEmpty()) {
+            throw new IOException("Remote path cannot be null or empty");
+        }
+        initClient();
+        connect(slaveConfig.getHost(), slaveConfig.getPort(), slaveConfig.getUsername(), slaveConfig.getPassword());
+        ClientSession session = sessionThreadLocal.get();
+        ScpClient scpClient = scpClientThreadLocal.get();
+        if (session == null || !session.isOpen()) {
+            throw new IOException("SSH session is not available or has been closed");
+        }
+
+        Path localFIlePath = Paths.get(localPath);
+        if (!Files.exists(localFIlePath)) {
+            throw new IOException("Local file does not exist: " + localPath);
+        }
+        if (!Files.isReadable(localFIlePath)) {
+            throw new IOException("Local file is not readable: " + localPath);
+        }
+        scpClient.upload(localFIlePath, remotePath);
+    }
 
     // 下载文件
     public void downloadFile(String remoteFilePath, String localPath) throws IOException {

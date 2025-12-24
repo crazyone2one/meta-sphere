@@ -1,5 +1,6 @@
 package com.master.meta.schedule;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
@@ -20,9 +21,11 @@ import java.util.*;
 public class RYSSInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
+    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private RYSSInfo(SensorUtil sensorUtil) {
+    private RYSSInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
@@ -31,14 +34,21 @@ public class RYSSInfo extends BaseScheduleJob {
         val personList = getPersonList();
         val substationList = getSubstationList();
         val areaList = getAreaList();
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         String fileName = "150622B0012000200092_RYSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
 //        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
         String content =
                 // 文件体
                 bodyContent(personList, substationList, areaList, now) +
                         END_FLAG;
-        String filePath = "/app/files/rydw/" + fileName;
+        // String filePath = "/app/files/rydw/" + fileName;
+        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "rydw", fileName);
         sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
+        Optional.ofNullable(config.getField("transfer", boolean.class)).ifPresent(t -> {
+            if (t) {
+                sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "rydw");
+            }
+        });
     }
 
     private String bodyContent(List<Row> personList, List<Row> substationList, List<Row> areaList, LocalDateTime now) {
@@ -104,7 +114,7 @@ public class RYSSInfo extends BaseScheduleJob {
                     .notLike("person_name", "厂家")
                     .notLike("person_name", "贵宾")
                     .notLike("person_name", "华电")
-                    .notLike("person_name", "测试").limit(50);
+                    .notLike("person_name", "测试").limit(100);
             rows = Db.selectListByQuery("sf_jxzy_person_new", condition);
         } finally {
             DataSourceKey.clear();
