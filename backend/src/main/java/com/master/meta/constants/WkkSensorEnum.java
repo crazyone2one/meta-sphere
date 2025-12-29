@@ -10,6 +10,7 @@ public enum WkkSensorEnum {
     BWYDY("表面位移设备信息", "BWYDY", "sf_wkk_bwydy_cddy","BWYSS"),
     QRX("浸润线信息", "QRX", "sf_wkk_qrxdy_cddy","QRXSS"),
     GNSSREALRIME("GNSS实时数据", "GNSS", "sf_aqjk_gnssbaseinfo","gnssrealtime"),
+    GNSSBASEINFO("GNSS设备信息", "GNSS", "sf_aqjk_gnssbaseinfo","gnssbaseinfo"),
     GNSSALARM("GNSS报警信息", "GNSS", "sf_aqjk_gnssalarminfo","gnssalarm"),
     ;
 

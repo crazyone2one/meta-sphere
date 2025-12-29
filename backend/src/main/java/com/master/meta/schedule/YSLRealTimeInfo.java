@@ -1,5 +1,6 @@
 package com.master.meta.schedule;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
@@ -13,6 +14,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -27,10 +29,11 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final SensorService sensorService;
     private final static String END_FLAG = "||";
-
-    private YSLRealTimeInfo(SensorUtil sensorUtil, SensorService sensorService) {
+    private final FileTransferConfiguration fileTransferConfiguration;
+    private YSLRealTimeInfo(SensorUtil sensorUtil, SensorService sensorService, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.sensorService = sensorService;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
@@ -38,7 +41,7 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_YSLCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         StringBuilder content = new StringBuilder();
-        String filePath = "/app/files/shfz/" + fileName;
+        // String filePath = "/app/files/shfz/" + fileName;
         // 文件头
         content.append(super.projectNum).append(";").append(super.projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
@@ -46,7 +49,11 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         content.append(cdssBodyContent(sensorList, now));
         content.append(END_FLAG);
-        sensorUtil.generateFile(filePath, content.toString(), "实时数据[" + fileName + "]");
+        // sensorUtil.generateFile(filePath, content.toString(), "实时数据[" + fileName + "]");
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
+        sensorUtil.generateFile(filePath, String.valueOf(content), "YSL实时信息[" + fileName + "]");
+        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
     }
 
     private StringBuilder cdssBodyContent(List<Row> sensorList, LocalDateTime now) {

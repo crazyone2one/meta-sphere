@@ -4,7 +4,6 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
@@ -17,7 +16,6 @@ import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * QRX实时信息
@@ -58,23 +56,40 @@ public class QRXRealTime extends BaseScheduleJob {
         // String filePath = "/app/files/" + projectNum + File.separator + "wkk" + File.separator + fileName;
         String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
         sensorUtil.generateFile(filePath, content, "QRX实时信息[" + fileName + "]");
-
-
-        Optional.ofNullable(config.getField("transfer", boolean.class)).ifPresent(t -> {
-            if (t) {
-                sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
-            }
-        });
+        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> effectiveSensor, LocalDateTime now) {
         StringBuilder sb = new StringBuilder();
         for (Row sensor : effectiveSensor) {
-            sb.append(sensor.getString("device_code")).append(";")
-                    .append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";")
-                    .append(RandomUtil.doubleTypeString(10, 20)).append(";")
+            String deviceCode = sensor.getString("device_code");
+            Double infiltrationDepth = sensor.getDouble("infiltration_depth");
+            String sensorCode = config.getField("sensorCode", String.class);
+            String valueLevel = config.getField("valueLevel", String.class);
+            String sensorValue = deviceCode.equals(sensorCode)
+                    ? String.valueOf(sensorValueByLevel(infiltrationDepth, valueLevel))
+                    : String.valueOf(infiltrationDepth + 1);
+            sb.append(deviceCode).append(";")
+                    .append(DateFormatUtil.localDateTime2StringStyle2(now.minusSeconds(10))).append(";")
+                    .append(sensorValue).append(";")
                     .append("0").append("~");
         }
         return sb.toString();
+    }
+
+    private double sensorValueByLevel(Double infiltrationDepth, String valueLevel) {
+        double result = switch (valueLevel) {
+            // 红
+            case "1" -> infiltrationDepth * 0.8 - 0.02;
+            // 橙
+            case "2" -> infiltrationDepth * 0.85;
+            // 黄
+            case "3" -> infiltrationDepth * 0.9;
+            // 蓝
+            case "4" -> infiltrationDepth * 0.9 + 0.1;
+            default -> infiltrationDepth;
+        };
+        // 保留两位小数
+        return Math.round(result * 100.0) / 100.0;
     }
 }

@@ -60,9 +60,12 @@ public class JYLRealTime extends BaseScheduleJob {
     private String bodyContent(List<Row> effectiveSensor, LocalDateTime now) {
         StringBuilder sb = new StringBuilder();
         for (Row sensor : effectiveSensor) {
-            sb.append(sensor.getString("device_code")).append(";")
+            String deviceCode = sensor.getString("device_code");
+            String sensorCode = config.getField("sensorCode", String.class);
+            String sensorValue = config.getField("sensorValue", String.class);
+            sb.append(deviceCode).append(";")
                     .append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";")
-                    .append(RandomUtil.doubleTypeString(1, 5)).append(";")
+                    .append(deviceCode.equals(sensorCode) ? sensorValue : RandomUtil.generateRandomDoubleString(0.1, 0.6))
                     .append("~");
         }
         return sb.toString();

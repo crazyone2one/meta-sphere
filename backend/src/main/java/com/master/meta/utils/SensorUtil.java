@@ -13,10 +13,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author Created by 11's papa on 2025/10/15
@@ -214,10 +211,10 @@ public class SensorUtil {
         }
     }
 
-    public List<Row> getWkkList(String tableName, Boolean deleted) {
+    public List<Row> getWkkList(String tableName, Boolean deleted,String dataSourceKey) {
         List<Row> rows;
         try {
-            DataSourceKey.use("ds-slave2");
+            DataSourceKey.use(dataSourceKey);
             Map<String, Object> map = new LinkedHashMap<>();
             if (Boolean.TRUE.equals(deleted)) {
                 map.put("deleted", "0");
@@ -233,7 +230,12 @@ public class SensorUtil {
         String defineInRedis = redisService.getSensor(projectNum, key);
         return Optional.ofNullable(defineInRedis).map(s -> JSON.parseArray(s, Row.class))
                 .orElseGet(() -> {
-                    List<Row> sensorList = getWkkList(tableName, deleted);
+                    List<Row> sensorList = new LinkedList<>();
+                    if ("150622020001".equals(projectNum)) {
+                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622020001");
+                    } else if ("150622007792".equals(projectNum)) {
+                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622007792");
+                    }
                     if (sensorList.isEmpty()) {
                         return sensorList;
                     }
@@ -246,7 +248,12 @@ public class SensorUtil {
         String defineInRedis = redisService.getSensor(projectNum, key);
         return Optional.ofNullable(defineInRedis).map(s -> JSON.parseArray(s, Row.class))
                 .orElseGet(() -> {
-                    List<Row> sensorList = getWkkList(tableName, deleted);
+                    List<Row> sensorList = new LinkedList<>();
+                    if ("150622020001".equals(projectNum)) {
+                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622020001");
+                    } else if ("150622007792".equals(projectNum)) {
+                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622007792");
+                    }
                     if (sensorList.isEmpty()) {
                         return sensorList;
                     }

@@ -1,5 +1,6 @@
 package com.master.meta.schedule.lt;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
@@ -10,20 +11,24 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
 public class GTRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
+    private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
 
-    private GTRealTimeInfo(SensorUtil sensorUtil) {
+    private GTRealTimeInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.GTXDY.getKey(), WkkSensorEnum.GTXDY.getTableName(), false);
         // 获取为删除的数据
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
@@ -33,18 +38,24 @@ public class GTRealTimeInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorList, now) +
                 END_FLAG;
-        String filePath = "/app/files/wkk/" + fileName;
+        // String filePath = "/app/files/wkk/" + fileName;
+        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
         sensorUtil.generateFile(filePath, content, "干滩设备实时信息[" + fileName + "]");
-        // todo targetPath更改为可配置
-        sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
+        // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
+        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> sensorList, LocalDateTime now) {
         StringBuilder sb = new StringBuilder();
         for (Row sensor : sensorList) {
-            sb.append(sensor.getString("device_code")).append(";")
+            String deviceCode = sensor.getString("device_code");
+            String sensorCode = config.getField("sensorCode", String.class);
+            String sensorValue = deviceCode.equals(sensorCode)
+                    ? config.getField("beachLength", String.class)
+                    : "10";
+            sb.append(deviceCode).append(";")
                     .append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";")
-                    .append("468.13").append(";")
+                    .append(sensorValue).append(";")
                     .append("57.2").append(";")
                     .append("0").append("~");
         }
