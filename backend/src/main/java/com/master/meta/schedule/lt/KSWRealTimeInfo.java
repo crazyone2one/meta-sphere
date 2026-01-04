@@ -4,6 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -23,10 +24,12 @@ public class KSWRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
     private final FileTransferConfiguration fileTransferConfiguration;
+    private final FileHelper fileHelper;
 
-    private KSWRealTimeInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
+    private KSWRealTimeInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
+        this.fileHelper = fileHelper;
     }
 
     @Override
@@ -42,10 +45,10 @@ public class KSWRealTimeInfo extends BaseScheduleJob {
                 bodyContent(sensorList, now) +
                 END_FLAG;
         // String filePath = "/app/files/wkk/" + fileName;
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        sensorUtil.generateFile(filePath, content, "库水位实时数据[" + fileName + "]");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileHelper.generateFile(filePath, content, "库水位实时数据[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
-        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> sensorList, LocalDateTime now) {

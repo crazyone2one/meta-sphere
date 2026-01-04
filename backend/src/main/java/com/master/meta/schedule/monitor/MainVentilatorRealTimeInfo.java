@@ -1,9 +1,11 @@
 package com.master.meta.schedule.monitor;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorKGType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
@@ -12,6 +14,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -28,9 +31,12 @@ import java.util.stream.Collectors;
 public class MainVentilatorRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
-
-    private MainVentilatorRealTimeInfo(SensorUtil sensorUtil) {
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
+    private MainVentilatorRealTimeInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
@@ -51,12 +57,16 @@ public class MainVentilatorRealTimeInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorList, now, sensorMap) +
                 END_FLAG;
-        String filePath = "/app/files/aqjk/" + fileName;
-        sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
+        // String filePath = "/app/files/aqjk/" + fileName;
+        // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "实时信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
         // 异常报警文件
-        if (this.config.isYcFlag()) {
+        if (config.isYcFlag()) {
             fileName = fileName("_YCBJ_", now);
-            filePath = "/app/files/aqjk/" + fileName;
+            // filePath = "/app/files/aqjk/" + fileName;
             LocalDateTime currentDate = now.withSecond(0).withNano(0);
             StringBuilder alarmContent = new StringBuilder();
             Row sensor = sensorMap.get(this.config.getCustomConfig().getSensorIds());
@@ -83,7 +93,10 @@ public class MainVentilatorRealTimeInfo extends BaseScheduleJob {
                     .append("entered;")
                     .append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~")
             ;
-            sensorUtil.generateFile(filePath, alarmContent.toString(), "异常报警文件数据[" + fileName + "]");
+            // sensorUtil.generateFile(filePath, alarmContent.toString(), "异常报警文件数据[" + fileName + "]");
+            String ycFilePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+            fileHelper.generateFile(ycFilePath, JSON.toJSONString(content), "异常报警文件数据[" + fileName + "]");
+            fileHelper.uploadFile(slaveConfig, ycFilePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
         }
     }
 

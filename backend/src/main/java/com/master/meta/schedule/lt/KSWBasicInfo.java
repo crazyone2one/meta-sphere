@@ -1,17 +1,16 @@
 package com.master.meta.schedule.lt;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.JSON;
-import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
+import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -25,14 +24,19 @@ import java.util.List;
  */
 public class KSWBasicInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
 
-    private KSWBasicInfo(SensorUtil sensorUtil) {
+    private KSWBasicInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.KSWDY.getKey(), WkkSensorEnum.KSWDY.getTableName(), false);
         // 获取为删除的数据
 //        List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
@@ -42,9 +46,12 @@ public class KSWBasicInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorInRedis, now) +
                 END_FLAG;
-        String filePath = "/app/files/wkk/" + fileName;
-        sensorUtil.generateFile(filePath, content, "库水位设备信息[" + fileName + "]");
-        sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
+        // String filePath = "/app/files/wkk/" + fileName;
+        // sensorUtil.generateFile(filePath, content, "库水位设备信息[" + fileName + "]");
+        // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), WkkSensorEnum.KSWDY.getLabel() + "基础信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

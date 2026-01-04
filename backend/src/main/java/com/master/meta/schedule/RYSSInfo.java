@@ -3,6 +3,7 @@ package com.master.meta.schedule;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.datasource.DataSourceKey;
@@ -22,10 +23,12 @@ public class RYSSInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
     private final FileTransferConfiguration fileTransferConfiguration;
+    private final FileHelper fileHelper;
 
-    private RYSSInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
+    private RYSSInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
+        this.fileHelper = fileHelper;
     }
 
     @Override
@@ -42,13 +45,9 @@ public class RYSSInfo extends BaseScheduleJob {
                 bodyContent(personList, substationList, areaList, now) +
                         END_FLAG;
         // String filePath = "/app/files/rydw/" + fileName;
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "rydw", fileName);
-        sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
-        Optional.ofNullable(config.getField("transfer", boolean.class)).ifPresent(t -> {
-            if (t) {
-                sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "rydw");
-            }
-        });
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "rydw", fileName);
+        fileHelper.generateFile(filePath, content, "实时数据[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "rydw");
     }
 
     private String bodyContent(List<Row> personList, List<Row> substationList, List<Row> areaList, LocalDateTime now) {

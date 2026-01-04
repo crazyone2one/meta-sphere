@@ -1,7 +1,10 @@
 package com.master.meta.schedule;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -9,6 +12,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -18,10 +22,14 @@ import java.util.List;
  */
 public class RYJZInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
 
-    public RYJZInfo(SensorUtil sensorUtil) {
+    public RYJZInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
@@ -35,8 +43,12 @@ public class RYJZInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(unDeleteSensorList, now) +
                 END_FLAG;
-        String filePath = "/app/files/aqjk/" + fileName;
-        sensorUtil.generateFile(filePath, content, "基础数据[" + fileName + "]");
+        // String filePath = "/app/files/aqjk/" + fileName;
+        // sensorUtil.generateFile(filePath, content, "基础数据[" + fileName + "]");
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "基础数据[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
     }
 
     private String bodyContent(List<Row> unDeleteSensorList, LocalDateTime now) {

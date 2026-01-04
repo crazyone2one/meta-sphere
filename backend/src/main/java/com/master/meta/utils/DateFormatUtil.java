@@ -3,8 +3,11 @@ package com.master.meta.utils;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Objects;
+
 
 /**
  * @author Created by 11's papa on 2025/10/15
@@ -12,6 +15,7 @@ import java.util.Date;
 public class DateFormatUtil {
     public static final String DATE_PATTERN = "yyyy-MM-dd";
     public static final String TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+    private static final DateTimeFormatter UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     public static Date getDate(String dateString) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
@@ -118,5 +122,15 @@ public class DateFormatUtil {
         } else {
             return time1.truncatedTo(SECOND_UNIT).equals(time2.truncatedTo(SECOND_UNIT));
         }
+    }
+
+    public static String getUTCByLocal(LocalDateTime localDateTime) {
+        if (Objects.isNull(localDateTime)) {
+            return "";
+        }
+        // 1. 将输入时间减8小时（假设输入时间为东八区时间）
+        LocalDateTime adjustedTime = localDateTime.minusHours(8);
+        // 2. 转换为UTC时区的时间并格式化
+        return adjustedTime.atOffset(ZoneOffset.UTC).format(UTC_FORMATTER);
     }
 }

@@ -1,11 +1,9 @@
 package com.master.meta.schedule.lt;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.JSON;
-import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
+import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -13,6 +11,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
@@ -20,9 +19,13 @@ import java.util.stream.Collectors;
 
 public class GNSSWarningInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private GNSSWarningInfo(SensorUtil sensorUtil) {
+    private GNSSWarningInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -59,6 +62,7 @@ public class GNSSWarningInfo extends BaseScheduleJob {
      * @param now       当前时间
      */
     private void earlyWarningInformation(Map<String, Row> sensorMap, LocalDateTime now) {
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         // 构建预警信息文件名
         String fileName = projectNum + "_gnssalarm_"
                 + DateFormatUtil.localDateTime2StringStyle2(now) + "_"
@@ -76,13 +80,17 @@ public class GNSSWarningInfo extends BaseScheduleJob {
             if (DateFormatUtil.isSameByType("min", warningTime, now) || alarmLevel == 0) {
                 content.put("send_time", DateFormatUtil.localDateTime2StringStyle2(warningTime));
                 content.put("data", warningInformation(sensorMap, warningTime, alarmLevel));
-                String filePath = "/app/files/gnss/" + fileName;
-                sensorUtil.generateFile(filePath, JSON.toJSONString(content), "gnss预警信息[" + fileName + "]");
-                sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+                // String filePath = "/app/files/gnss/" + fileName;
+                // sensorUtil.generateFile(filePath, JSON.toJSONString(content), "gnss预警信息[" + fileName + "]");
+                // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+                String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+                fileHelper.generateFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
+                // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+                fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
             }
             // 1分钟后生成预警处置文件
             if (DateFormatUtil.isSameByType("min", warningTime.plusMinutes(1), now)) {
-                earlyWarningDisposal(sensorMap, now, warningTime);
+                earlyWarningDisposal(sensorMap, now, warningTime, slaveConfig);
             }
         });
     }
@@ -126,11 +134,11 @@ public class GNSSWarningInfo extends BaseScheduleJob {
     /**
      * 处理早期预警信息并生成相应的文件
      *
-     * @param sensorMap 传感器数据映射表，键为传感器标识，值为对应的行数据
-     * @param now 当前时间
+     * @param sensorMap   传感器数据映射表，键为传感器标识，值为对应的行数据
+     * @param now         当前时间
      * @param warningTime 预警时间
      */
-    private void earlyWarningDisposal(Map<String, Row> sensorMap, LocalDateTime now, LocalDateTime warningTime) {
+    private void earlyWarningDisposal(Map<String, Row> sensorMap, LocalDateTime now, LocalDateTime warningTime, FileTransferConfiguration.SlaveConfig slaveConfig) {
         // 生成预警解除文件名
         String fileName = projectNum + "_clearalarm_"
                 + DateFormatUtil.localDateTime2StringStyle2(now) + "_"
@@ -142,9 +150,13 @@ public class GNSSWarningInfo extends BaseScheduleJob {
         content.put("data", disposalInformation(sensorMap, now, warningTime));
 
         // 生成并上传预警解除文件
-        String filePath = "/app/files/gnss/" + fileName;
-        sensorUtil.generateFile(filePath, JSON.toJSONString(content), "gnss预警解除信息[" + fileName + "]");
-        sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+        // String filePath = "/app/files/gnss/" + fileName;
+        // sensorUtil.generateFile(filePath, JSON.toJSONString(content), "gnss预警解除信息[" + fileName + "]");
+        // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
+        // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
     }
 
     private List<Map<String, Object>> disposalInformation(Map<String, Row> sensorMap, LocalDateTime now, LocalDateTime warningTime) {

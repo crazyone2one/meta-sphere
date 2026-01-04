@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -30,10 +29,6 @@ public class SensorUtil {
     public SensorUtil(FileTransferConfiguration fileTransferConfiguration, RedisService redisService) {
         this.redisService = redisService;
         this.scpUtils = new ScpUtils(fileTransferConfiguration);
-    }
-
-    public String filePath(String filePath, String projectNum, String directoryName, String fileName) {
-        return filePath + projectNum + File.separator + directoryName + File.separator + fileName;
     }
 
     public List<Row> getRainDefineList(String tableName, Boolean deleted) {
@@ -153,65 +148,7 @@ public class SensorUtil {
         }
     }
 
-    /**
-     * 上传文件到远程服务器
-     *
-     * @param filePath   本地文件路径
-     * @param targetPath 远程服务器目标路径
-     */
-    public void uploadFile(String filePath, String targetPath) {
-        if (activeProfile.equals("dev")) {
-            return;
-        }
-        File file = new File(filePath);
-        // 检查父目录是否存在，不存在则创建
-        File parentDir = file.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            boolean dirCreated = parentDir.mkdirs();
-            if (!dirCreated) {
-                log.error("Failed to create directory: {}", parentDir.getAbsolutePath());
-                return;
-            }
-        }
-        if (!file.exists()) {
-            log.warn("file not exists: {}", filePath);
-            return;
-        }
-        try {
-            scpUtils.initClient();
-            scpUtils.connect("172.16.2.15", 8841, "root", "zkah@123");
-            // 上传文件
-            // scpUtils.uploadFile("C:\\Users\\the2n\\Desktop\\150622B0012000200092_CDDY_20241006163722.txt", "/home/app/luna");
-            scpUtils.uploadFile(filePath, targetPath);
-            log.info("file transfer successfully");
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        } finally {
-            scpUtils.close();
-        }
-    }
-
-    public void uploadFile(FileTransferConfiguration.SlaveConfig slaveConfig, String localPath, String targetPath) {
-        if (activeProfile.equals("dev")) {
-            return;
-        }
-        File file = new File(localPath);
-        if (!file.exists()) {
-            log.warn("file not exists: {}", localPath);
-            return;
-        }
-        try {
-            // 上传文件
-            scpUtils.uploadFile(slaveConfig, localPath, targetPath);
-            log.info("file transfer successfully");
-        } catch (IOException e) {
-            log.error(e.getMessage(), e);
-        } finally {
-            scpUtils.close();
-        }
-    }
-
-    public List<Row> getWkkList(String tableName, Boolean deleted,String dataSourceKey) {
+    public List<Row> getWkkList(String tableName, Boolean deleted, String dataSourceKey) {
         List<Row> rows;
         try {
             DataSourceKey.use(dataSourceKey);
@@ -232,9 +169,9 @@ public class SensorUtil {
                 .orElseGet(() -> {
                     List<Row> sensorList = new LinkedList<>();
                     if ("150622020001".equals(projectNum)) {
-                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622020001");
+                        sensorList = getWkkList(tableName, deleted, "ds-slave150622020001");
                     } else if ("150622007792".equals(projectNum)) {
-                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622007792");
+                        sensorList = getWkkList(tableName, deleted, "ds-slave150622007792");
                     }
                     if (sensorList.isEmpty()) {
                         return sensorList;
@@ -250,9 +187,9 @@ public class SensorUtil {
                 .orElseGet(() -> {
                     List<Row> sensorList = new LinkedList<>();
                     if ("150622020001".equals(projectNum)) {
-                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622020001");
+                        sensorList = getWkkList(tableName, deleted, "ds-slave150622020001");
                     } else if ("150622007792".equals(projectNum)) {
-                        sensorList=  getWkkList(tableName, deleted, "ds-slave150622007792");
+                        sensorList = getWkkList(tableName, deleted, "ds-slave150622007792");
                     }
                     if (sensorList.isEmpty()) {
                         return sensorList;

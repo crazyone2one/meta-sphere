@@ -3,10 +3,7 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.JSON;
-import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
+import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -23,10 +20,12 @@ import java.util.Map;
 public class GNSSBasicInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
+    private final FileHelper fileHelper;
 
-    private GNSSBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
+    private GNSSBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
+        this.fileHelper = fileHelper;
     }
 
     @Override
@@ -40,9 +39,9 @@ public class GNSSBasicInfo extends BaseScheduleJob {
         Map<String, Object> content = new LinkedHashMap<>();
         content.put("send_time", DateFormatUtil.localDateTime2StringStyle2(now));
         content.put("data", contentData(sourceRows, now));
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
-        sensorUtil.generateFile(filePath, JSON.toJSONString(content), "GNSS设备信息[" + fileName + "]");
-        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "GNSS设备信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
     }
 
     private List<Map<String, Object>> contentData(List<Row> sourceRows, LocalDateTime now) {

@@ -4,6 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
@@ -22,10 +23,12 @@ public class JYLRealTime extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
+    private final FileHelper fileHelper;
 
-    private JYLRealTime(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
+    private JYLRealTime(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
+        this.fileHelper = fileHelper;
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -52,9 +55,9 @@ public class JYLRealTime extends BaseScheduleJob {
                 bodyContent(effectiveSensor, now) +
                 END_FLAG;
         // String filePath = "/app/files/" + projectNum + File.separator + "wkk" + File.separator + fileName;
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        sensorUtil.generateFile(filePath, content, WkkSensorEnum.JYLDY.getLabel() + "实时信息[" + fileName + "]");
-        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileHelper.generateFile(filePath, content, WkkSensorEnum.JYLDY.getLabel() + "实时信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> effectiveSensor, LocalDateTime now) {
@@ -63,9 +66,11 @@ public class JYLRealTime extends BaseScheduleJob {
             String deviceCode = sensor.getString("device_code");
             String sensorCode = config.getField("sensorCode", String.class);
             String sensorValue = config.getField("sensorValue", String.class);
+            Boolean zeroValueFlag = config.getField("zeroValue", Boolean.class);
+            String zeroValue = BooleanUtils.isTrue(zeroValueFlag) ? "0" : RandomUtil.generateRandomDoubleString(0.1, 0.6);
             sb.append(deviceCode).append(";")
                     .append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";")
-                    .append(deviceCode.equals(sensorCode) ? sensorValue : RandomUtil.generateRandomDoubleString(0.1, 0.6))
+                    .append(deviceCode.equals(sensorCode) ? sensorValue : zeroValue)
                     .append("~");
         }
         return sb.toString();

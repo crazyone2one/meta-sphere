@@ -1,16 +1,16 @@
 package com.master.meta.schedule.lt;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
+import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -23,13 +23,18 @@ import java.util.List;
 public class BWYBasicInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private BWYBasicInfo(SensorUtil sensorUtil) {
+    private BWYBasicInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.BWYDY.getKey(), WkkSensorEnum.BWYDY.getTableName(), false);
         // 获取为删除的数据
 //        List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
@@ -39,9 +44,12 @@ public class BWYBasicInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorInRedis, now) +
                 END_FLAG;
-        String filePath = "/app/files/GNSS/" + fileName;
-        sensorUtil.generateFile(filePath, content, "表面位移设备信息[" + fileName + "]");
-        sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+        // String filePath = "/app/files/GNSS/" + fileName;
+        // sensorUtil.generateFile(filePath, content, "表面位移设备信息[" + fileName + "]");
+        // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "表面位移设备信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

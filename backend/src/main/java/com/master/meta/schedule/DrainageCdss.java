@@ -4,6 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorKGType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
@@ -16,16 +17,17 @@ import org.quartz.TriggerKey;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Optional;
 
 public class DrainageCdss extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
+    private final FileHelper fileHelper;
 
-    private DrainageCdss(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
+    private DrainageCdss(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
+        this.fileHelper = fileHelper;
     }
 
     @Override
@@ -36,18 +38,13 @@ public class DrainageCdss extends BaseScheduleJob {
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         StringBuilder content = new StringBuilder();
         // String filePath = "/app/files/shfz/" + fileName;
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         content.append(bodyContent(sensorInRedis, now));
         content.append(END_FLAG);
-        sensorUtil.generateFile(filePath, content.toString(), "水泵开停实时信息[" + fileName + "]");
-
-        Optional.ofNullable(config.getField("transfer", boolean.class)).ifPresent(t -> {
-            if (t) {
-                sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "shfz");
-            }
-        });
+        fileHelper.generateFile(filePath, content.toString(), "水泵开停实时信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "shfz");
     }
 
     private StringBuilder bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

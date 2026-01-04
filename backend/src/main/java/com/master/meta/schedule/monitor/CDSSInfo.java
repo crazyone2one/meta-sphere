@@ -1,12 +1,11 @@
 package com.master.meta.schedule.monitor;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorMNType;
 import com.master.meta.dto.CustomConfig;
 import com.master.meta.dto.ScheduleConfigDTO;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
+import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -15,6 +14,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -31,9 +31,13 @@ import java.util.stream.Collectors;
 public class CDSSInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final static String END_FLAG = "||";
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private CDSSInfo(SensorUtil sensorUtil) {
+    private CDSSInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
@@ -51,15 +55,19 @@ public class CDSSInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorList, now, endTime, ycValue) +
                 END_FLAG;
-        String filePath = "/app/files/aqjk/" + fileName;
-        sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
+        // String filePath = "/app/files/aqjk/" + fileName;
+        // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "cdss实时信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
         // 异常报警文件
         if (config.isYcFlag()) {
-            generateYcFile(sensorList, now, ycEndTimeStr, ycValue);
+            generateYcFile(sensorList, now, ycEndTimeStr, ycValue, slaveConfig);
         }
     }
 
-    private void generateYcFile(List<Row> sensorList, LocalDateTime now, String ycEndTime, String ycValue) {
+    private void generateYcFile(List<Row> sensorList, LocalDateTime now, String ycEndTime, String ycValue, FileTransferConfiguration.SlaveConfig slaveConfig) {
         LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2(ycEndTime);
         Optional.ofNullable(config.getAdditionalFields().get("ycCode")).ifPresent(
                 code -> {
@@ -90,9 +98,11 @@ public class CDSSInfo extends BaseScheduleJob {
 
                     content.append(DateFormatUtil.localDateTime2StringStyle2(endTime)).append("~");
                     content.append(END_FLAG);
-                    String filePath = "/app/files/aqjk/" + fileName;
-                    log.info("生成异常报警数据文件: {}", content);
-                    sensorUtil.generateFile(filePath, content.toString(), "异常报警数据[" + fileName + "]");
+                    // String filePath = "/app/files/aqjk/" + fileName;
+                    // sensorUtil.generateFile(filePath, content.toString(), "异常报警数据[" + fileName + "]");
+                    String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+                    fileHelper.generateFile(filePath, JSON.toJSONString(content), "cdss异常报警数据[" + fileName + "]");
+                    fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
                 }
         );
 

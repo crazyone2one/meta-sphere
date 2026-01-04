@@ -4,6 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
@@ -24,10 +25,12 @@ public class QRXRealTime extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
+    private final FileHelper fileHelper;
 
-    private QRXRealTime(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
+    private QRXRealTime(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
+        this.fileHelper = fileHelper;
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -54,9 +57,9 @@ public class QRXRealTime extends BaseScheduleJob {
                 bodyContent(effectiveSensor, now) +
                 END_FLAG;
         // String filePath = "/app/files/" + projectNum + File.separator + "wkk" + File.separator + fileName;
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        sensorUtil.generateFile(filePath, content, "QRX实时信息[" + fileName + "]");
-        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileHelper.generateFile(filePath, content, "QRX实时信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> effectiveSensor, LocalDateTime now) {

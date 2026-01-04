@@ -25,11 +25,13 @@ public class GNSSRealTime extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
     private final InfluxDbUtils influxDbUtils;
+    private final FileHelper fileHelper;
 
-    private GNSSRealTime(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, InfluxDbUtils influxDbUtils) {
+    private GNSSRealTime(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, InfluxDbUtils influxDbUtils, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.influxDbUtils = influxDbUtils;
+        this.fileHelper = fileHelper;
     }
 
     @Override
@@ -54,22 +56,22 @@ public class GNSSRealTime extends BaseScheduleJob {
         content.put("open_pit_no", projectNum);
         content.put("data", contentData(effectiveSensor, now));
         // String filePath = "/app/files/gnss/" + fileName;
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
-        sensorUtil.generateFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
-        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
     }
 
     private List<Map<String, Object>> contentData(List<Row> sensorInRedis, LocalDateTime now) {
         List<Map<String, Object>> result = new ArrayList<>();
         String sensorCode = config.getField("sensorCode", String.class);
-        AtomicReference<String> disp = new AtomicReference<>("1.0");
+
         for (Row s : sensorInRedis) {
             String equipNo = s.getString("equip_no");
-            if (!equipNo.equals(sensorCode)) {
-                continue;
+            AtomicReference<String> disp = new AtomicReference<>("1.0");
+            if (equipNo.equals(sensorCode)) {
+                disp.set(Optional.ofNullable(config.getField("disp", String.class)).orElse("1.0"));
             }
-            disp.set(config.getField("disp", String.class));
             Map<String, Object> content = new LinkedHashMap<>();
             content.put("equip_no", equipNo);
             content.put("monitor_time", DateFormatUtil.localDateTime2StringStyle2(now));

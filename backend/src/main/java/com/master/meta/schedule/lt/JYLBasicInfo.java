@@ -3,10 +3,7 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.JSON;
-import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
+import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -23,10 +20,12 @@ public class JYLBasicInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
     private final static String END_FLAG = "||";
+    private final FileHelper fileHelper;
 
-    private JYLBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration) {
+    private JYLBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
+        this.fileHelper = fileHelper;
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -47,10 +46,10 @@ public class JYLBasicInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorInRedis, now) +
                 END_FLAG;
-        String filePath = sensorUtil.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        sensorUtil.generateFile(filePath, content, WkkSensorEnum.JYLDY.getLabel() + "基础信息[" + fileName + "]");
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileHelper.generateFile(filePath, content, WkkSensorEnum.JYLDY.getLabel() + "基础信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
-        sensorUtil.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "wkk");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "wkk");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {
