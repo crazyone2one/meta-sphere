@@ -69,8 +69,8 @@ public class FTRealTimeInfo extends BaseScheduleJob {
         rows.forEach(row -> {
             String sensorValue = "1";
             String sensorInfoCode = row.getString("sensor_code");
-            if (sensorInfoCode.equals(this.config.getCustomConfig().getSensorIds()) &&
-                    this.config.getCustomConfig().getAlarmFlag()) {
+            String sensorCode = config.getField("sensorCode", String.class);
+            if (sensorInfoCode.equals(sensorCode)) {
                 sensorValue = "0";
             }
             Row sensor = sensorMap.get(sensorInfoCode);
