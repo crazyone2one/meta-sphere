@@ -1,10 +1,10 @@
 spring:
   data:
     redis:
-      host: 172.16.2.10
-      port: 6379
-      password: c1$4T&9pW#z2Q@7vL
-      database: 5
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:5}
   datasource:
     hikari:
       maximum-pool-size: 100
@@ -38,17 +38,22 @@ spring:
 mybatis-flex:
   datasource:
     master:
-      url: jdbc:mysql://172.16.2.10:3306/meta-sphere?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
-      username: root
-      password: 3eCrAw8Ba6Tg
+      url: jdbc:mysql://${MASTER_DB_URL}:${MASTER_DB_PORT:3306}/${MASTER_DB_NAME}?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      username: ${MASTER_DB_USERNAME:root}
+      password: ${MASTER_DB_PASSWORD}
     ds-slave1:
-      url: jdbc:mysql://172.16.2.10:3306/ruoyi-vue-pro?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
-      username: root
-      password: 3eCrAw8Ba6Tg
-    ds-slave2:
-      url: jdbc:mysql://172.16.2.15:3306/nmfm_lt?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
-      username: root
-      password: Zkah@83539595S
+      url: jdbc:mysql://${SLAVE1_DB_URL}:${SLAVE1_DB_PORT:3306}/${SLAVE1_DB_NAME}?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
+      username: ${SLAVE1_DB_USERNAME:root}
+      password: ${SLAVE1_DB_PASSWORD}
+    ds-slave150622020001:
+      url: jdbc:mysql://${SLAVE2_DB_URL}:${SLAVE2_DB_PORT:3306}/${SLAVE2_DB_NAME}?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
+      username: ${SLAVE2_DB_USERNAME:root}
+      password: ${SLAVE2_DB_PASSWORD}
+    ds-slave150622007792:
+      url: jdbc:mysql://${SLAVE3_DB_URL}:${SLAVE3_DB_PORT:3306}/${SLAVE3_DB_NAME}?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
+      username: ${SLAVE3_DB_USERNAME:root}
+      password: ${SLAVE3_DB_PASSWORD}
+
 jwt:
   secret: K4lgrcqOP576NhrtYJhuQD8DdMYfZtb58hWdJaTjPbk=
   access-token-validity: 43200000 #2h
@@ -68,3 +73,28 @@ logging:
     org.springframework.web: info  # Spring Web 框架日志
     org.springframework.boot.web.servlet: info  # Servlet 容器日志
     org.springframework.security: info
+
+# 文件传输配置 FileTransferConfiguration
+transfer:
+  slave:
+    - '150622004499':
+        host: ${SLAVE1_DB_URL}
+        port: 8841
+        username: root
+        password: zkah@123
+        localPath: /app/files/
+        remotePath: /home/app/files/ftp/
+    - '150622020001':
+        host: ${SLAVE2_DB_URL}
+        port: 8841
+        username: root
+        password: zkah@123
+        localPath: /app/files/
+        remotePath: /home/app/ftp/
+    - "150622007792":
+        host: ${SLAVE3_DB_URL}
+        port: 8841
+        username: root
+        password: zkah@123
+        localPath: /app/files/
+        remotePath: /home/app/jg-ftp/
