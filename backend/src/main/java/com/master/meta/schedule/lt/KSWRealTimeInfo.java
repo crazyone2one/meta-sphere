@@ -22,7 +22,6 @@ import java.util.List;
  */
 public class KSWRealTimeInfo extends BaseScheduleJob {
     private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
     private final FileTransferConfiguration fileTransferConfiguration;
     private final FileHelper fileHelper;
 
@@ -44,10 +43,8 @@ public class KSWRealTimeInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorList, now) +
                 END_FLAG;
-        // String filePath = "/app/files/wkk/" + fileName;
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
         fileHelper.generateFile(filePath, content, "库水位实时数据[" + fileName + "]");
-        // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
