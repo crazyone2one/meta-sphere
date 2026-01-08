@@ -17,6 +17,7 @@ public class ScheduleConfigDTO {
     private double minValue = 0.2;
     private double maxValue = 1.5;
     private boolean ycFlag;
+    private boolean fmFlag;
     // 是否是调参、标校
     private boolean tuningFlag;
     private String sensorId;

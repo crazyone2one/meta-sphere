@@ -30,9 +30,34 @@ public class SensorService {
     private final InfluxDbUtils influxDbUtils;
     private static final DateTimeFormatter UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
+    private static final Long TIMEOUT = 60 * 60 * 24L;
+
     public SensorService(RedisService redisService, InfluxDbUtils influxDbUtils) {
         this.redisService = redisService;
         this.influxDbUtils = influxDbUtils;
+    }
+
+    public List<Row> getAllDataFromSlaveDatabase(String projectNum, String tableName) {
+        List<Row> rows;
+        try {
+            DataSourceKey.use("ds-slave" + projectNum);
+            Map<String, Object> map = new LinkedHashMap<>();
+            rows = Db.selectListByMap(tableName, map);
+        } finally {
+            DataSourceKey.clear();
+        }
+        return rows;
+    }
+
+    public List<Row> getSensorFromRedis(String projectNum, String key, String tableName) {
+        String rainDefineInRedis = redisService.getSensor(projectNum, key);
+        if (rainDefineInRedis != null) {
+            return JSON.parseArray(rainDefineInRedis, Row.class);
+        } else {
+            List<Row> sensorList = getAllDataFromSlaveDatabase(projectNum, tableName);
+            redisService.storeSensor(projectNum, key, sensorList, TIMEOUT);
+            return sensorList;
+        }
     }
 
     public List<Row> getShfzSensorList(String tableName, Boolean deleted) {
@@ -48,21 +73,6 @@ public class SensorService {
             DataSourceKey.clear();
         }
         return rows;
-    }
-
-    public List<Row> getShfzSensorFromRedis(String projectNum, SensorMNType sensorMNType, Boolean deleted) {
-        return getShfzSensorFromRedis(projectNum, sensorMNType.getKey(), sensorMNType.getTableName(), deleted);
-    }
-
-    public List<Row> getShfzSensorFromRedis(String projectNum, String key, String tableName, Boolean deleted) {
-        String rainDefineInRedis = redisService.getSensor(projectNum, key);
-        if (rainDefineInRedis != null) {
-            return JSON.parseArray(rainDefineInRedis, Row.class);
-        } else {
-            List<Row> sensorList = getShfzSensorList(tableName, deleted);
-            redisService.storeSensor(projectNum, key, sensorList, 60 * 60 * 24 * 7);
-            return sensorList;
-        }
     }
 
     /**
@@ -126,6 +136,7 @@ public class SensorService {
         // 2. 转换为UTC时区的时间并格式化
         return adjustedTime.atOffset(ZoneOffset.UTC).format(UTC_FORMATTER);
     }
+
     /**
      * 获取传感器最新的一条数据记录
      *
@@ -163,6 +174,7 @@ public class SensorService {
         });
         return latestData;
     }
+
     /**
      * 获取指定时间段内的传感器数据列表
      *
@@ -177,12 +189,13 @@ public class SensorService {
         String startTimeStr = getUTCByLocal(startTime);
         String endTimeStr = getUTCByLocal(endTime);
 
-        String query = "|> range(start: " + startTimeStr + ", stop: " + endTimeStr + ")" +
-                " |> filter(fn: (r) => r[\"_measurement\"] == \"" + sensorTypeEnum.getMeasurement() + "\")" +
-                " |> filter(fn: (r) => r[\"send_id\"] == \"" + sensorId + "\")" +
-                " |> filter(fn: (r) => r[\"_field\"] == \"" + sensorTypeEnum.getQueryFields() + "\")" +
-                " |> toFloat()" +
-                " |> sort(columns: [\"_time\"], desc: false)";
+        String query =
+                "|> range(start: " + startTimeStr + ", stop: " + endTimeStr + ")" +
+                        " |> filter(fn: (r) => r[\"_measurement\"] == \"" + sensorTypeEnum.getMeasurement() + "\")" +
+                        " |> filter(fn: (r) => r[\"send_id\"] == \"" + sensorId + "\")" +
+                        " |> filter(fn: (r) => r[\"_field\"] == \"" + sensorTypeEnum.getQueryFields() + "\")" +
+                        " |> toFloat()" +
+                        " |> sort(columns: [\"_time\"], desc: false)";
 
         List<FluxTable> fluxTables = influxDbUtils.getData(query);
 
@@ -209,6 +222,7 @@ public class SensorService {
 
         return dataList;
     }
+
     /**
      * 判断水位变化条件：实时数据与前30天平均值的绝对差 > 最大相邻差值*0.7 且 水位降幅>=0.1m
      *

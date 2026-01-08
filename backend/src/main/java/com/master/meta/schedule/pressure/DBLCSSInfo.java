@@ -1,8 +1,11 @@
 package com.master.meta.schedule.pressure;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.SensorUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -10,6 +13,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -20,17 +24,20 @@ import java.util.Random;
  */
 @Slf4j
 public class DBLCSSInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
     Random random = new Random();
 
-    private DBLCSSInfo(SensorUtil sensorUtil) {
+    private DBLCSSInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, "DBLC", "sf_ky_dblc", false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, "DBLC", "sf_ky_dblc");
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_LCSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
@@ -38,10 +45,13 @@ public class DBLCSSInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorList, now) +
                 END_FLAG;
-        String filePath = "/app/files/ky/" + fileName;
-        sensorUtil.generateFile(filePath, content, "顶板离层实时数据[" + fileName + "]");
+        // String filePath = "/app/files/ky/" + fileName;
+        // sensorUtil.generateFile(filePath, content, "顶板离层实时数据[" + fileName + "]");
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "顶板离层信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");
     }
-
 
 
     private String bodyContent(List<Row> sensorList, LocalDateTime localDateTime) {

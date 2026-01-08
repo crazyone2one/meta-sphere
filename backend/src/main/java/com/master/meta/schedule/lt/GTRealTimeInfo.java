@@ -3,9 +3,9 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -18,12 +18,11 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class GTRealTimeInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
     private final FileHelper fileHelper;
 
-    private GTRealTimeInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+    private GTRealTimeInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
@@ -32,7 +31,7 @@ public class GTRealTimeInfo extends BaseScheduleJob {
     @Override
     protected void businessExecute(JobExecutionContext context) {
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
-        List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.GTXDY.getKey(), WkkSensorEnum.GTXDY.getTableName(), false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.GTXDY.getKey(), WkkSensorEnum.GTXDY.getTableName());
         // 获取为删除的数据
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));

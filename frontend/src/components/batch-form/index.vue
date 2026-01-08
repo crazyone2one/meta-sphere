@@ -6,7 +6,7 @@ import {VueDraggable} from "vue-draggable-plus";
 import {scrollIntoView} from "/@/utils/dom.ts";
 
 export interface BatchFormProps {
-  models: FormItemModel[];
+  models?: FormItemModel[];
   formMode: FormMode;
   addText?: string;
   maxHeight?: string;
@@ -16,17 +16,27 @@ export interface BatchFormProps {
   showEnable?: boolean; // 是否显示启用禁用switch状态
   hideAdd?: boolean; // 是否隐藏添加按钮
   addToolTip?: string;
-  enableType?: 'circle' | 'round' | 'line';
 }
 
 const props = withDefaults(defineProps<BatchFormProps>(), {
   maxHeight: '30vh',
   isShowDrag: false,
   hideAdd: false,
-  enableType: 'line',
 })
 const formRef = ref<FormInst | null>(null)
 const emit = defineEmits(['change']);
+const onlyOptions = ref<Array<FormItemModel>>([{
+  field: 'text',
+  type: 'input',
+  label: '',
+  rules: [
+    {required: true, message: '选项内容不能为空'},
+    {notRepeat: true, message: '选项内容不可以重复'},
+  ],
+  placeholder: '请输入选项',
+  hideAsterisk: true,
+  hideLabel: true,
+}]);
 const defaultForm = {
   list: [] as Record<string, any>[],
 };
@@ -62,7 +72,7 @@ const resetForm = () => {
   formRef.value?.restoreValidation();
 }
 watchEffect(() => {
-  props.models.forEach((e) => {
+  onlyOptions.value.forEach((e) => {
     // 默认填充表单项
     let value: string | number | boolean | string[] | number[] | undefined;
     if (e.type === 'inputNumber') {
@@ -121,7 +131,7 @@ defineExpose({
             <n-flex v-if="props.isShowDrag" align="center">
               <div class="i-mdi:drag block text-[16px] text-[#9597a4]"/>
 
-              <n-form-item v-for="model of props.models" :key="`${model.field}-${index}`"
+              <n-form-item v-for="model of onlyOptions" :key="`${model.field}-${index}`"
                            :path="`list[${index}].${model.field}`"
                            :class="index > 0 ? 'hidden-item' : 'mb-0 flex-1'"
                            :rule="model.rules?.map(e=>{

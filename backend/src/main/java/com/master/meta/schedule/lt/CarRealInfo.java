@@ -3,6 +3,7 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
@@ -19,13 +20,12 @@ import java.util.List;
 import java.util.Optional;
 
 public class CarRealInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
     private final FileHelper fileHelper;
     private final StringRedisTemplate redisTemplate;
 
-    private CarRealInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper, StringRedisTemplate redisTemplate) {
+    private CarRealInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper, StringRedisTemplate redisTemplate) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
@@ -34,7 +34,7 @@ public class CarRealInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.CARBASEINFO.getKey(), WkkSensorEnum.CARBASEINFO.getTableName(), false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.CARBASEINFO.getKey(), WkkSensorEnum.CARBASEINFO.getTableName());
         List<Row> list = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
@@ -52,7 +52,7 @@ public class CarRealInfo extends BaseScheduleJob {
     }
 
     private String bodyContent(List<Row> list) {
-        List<Row> persons = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.LTPERSON.getKey(), WkkSensorEnum.LTPERSON.getTableName(), true);
+        List<Row> persons = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.LTPERSON.getKey(), WkkSensorEnum.LTPERSON.getTableName());
         StringBuilder sb = new StringBuilder();
         String carStatus = Optional.ofNullable(config.getField("carStatus", String.class)).orElse("1");
         String carLocationNo = config.getField("car_location_no", String.class);

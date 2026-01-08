@@ -3,9 +3,9 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -22,12 +22,11 @@ import java.util.List;
  * QRX实时信息
  */
 public class QRXRealTime extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
     private final FileHelper fileHelper;
 
-    private QRXRealTime(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+    private QRXRealTime(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
@@ -44,7 +43,7 @@ public class QRXRealTime extends BaseScheduleJob {
     @Override
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        List<Row> sourceRows = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName(), false);
+        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName());
         List<Row> effectiveSensor = sourceRows.stream()
                 .filter(s -> BooleanUtils.isFalse(s.getBoolean("deleted"))).toList();
         if (CollectionUtils.isEmpty(effectiveSensor)) {

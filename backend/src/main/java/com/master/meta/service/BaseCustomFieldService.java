@@ -42,4 +42,6 @@ public interface BaseCustomFieldService extends IService<CustomField> {
     CustomFieldDTO getCustomFieldDTOWithCheck(String id);
 
     Page<CustomFieldDTO> page(CustomFieldRequest request);
+
+    List<CustomField> getByRefIdsAndScopeId(List<String> fieldIds, String scopeId);
 }

@@ -1,6 +1,5 @@
 package com.master.meta.service.log;
 
-import com.master.meta.constants.TemplateScene;
 import com.master.meta.dto.system.request.TemplateUpdateRequest;
 import com.master.meta.entity.Template;
 import com.master.meta.handle.Translator;
@@ -37,15 +36,16 @@ public class ProjectTemplateLogService {
         return dto;
     }
 
-    public String getOperationLogModule(TemplateScene scene) {
+    public String getOperationLogModule(String scene) {
 //        TemplateScene templateScene = EnumValidator.validateEnum(TemplateScene.class, scene);
         return switch (scene) {
-            case API -> OperationLogModule.PROJECT_MANAGEMENT_TEMPLATE_API_TEMPLATE;
-            case FUNCTIONAL -> OperationLogModule.PROJECT_MANAGEMENT_TEMPLATE_FUNCTIONAL_TEMPLATE;
-            case UI -> OperationLogModule.PROJECT_MANAGEMENT_TEMPLATE_UI_TEMPLATE;
-            case BUG -> OperationLogModule.PROJECT_MANAGEMENT_TEMPLATE_BUG_TEMPLATE;
-            case TEST_PLAN -> OperationLogModule.PROJECT_MANAGEMENT_TEMPLATE_TEST_PLAN_TEMPLATE;
-            case SCHEDULE -> OperationLogModule.PROJECT_MANAGEMENT_TEMPLATE_SCHEDULE_TEMPLATE;
+            case "API" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_API_TEMPLATE;
+            case "FUNCTIONAL" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_FUNCTIONAL_TEMPLATE;
+            case "UI" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_UI_TEMPLATE;
+            case "BUG" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_BUG_TEMPLATE;
+            case "TEST_PLAN" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_TEST_PLAN_TEMPLATE;
+            case "SCHEDULE" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_SCHEDULE_FIELD;
+            default -> throw new IllegalStateException("Unexpected value: " + scene);
         };
     }
 

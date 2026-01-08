@@ -1,8 +1,6 @@
 package com.master.meta;
 
-import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.datasource.DataSourceKey;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
@@ -25,14 +23,12 @@ import static org.mockito.Mockito.when;
 @SpringBootTest
 public class RandomUtilTest {
     private MockedStatic<Random> mockedRandom;
-    private SensorUtil sensorUtil;
 
     @BeforeEach
     void setUp() {
         // 使用 Mockito-inline 对 Random 类进行静态方法 mock
         mockedRandom = Mockito.mockStatic(Random.class);
         // 初始化mock对象
-        sensorUtil = Mockito.mock(SensorUtil.class);
     }
 
     @AfterEach
@@ -55,6 +51,7 @@ public class RandomUtilTest {
             assertEquals("16.00", result); // 10 + (20-10)*0.6 = 16.00
         }
     }
+
     public List<Row> getWkkList(String tableName, Boolean deleted) {
         List<Row> rows;
         try {
@@ -69,6 +66,7 @@ public class RandomUtilTest {
         }
         return rows;
     }
+
     @Test
     void test() {
         // List<Row> sensorInRedis = sensorUtil.getWkkFromRedis("84493325060000156", WkkSensorEnum.GTXDY.getKey(), WkkSensorEnum.GTXDY.getTableName(), false);

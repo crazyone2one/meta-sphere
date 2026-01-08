@@ -197,18 +197,18 @@ const getSpecialHandler = (itemType: FormItemType): FormItemType => {
 };
 const {send: detail} = useRequest(id => {
   return props.mode === 'organization' ? templateApi.getOrgFieldDetail(id) : templateApi.getProjectFieldDetail(id)
-}, {immediate: false})
+}, {immediate: false, force: true})
 const getFieldDetail = async (id: string) => {
   const fieldDetail = await detail(id);
   fieldForm.value = {
     ...fieldDetail,
     type: getSpecialHandler(fieldDetail.type),
   };
-  fieldDefaultValues.value = fieldDetail.options ? fieldDetail.options.map((item: any) => {
+  fieldDefaultValues.value = fieldDetail.options?.map((item: any) => {
     return {
       ...item,
     };
-  }) : [];
+  }) ?? [];
   if (fieldDefaultValues.value.length == 0) {
     optionsModels.value = [{...onlyOptions.value}];
   }
@@ -266,7 +266,7 @@ defineExpose({
         </n-form-item>
         <n-form-item v-if="showOptionsSelect" label="选项内容" path="optionsModels" class="relative"
                      :class="[!fieldForm?.enableOptionKey ? 'max-w-[340px]' : 'w-full']">
-          <batch-form ref="batchFormRef" :models="optionsModels" form-mode="create"
+          <batch-form ref="batchFormRef"  form-mode="create"
                       add-text="添加一个选项" :is-show-drag="true"
                       :form-width="!fieldForm?.enableOptionKey ? '340px' : ''"
                       :default-vals="fieldDefaultValues"/>

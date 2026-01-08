@@ -1,7 +1,14 @@
 import type {FormItemType, FormRuleItem} from "/@/api/types.ts";
 import type {LocationQueryValue} from "vue-router";
 
-export type SceneType = 'FUNCTIONAL' | 'BUG' | 'API' | 'UI' | 'TEST_PLAN' | LocationQueryValue[] | LocationQueryValue;
+export type SceneType =
+    'FUNCTIONAL'
+    | 'BUG'
+    | 'API'
+    | 'SCHEDULE'
+    | 'TEST_PLAN'
+    | LocationQueryValue[]
+    | LocationQueryValue;
 
 export interface FieldOptions {
     id?: string;

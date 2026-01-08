@@ -3,10 +3,10 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -23,12 +23,11 @@ import java.util.List;
  * @since : 2026/1/8, 星期四
  **/
 public class QRXBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
     private final FileHelper fileHelper;
 
-    public QRXBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+    private QRXBasicInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
@@ -39,7 +38,7 @@ public class QRXBasicInfo extends BaseScheduleJob {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         String fileName = projectNum + "_QRXDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        List<Row> sourceRows = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName(), false);
+        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName());
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(sourceRows, now) +

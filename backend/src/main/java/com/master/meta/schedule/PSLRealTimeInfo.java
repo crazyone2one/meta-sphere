@@ -3,6 +3,7 @@ package com.master.meta.schedule;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -19,12 +20,11 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/22
  */
 public class PSLRealTimeInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
 
-    private PSLRealTimeInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    private PSLRealTimeInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -40,7 +40,7 @@ public class PSLRealTimeInfo extends BaseScheduleJob {
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_PSL, false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_PSL.getKey(), SensorMNType.SENSOR_SHFZ_PSL.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         content.append(bodyContent(sensorList, now));
         content.append(END_FLAG);

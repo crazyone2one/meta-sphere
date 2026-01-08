@@ -7,7 +7,6 @@ import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -23,12 +22,11 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/21
  */
 public class CGKRealTimeInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
-    private final static String END_FLAG = "||";
     private final FileTransferConfiguration fileTransferConfiguration;
 
-    private CGKRealTimeInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    private CGKRealTimeInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -37,13 +35,13 @@ public class CGKRealTimeInfo extends BaseScheduleJob {
     @Override
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_CGKCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String fileName = projectNum + "_CGKCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         StringBuilder content = new StringBuilder();
         // String filePath = "/app/files/shfz/" + fileName;
         // 文件头
-        content.append(super.projectNum).append(";").append(super.projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
+        content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, SensorMNType.SENSOR_SHFZ_0502, false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum,SensorMNType.SENSOR_SHFZ_0502.getKey(), SensorMNType.SENSOR_SHFZ_0502.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         content.append(bodyContent(sensorList, now));
         content.append(END_FLAG);

@@ -1,9 +1,9 @@
 package com.master.meta.schedule.pressure;
 
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
@@ -21,20 +21,19 @@ import java.util.List;
  */
 @Slf4j
 public class MGYLBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
 
-    private MGYLBasicInfo(SensorUtil sensorUtil) {
+    private MGYLBasicInfo(SensorService sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "MGYL", "sf_ky_mgsyl", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "MGYL", "sf_ky_mgsyl");
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_MGYL_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = super.projectNum + ";" + super.projectName + ";锚杆(索)应力监测系统;KJ001;"
-                + DateFormatUtil.localDateTime2StringStyle3(now)+ ";"
+                + DateFormatUtil.localDateTime2StringStyle3(now) + ";"
                 + DateFormatUtil.localDateTime2StringStyle2(now)
                 + "~" +
                 // 文件体

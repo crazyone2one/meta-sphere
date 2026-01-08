@@ -6,23 +6,18 @@ import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Random;
 
 public class LtPersonBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
     private final FileHelper fileHelper;
 
-    public LtPersonBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
+    private LtPersonBasicInfo(FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
     }

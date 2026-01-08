@@ -1,11 +1,12 @@
 package com.master.meta.schedule;
 
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -22,22 +23,22 @@ import java.util.List;
  */
 @Slf4j
 public class RainDefineBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private static final String END_FLAG = "||";
+    private final SensorService sensorUtil;
 
-    public RainDefineBasicInfo(SensorUtil sensorUtil) {
+    private RainDefineBasicInfo(SensorService sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
 
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "rainDefine", "sf_shfz_jsl_cddy", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, "rainDefine", "sf_shfz_jsl_cddy");
+        List<Row> sensorList = parsedObject.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_JSLCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+        String fileName = projectNum + "_JSLCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
-                bodyContent(parsedObject) +
+                bodyContent(sensorList) +
                 END_FLAG;
         log.info("生成文件：{}", fileName);
         log.info("文件内容：{}", content);
@@ -47,7 +48,7 @@ public class RainDefineBasicInfo extends BaseScheduleJob {
         List<Row> sensorList = RandomUtil.getRandomSubList(parsedObject, 15);
         String randomAlphabetic = RandomStringUtils.insecure().nextAlphanumeric(12);
         StringBuilder content = new StringBuilder();
-        String newRain = super.projectNum + randomAlphabetic + ";3;降雨量观测站" + randomAlphabetic + ";2025-10-10;江苏中矿安华;2025-10-10;4245615.60;36372560.60;1229.00~";
+        String newRain = projectNum + randomAlphabetic + ";3;降雨量观测站" + randomAlphabetic + ";2025-10-10;江苏中矿安华;2025-10-10;4245615.60;36372560.60;1229.00~";
         sensorList.forEach(row -> {
             String sensor = row.getString("id") + ";" + row.getString("device_type") + ";" + row.getString("install_location") + ";2025-10-10;江苏中矿安华;2025-10-10;4245615.60;36372560.60;1229.00~";
             content.append(sensor);

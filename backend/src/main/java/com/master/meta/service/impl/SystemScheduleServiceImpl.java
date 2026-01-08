@@ -13,7 +13,6 @@ import com.master.meta.mapper.SystemScheduleMapper;
 import com.master.meta.service.SensorService;
 import com.master.meta.service.SystemScheduleService;
 import com.master.meta.uid.NumGenerator;
-import com.master.meta.utils.SensorUtil;
 import com.master.meta.utils.SessionUtils;
 import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryChain;
@@ -43,15 +42,13 @@ import static com.master.meta.entity.table.SystemScheduleTableDef.SYSTEM_SCHEDUL
 @Service
 public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper, SystemSchedule> implements SystemScheduleService {
     private final ScheduleManager scheduleManager;
-    private final SensorUtil sensorUtil;
     private final SensorService sensorService;
     private final ClassScanner classScanner;
 
     public SystemScheduleServiceImpl(ScheduleManager scheduleManager,
-                                     SensorUtil sensorUtil, SensorService sensorService,
+                                     SensorService sensorService,
                                      ClassScanner classScanner) {
         this.scheduleManager = scheduleManager;
-        this.sensorUtil = sensorUtil;
         this.sensorService = sensorService;
         this.classScanner = classScanner;
     }
@@ -201,7 +198,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
         List<SensorSelectOptionDTO> options;
         switch (request.getSensorType()) {
             case "psl":
-                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_PSL, false);
+                sensorFromRedis = sensorService.getSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_PSL.getKey(), SensorMNType.SENSOR_SHFZ_PSL.getTableName());
                 if (CollectionUtils.isEmpty(sensorFromRedis)) {
                     return new ArrayList<>();
                 }
@@ -220,7 +217,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                         ).toList();
                 break;
             case "ysl":
-                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_YSL, false);
+                sensorFromRedis = sensorService.getSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_YSL.getKey(), SensorMNType.SENSOR_SHFZ_YSL.getTableName());
                 if (CollectionUtils.isEmpty(sensorFromRedis)) {
                     return new ArrayList<>();
                 }
@@ -239,7 +236,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                         ).toList();
                 break;
             case "ckg":
-                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_0502, false);
+                sensorFromRedis = sensorService.getSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_SHFZ_0502.getKey(), SensorMNType.SENSOR_SHFZ_0502.getTableName());
                 if (CollectionUtils.isEmpty(sensorFromRedis)) {
                     return new ArrayList<>();
                 }
@@ -258,7 +255,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                         ).toList();
                 break;
             case "dblc":
-                sensorFromRedis = sensorService.getShfzSensorFromRedis(systemProject.getNum(), "DBLC", "sf_ky_dblc", false);
+                sensorFromRedis = sensorService.getSensorFromRedis(systemProject.getNum(), "DBLC", "sf_ky_dblc");
                 if (CollectionUtils.isEmpty(sensorFromRedis)) {
                     return new ArrayList<>();
                 }
@@ -277,7 +274,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                         ).toList();
                 break;
             default:
-                sensorFromRedis = sensorUtil.getCDSSSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_AQJK_CO, false);
+                sensorFromRedis = sensorService.getSensorFromRedis(systemProject.getNum(), SensorMNType.SENSOR_AQJK_CO.getKey(), SensorMNType.SENSOR_AQJK_CO.getTableName());
                 if (CollectionUtils.isEmpty(sensorFromRedis)) {
                     return new ArrayList<>();
                 }

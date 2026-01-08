@@ -3,7 +3,11 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.*;
+import com.master.meta.service.SensorService;
+import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
+import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -17,12 +21,11 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class JYLBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
     private final FileHelper fileHelper;
 
-    private JYLBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+    private JYLBasicInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
@@ -38,7 +41,7 @@ public class JYLBasicInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.JYLDY.getKey(), WkkSensorEnum.JYLDY.getTableName(), false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.JYLDY.getKey(), WkkSensorEnum.JYLDY.getTableName());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         String fileName = projectNum + "_" + WkkSensorEnum.JYLDY.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";

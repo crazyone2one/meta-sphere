@@ -1,9 +1,12 @@
 package com.master.meta.schedule.pressure;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -11,6 +14,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -22,16 +26,19 @@ import java.util.List;
  */
 @Slf4j
 public class MGYLInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private MGYLInfo(SensorUtil sensorUtil) {
+    private MGYLInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, "MGYL", "sf_ky_mgsyl", false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, "MGYL", "sf_ky_mgsyl");
         // 获取为删除的数据
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
@@ -40,8 +47,12 @@ public class MGYLInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorList, now) +
                 END_FLAG;
-        String filePath = "/app/files/ky/" + fileName;
-        sensorUtil.generateFile(filePath, content, "锚杆应力测点实时数据[" + fileName + "]");
+        // String filePath = "/app/files/ky/" + fileName;
+        // sensorUtil.generateFile(filePath, content, "锚杆应力测点实时数据[" + fileName + "]");
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "锚杆应力测点实时数据[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");
     }
 
     private String bodyContent(List<Row> sensorList, LocalDateTime localDateTime) {

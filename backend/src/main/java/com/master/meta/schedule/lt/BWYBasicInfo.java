@@ -3,7 +3,11 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.*;
+import com.master.meta.service.SensorService;
+import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
+import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.quartz.JobExecutionContext;
@@ -21,12 +25,11 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/15
  */
 public class BWYBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
 
-    private BWYBasicInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    private BWYBasicInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -35,7 +38,7 @@ public class BWYBasicInfo extends BaseScheduleJob {
     @Override
     protected void businessExecute(JobExecutionContext context) {
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
-        List<Row> sensorInRedis = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.BWYDY.getKey(), WkkSensorEnum.BWYDY.getTableName(), false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.BWYDY.getKey(), WkkSensorEnum.BWYDY.getTableName());
         // 获取为删除的数据
 //        List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));

@@ -1,5 +1,10 @@
 import {get, post} from "/@/api";
-import type {AddOrUpdateField, DefinedFieldItem, SceneType} from "/@/api/modules/setting/template/types.ts";
+import type {
+    ActionTemplateManage,
+    AddOrUpdateField,
+    DefinedFieldItem,
+    SceneType
+} from "/@/api/modules/setting/template/types.ts";
 import type {IPageResponse, ITableQueryParams} from "/@/api/types.ts";
 
 export const templateApi = {
@@ -16,7 +21,9 @@ export const templateApi = {
         }
         return post<AddOrUpdateField>('/organization/custom/field/add', data)
     },
-    // 获取自定义字段列表(组织)
+    // // 获取自定义字段列表(组织)
+    getOrgFieldList: (params: ITableQueryParams) => get<DefinedFieldItem[]>(`/organization/custom/field/list/${params.scopedId}/${params.scene}`),
+    // 获取自定义字段列表(项目)
     getProjectFieldList: (params: ITableQueryParams) => get<DefinedFieldItem[]>(`/project/custom/field/list/${params.scopedId}/${params.scene}`),
     // 获取自定义字段详情选项(组织)
     getOrgFieldDetail: (id: string) => get<DefinedFieldItem>(`/organization/custom/field/get/${id}`),
@@ -29,5 +36,8 @@ export const templateApi = {
     getProTemplate: (scopedId: string) => get<Record<string, boolean>>(`/project/template/enable/config/${scopedId}`, {}, {cacheFor: 0}),
     // 关闭组织模板||开启项目模板
     enableOrOffTemplate: (organizationId: string, scene: SceneType) => get(`/organization/template/disable/${organizationId}/${scene}`),
-
+    createProjectTemplateInfo: (params: ActionTemplateManage) => post(`/project/template/save`, params),
+    updateProjectTemplateInfo: (params: ActionTemplateManage) => post(`/project/template/update`, params),
+    createOrganizeTemplateInfo: (params: ActionTemplateManage) => post(`/organization/template/save`, params),
+    updateOrganizeTemplateInfo: (params: ActionTemplateManage) => post(`/organization/template/update`, params),
 }

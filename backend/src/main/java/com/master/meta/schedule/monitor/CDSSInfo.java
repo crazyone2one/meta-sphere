@@ -5,6 +5,7 @@ import com.master.meta.constants.SensorMNType;
 import com.master.meta.dto.CustomConfig;
 import com.master.meta.dto.ScheduleConfigDTO;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -29,12 +30,11 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class CDSSInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
 
-    private CDSSInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    private CDSSInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -42,7 +42,7 @@ public class CDSSInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(projectNum, SensorMNType.SENSOR_AQJK_CO, false);
+        List<Row> sensorInRedis = sensorUtil.getAllDataFromSlaveDatabase(projectNum, SensorMNType.SENSOR_AQJK_CO.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         //        异常开始时间

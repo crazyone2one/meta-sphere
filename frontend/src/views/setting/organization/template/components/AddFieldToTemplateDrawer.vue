@@ -53,6 +53,25 @@ const handleCheckedChange = (checked: boolean) => {
     selectCustomIds.value = [];
   }
 }
+const totalIds = computed(() => {
+  return [...new Set([...selectSystemIds.value, ...selectCustomIds.value])];
+});
+const handleClear = () => selectCustomIds.value = [];
+// 移除已选择字段
+const removeSelectedField = (id: string) => {
+  selectCustomIds.value = selectCustomIds.value.filter((item) => item !== id);
+  selectedList.value = selectedList.value.filter((item) => item.id !== id);
+}
+// 监视选择列表顺序按照选择列表排序
+watch(
+    () => totalIds.value,
+    (val) => {
+      const res = totalList.value.filter((item) => val.indexOf(item.id) > -1);
+      selectedList.value = res.sort((a, b) => {
+        return val.indexOf(a.id) - val.indexOf(b.id);
+      });
+    }
+);
 // 监视回显字段
 watch(
     () => props.tableSelectData,
@@ -88,11 +107,11 @@ watchEffect(() => {
             <div class="optional-header">
               <n-checkbox v-model:checked="isCheckedAll" :indeterminate="!indeterminate"
                           @update:checked="handleCheckedChange">
-                <span class="font-medium text-[var(--color-text-3)]">全选</span>
+                <span class="font-medium text-#adb0bc">全选</span>
               </n-checkbox>
             </div>
             <div class="optional-panel p-4">
-              <div class="mb-2 font-medium text-[var(--color-text-3)]">系统字段</div>
+              <div class="mb-2 font-medium text-#adb0bc">系统字段</div>
               <div>
                 <div>
                   <n-checkbox-group v-model:value="selectSystemIds" class="checkboxContainer">
@@ -102,7 +121,7 @@ watchEffect(() => {
                   </n-checkbox-group>
                 </div>
               </div>
-              <div class="my-2 mt-8 font-medium text-[var(--color-text-3)]">
+              <div class="my-2 mt-8 font-medium text-#adb0bc">
                 自定义字段
               </div>
               <div>
@@ -114,7 +133,7 @@ watchEffect(() => {
               </div>
               <edit-field-drawer :mode="props.mode" :data="totalData"/>
               <div>
-                <n-button text :disabled="totalData.length >= 20" @click="createField">
+                <n-button class="mt-1 px-0" text :disabled="totalData.length >= 20" @click="createField">
                   <template #icon>
                     <div class="i-mdi:plus-circle text-[14px]"/>
                   </template>
@@ -126,12 +145,13 @@ watchEffect(() => {
           <div class="selected-field w-[272px]">
             <div class="optional-header">
               <div class="font-medium">已选字段</div>
-              <n-button>清空</n-button>
+              <n-button size="small" type="warning" @click="handleClear">清空</n-button>
             </div>
             <div class="selected-list p-4">
               <div v-for="element in selectedList" :key="element.dateIndex" class="selected-item">
                 <span class="one-line-text ml-2 max-w-[180px]">{{ element.name }}</span>
-                <div class="i-mdi:close-circle-outline text-[14px] cursor-pointer"/>
+                <div v-if="!element.internal" class="i-mdi:close-circle-outline text-[14px] cursor-pointer"
+                     @click="removeSelectedField(element.id)"/>
               </div>
             </div>
           </div>

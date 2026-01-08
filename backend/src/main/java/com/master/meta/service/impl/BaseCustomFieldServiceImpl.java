@@ -249,6 +249,14 @@ public class BaseCustomFieldServiceImpl extends ServiceImpl<CustomFieldMapper, C
         return customFields;
     }
 
+    @Override
+    public List<CustomField> getByRefIdsAndScopeId(List<String> fieldIds, String scopeId) {
+        if (CollectionUtils.isEmpty(fieldIds)) {
+            return new ArrayList<>(0);
+        }
+        return queryChain().where(CUSTOM_FIELD.REF_ID.in(fieldIds).and(CUSTOM_FIELD.SCOPE_ID.eq(scopeId))).list();
+    }
+
     private Collection<String> selectUsedFieldIds(List<String> list) {
         return QueryChain.of(TemplateCustomField.class)
                 .select(QueryMethods.distinct(TEMPLATE_CUSTOM_FIELD.FIELD_ID))

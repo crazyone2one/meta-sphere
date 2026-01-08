@@ -2,10 +2,10 @@ package com.master.meta.schedule;
 
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.JSON;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.BooleanUtils;
@@ -23,12 +23,11 @@ import java.util.List;
  */
 @Slf4j
 public class DBCXRealTimeInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
 
-    private DBCXRealTimeInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    private DBCXRealTimeInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -36,12 +35,13 @@ public class DBCXRealTimeInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "DBCX", "sf_shfz_dbcx_cddy", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, "DBCX", "sf_shfz_dbcx_cddy");
+        List<Row> unDeleted = parsedObject.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_DBCXCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+        String fileName = projectNum + "_DBCXCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
-                bodyContent(parsedObject, now) +
+                bodyContent(unDeleted, now) +
                 END_FLAG;
         // String filePath = "/app/files/shfz/" + fileName;
         // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");

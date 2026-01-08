@@ -1,10 +1,10 @@
 spring:
   data:
     redis:
-      host: 172.16.2.10
+      host: 172.16.2.19
       port: 6379
-      password: c1$4T&9pW#z2Q@7vL
-      database: 6
+      password: 3eCrAw8Ba6Tg
+      database: 5
   datasource:
     hikari:
       maximum-pool-size: 100
@@ -59,6 +59,7 @@ jwt:
 influx:
   url: http://172.16.2.10:8086
   token: CgfdhyPnh-GIrYtLV37zLffC4mvP620xRXA6mu2BRThTrnWwNJp1b6Pl5dpGnykgYhg5EoI0WptScdKq7YKZ2g==
+#  token: FiNr-P0X3AsERKqL43nN3s9YjnjY8GaFPrRo--ohZm6uS95jJNFjjPz5LrQvv8TZfD6Jw52b2GMOsn2bGmTFNA==
   org: admin
   bucket: analyse
 jmeter:
@@ -72,3 +73,27 @@ logging:
     org.springframework.web: info  # Spring Web 框架日志
     org.springframework.boot.web.servlet: info  # Servlet 容器日志
     org.springframework.security: info
+# 文件传输配置 FileTransferConfiguration
+transfer:
+  slave:
+    - "150622004499":
+        host: 172.16.2.10
+        port: 8841
+        username: root
+        password: zkah@123
+        localPath: /app/files
+        remotePath: /app/files
+    - "150622020001":
+        host: 172.16.2.15
+        port: 8841
+        username: root
+        password: zkah@123
+        localPath: /app/files
+        remotePath: /home/app/ftp
+    - "150622007792":
+        host: 172.16.2.15
+        port: 8841
+        username: root
+        password: zkah@123
+        localPath: /app/files
+        remotePath: /home/app/jg-ftp

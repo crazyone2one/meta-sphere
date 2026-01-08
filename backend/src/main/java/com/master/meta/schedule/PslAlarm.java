@@ -3,6 +3,7 @@ package com.master.meta.schedule;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.*;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -20,13 +21,12 @@ import java.util.Random;
  * @author Created by 11's papa on 2025/11/11
  */
 public class PslAlarm extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
     Random random = new Random();
 
-    private PslAlarm(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    private PslAlarm(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -41,7 +41,7 @@ public class PslAlarm extends BaseScheduleJob {
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_PSL, false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_PSL.getKey(), SensorMNType.SENSOR_SHFZ_PSL.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         List<Row> rows = sensorList.stream().filter(row -> row.getString("sensor_id").equals(config.getCustomConfig().getSensorIds())).toList();
         content.append(ycBodyContent(rows.getFirst(), now));

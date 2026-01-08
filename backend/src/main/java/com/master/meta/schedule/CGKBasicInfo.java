@@ -1,9 +1,9 @@
 package com.master.meta.schedule;
 
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
@@ -19,19 +19,18 @@ import java.util.List;
  */
 @Slf4j
 public class CGKBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
 
-    public CGKBasicInfo(SensorUtil sensorUtil) {
+    public CGKBasicInfo(SensorService sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "CGK", "sf_shfz_cgk_cddy", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, "CGK", "sf_shfz_cgk_cddy");
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_CGKCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+        String fileName = projectNum + "_CGKCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(parsedObject, now) +
                 END_FLAG;

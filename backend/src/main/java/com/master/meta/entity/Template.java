@@ -1,10 +1,8 @@
 package com.master.meta.entity;
 
-import com.master.meta.constants.TemplateScene;
 import com.master.meta.handle.validation.Created;
 import com.master.meta.handle.validation.Updated;
 import com.mybatisflex.annotation.Column;
-import com.mybatisflex.annotation.EnumValue;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.Table;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -104,9 +102,7 @@ public class Template implements Serializable {
     @Schema(description = "使用场景", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "{template.scene.not_blank}", groups = {Created.class})
     @Size(min = 1, max = 30, message = "{template.scene.length_range}", groups = {Created.class, Updated.class})
-//    private String scene;
-    @EnumValue
-    private TemplateScene scene;
+    private String scene;
 
 
     @Schema(description = "是否是默认模板")

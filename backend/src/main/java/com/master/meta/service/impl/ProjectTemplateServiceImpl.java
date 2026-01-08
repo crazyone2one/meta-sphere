@@ -43,7 +43,7 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
         BeanUtils.copyProperties(request, template);
         template.setCreateUser(creator);
         checkProjectResourceExist(template);
-        checkProjectTemplateEnable(template.getScopeId(), template.getScene().name());
+        checkProjectTemplateEnable(template.getScopeId(), template.getScene());
         template.setScopeType(TemplateScopeType.PROJECT.name());
         template.setRefId(null);
         template = super.add(template, request.getCustomFields(), request.getSystemFields());
@@ -66,7 +66,7 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
     @Override
     public void delete(String id) {
         Template template = getWithCheck(id);
-        checkProjectTemplateEnable(template.getScopeId(), template.getScene().name());
+        checkProjectTemplateEnable(template.getScopeId(), template.getScene());
         checkDefault(template);
         super.delete(id);
     }
@@ -80,7 +80,7 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
             // 内置模板不能修改名字
             template.setName(null);
         }
-        checkProjectTemplateEnable(originTemplate.getScopeId(), originTemplate.getScene().name());
+        checkProjectTemplateEnable(originTemplate.getScopeId(), originTemplate.getScene());
         template.setScopeId(originTemplate.getScopeId());
         template.setScene(originTemplate.getScene());
         checkProjectResourceExist(originTemplate);
@@ -132,7 +132,7 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
             // 为空check抛出异常
             template = getWithCheck(id);
         }
-        String paramType = ProjectApplicationType.DEFAULT_TEMPLATE.getByTemplateScene(template.getScene().name()).name();
+        String paramType = ProjectApplicationType.DEFAULT_TEMPLATE.getByTemplateScene(template.getScene()).name();
         ProjectApplication projectApplication = new ProjectApplication();
         projectApplication.setProjectId(projectId);
         projectApplication.setTypeValue(id);
@@ -177,7 +177,7 @@ public class ProjectTemplateServiceImpl extends BaseTemplateServiceImpl implemen
     }
 
     private void checkDefault(Template template) {
-        String defaultTemplateId = getDefaultTemplateId(template.getScopeId(), template.getScene().name());
+        String defaultTemplateId = getDefaultTemplateId(template.getScopeId(), template.getScene());
         if (template.getId().equals(defaultTemplateId)) {
             throw new CustomException(DEFAULT_TEMPLATE_PERMISSION);
         }

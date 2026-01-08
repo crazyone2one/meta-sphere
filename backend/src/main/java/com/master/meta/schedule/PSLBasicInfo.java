@@ -1,11 +1,12 @@
 package com.master.meta.schedule;
 
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
@@ -19,21 +20,21 @@ import java.util.List;
  */
 @Slf4j
 public class PSLBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
 
-    public PSLBasicInfo(SensorUtil sensorUtil) {
+    private PSLBasicInfo(SensorService sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "psl", "sf_shfz_psl_cddy", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, "psl", "sf_shfz_psl_cddy");
+        List<Row> sensorList = parsedObject.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_PSLCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+        String fileName = projectNum + "_PSLCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
-                bodyContent(parsedObject, now) +
+                bodyContent(sensorList, now) +
                 END_FLAG;
         log.info("生成文件：{}", fileName);
         log.info("文件内容：{}", content);

@@ -8,10 +8,12 @@ public enum WkkSensorEnum {
     JYLDY("降雨量设备", "JYLDY", "sf_wkk_jyldy_cddy","JYLSS"),
     KSWDY("库水位设备", "KSWDY", "sf_wkk_kswdy_cddy","KSWSS"),
     BWYDY("表面位移设备信息", "BWYDY", "sf_wkk_bwydy_cddy","BWYSS"),
-    QRX("浸润线信息", "QRX", "sf_wkk_qrxdy_cddy","QRXSS"),
+    QRX("浸润线信息", "QRXDY", "sf_wkk_qrxdy_cddy","QRXSS"),
     GNSSREALRIME("GNSS实时数据", "GNSS", "sf_aqjk_gnssbaseinfo","gnssrealtime"),
     GNSSBASEINFO("GNSS设备信息", "GNSS", "sf_aqjk_gnssbaseinfo","gnssbaseinfo"),
     GNSSALARM("GNSS报警信息", "GNSS", "sf_aqjk_gnssalarminfo","gnssalarm"),
+    CARBASEINFO("车辆设备信息", "CZZD", "sf_lt_car","SSWJ"),
+    LTPERSON("露天矿人员基本信息", "RYCS", "sf_lt_person","SSWJ"),
     ;
 
     private final String label;

@@ -3,7 +3,11 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
-import com.master.meta.utils.*;
+import com.master.meta.service.SensorService;
+import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
+import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -18,11 +22,11 @@ import java.util.List;
 import java.util.Map;
 
 public class GNSSBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
     private final FileHelper fileHelper;
 
-    private GNSSBasicInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+    private GNSSBasicInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
@@ -31,7 +35,7 @@ public class GNSSBasicInfo extends BaseScheduleJob {
     @Override
     protected void businessExecute(JobExecutionContext context) {
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
-        List<Row> sourceRows = sensorUtil.getWkkFromRedis(projectNum, WkkSensorEnum.GNSSBASEINFO.getKey(), WkkSensorEnum.GNSSBASEINFO.getTableName(), false);
+        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.GNSSBASEINFO.getKey(), WkkSensorEnum.GNSSBASEINFO.getTableName());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_" + WkkSensorEnum.GNSSBASEINFO.getCdssKey() + "_"
                 + DateFormatUtil.localDateTimeToString(now) + "_"

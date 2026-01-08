@@ -2,10 +2,10 @@ package com.master.meta.schedule.monitor;
 
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.JSON;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -23,12 +23,11 @@ import static com.master.meta.constants.SensorMNType.SENSOR_AQJK_CO;
  * @author Created by 11's papa on 2025/10/27
  */
 public class CDDYInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
 
-    public CDDYInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    private CDDYInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -40,14 +39,13 @@ public class CDDYInfo extends BaseScheduleJob {
         List<Row> unDeleteSensorList = sfAqjkSensor.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
         List<Row> deleteSensorList = sfAqjkSensor.stream().filter(row -> BooleanUtils.isTrue(row.getBoolean("is_delete"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = projectNum + "_CDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String fileNameCode = BooleanUtils.isFalse(config.isFmFlag()) ? "_CDDY_" : "_NCDDY_";
+        String fileName = projectNum + fileNameCode + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" +
                 "KJXXx;煤矿安全监控系统;中矿安华;2025-12-30;" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(unDeleteSensorList, now) +
                 END_FLAG;
-        // String filePath = "/app/files/aqjk/" + fileName;
-        // sensorUtil.generateFile(filePath, content, "基础数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "基础数据[" + fileName + "]");
@@ -93,7 +91,7 @@ public class CDDYInfo extends BaseScheduleJob {
     }
 
     private List<Row> getCDDYInfo() {
-        return sensorUtil.getCDSSSensorFromRedis(projectNum, SENSOR_AQJK_CO, false);
+        return sensorUtil.getSensorFromRedis(projectNum, SENSOR_AQJK_CO.getKey(), SENSOR_AQJK_CO.getTableName());
     }
 
     public static JobKey getJobKey(String resourceId) {

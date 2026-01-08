@@ -42,4 +42,6 @@ public interface BaseTemplateService extends IService<Template> {
     TemplateDTO getTemplateDTO(Template template);
 
     Page<Template> templatePage(TemplateRequest request);
+
+    List<TemplateCustomFieldRequest> getRefTemplateCustomFieldRequest(String projectId, List<TemplateCustomFieldRequest> customFields);
 }

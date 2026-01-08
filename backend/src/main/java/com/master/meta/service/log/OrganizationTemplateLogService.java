@@ -32,22 +32,21 @@ public class OrganizationTemplateLogService {
                 null,
                 null,
                 OperationLogType.ADD.name(),
-                getOperationLogModule(request.getScene().name()),
+                getOperationLogModule(request.getScene()),
                 request.getName());
         dto.setOriginalValue(JSON.toJSONBytes(request));
         return dto;
     }
 
     public String getOperationLogModule(String scene) {
-        TemplateScene templateScene = EnumValidator.validateEnum(TemplateScene.class, scene);
-        assert templateScene != null;
-        return switch (templateScene) {
-            case API -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_API_TEMPLATE;
-            case FUNCTIONAL -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_FUNCTIONAL_TEMPLATE;
-            case UI -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_UI_TEMPLATE;
-            case BUG -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_BUG_TEMPLATE;
-            case TEST_PLAN -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_TEST_PLAN_TEMPLATE;
-            case SCHEDULE -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_SCHEDULE_FIELD;
+        return switch (scene) {
+            case "API" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_API_TEMPLATE;
+            case "FUNCTIONAL" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_FUNCTIONAL_TEMPLATE;
+            case "UI" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_UI_TEMPLATE;
+            case "BUG" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_BUG_TEMPLATE;
+            case "TEST_PLAN" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_TEST_PLAN_TEMPLATE;
+            case "SCHEDULE" -> OperationLogModule.SETTING_ORGANIZATION_TEMPLATE_SCHEDULE_FIELD;
+            default -> throw new IllegalStateException("Unexpected value: " + scene);
         };
     }
 
@@ -86,7 +85,7 @@ public class OrganizationTemplateLogService {
                     template.getId(),
                     null,
                     OperationLogType.UPDATE.name(),
-                    getOperationLogModule(template.getScene().name()),
+                    getOperationLogModule(template.getScene()),
                     BooleanUtils.isTrue(template.getInternal()) ? Translator.get("template.default") : template.getName());
             dto.setOriginalValue(JSON.toJSONBytes(template));
         }
@@ -101,7 +100,7 @@ public class OrganizationTemplateLogService {
                 template.getId(),
                 null,
                 OperationLogType.DELETE.name(),
-                getOperationLogModule(template.getScene().name()),
+                getOperationLogModule(template.getScene()),
                 template.getName());
         dto.setOriginalValue(JSON.toJSONBytes(template));
         return dto;

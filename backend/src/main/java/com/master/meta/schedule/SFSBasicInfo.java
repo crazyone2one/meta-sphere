@@ -1,9 +1,9 @@
 package com.master.meta.schedule;
 
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
@@ -19,16 +19,15 @@ import java.util.List;
  */
 @Slf4j
 public class SFSBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
 
-    public SFSBasicInfo(SensorUtil sensorUtil) {
+    public SFSBasicInfo(SensorService sensorUtil) {
         this.sensorUtil = sensorUtil;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "sfs", "sf_shfz_sfs_cddy", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "sfs", "sf_shfz_sfs_cddy");
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_SFSCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +

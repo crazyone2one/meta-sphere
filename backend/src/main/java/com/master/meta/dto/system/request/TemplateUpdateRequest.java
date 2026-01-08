@@ -1,9 +1,7 @@
 package com.master.meta.dto.system.request;
 
-import com.master.meta.constants.TemplateScene;
 import com.master.meta.handle.validation.Created;
 import com.master.meta.handle.validation.Updated;
-import com.mybatisflex.annotation.EnumValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -38,9 +36,8 @@ public class TemplateUpdateRequest {
 
     @Schema(title = "使用场景", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "{template.scene.not_blank}", groups = {Created.class})
-    @EnumValue
     @Size(min = 1, max = 30, message = "{template.scene.length_range}", groups = {Created.class})
-    private TemplateScene scene;
+    private String scene;
 
     @Valid
     @Schema(title = "自定义字段Id列表")

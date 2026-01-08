@@ -4,10 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorKGType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.JSON;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -29,11 +29,11 @@ import java.util.stream.Collectors;
  * @author Created by 11's papa on 2025/10/22
  */
 public class MainVentilatorRealTimeInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private MainVentilatorRealTimeInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+
+    private MainVentilatorRealTimeInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -41,7 +41,7 @@ public class MainVentilatorRealTimeInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(super.projectNum, SensorKGType.SENSOR_AQJK_1010, false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorKGType.SENSOR_AQJK_1010.getKey(), SensorKGType.SENSOR_AQJK_1010.getTableName());
         List<Row> sensorList = sensorInRedis.stream()
                 .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
                 .filter(row -> {

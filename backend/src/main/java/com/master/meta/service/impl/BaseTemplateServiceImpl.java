@@ -230,6 +230,29 @@ public class BaseTemplateServiceImpl extends ServiceImpl<TemplateMapper, Templat
         return page;
     }
 
+    @Override
+    public List<TemplateCustomFieldRequest> getRefTemplateCustomFieldRequest(String projectId, List<TemplateCustomFieldRequest> customFields) {
+        if (customFields == null) {
+            return null;
+        }
+        List<String> fieldIds = customFields.stream()
+                .map(TemplateCustomFieldRequest::getFieldId).toList();
+        // 查询当前组织字段所对应的项目字段，构建map，键为组织字段ID，值为项目字段ID
+        Map<String, String> refFieldMap = baseCustomFieldService.getByRefIdsAndScopeId(fieldIds, projectId)
+                .stream()
+                .collect(Collectors.toMap(CustomField::getRefId, CustomField::getId));
+        // 根据组织字段ID，替换为项目字段ID
+        return customFields.stream()
+                .map(item -> {
+                    TemplateCustomFieldRequest request = new TemplateCustomFieldRequest();
+                    BeanUtils.copyProperties(item, request);
+                    request.setFieldId(refFieldMap.get(item.getFieldId()));
+                    return request;
+                })
+                .filter(item -> StringUtils.isNotBlank(item.getFieldId()))
+                .toList();
+    }
+
     private void checkUpdateExist(Template template) {
         if (StringUtils.isBlank(template.getName())) {
             return;

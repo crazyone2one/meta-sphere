@@ -63,8 +63,8 @@ class AQJKYJ006 {
 
         double average30Days = sum / sensorDataList.size();
         // 初始水位
-//        double first = (double) sensorDataList.getFirst().get("_value");
-        double first = 2.5;
+       double first = (double) sensorDataList.getFirst().get("_value");
+        // double first = 2.5;
         // 获取近30天最大差值
         double maxBetweenAdjacentData = getMaxDifferenceBetweenAdjacentData(sensorDataList);
         // 获取最新数据（实时数据）

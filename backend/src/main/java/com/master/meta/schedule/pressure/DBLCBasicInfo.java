@@ -1,15 +1,19 @@
 package com.master.meta.schedule.pressure;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -21,27 +25,32 @@ import java.util.List;
  */
 @Slf4j
 public class DBLCBasicInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
+    private final SensorService sensorUtil;
+    private final FileHelper fileHelper;
+    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private DBLCBasicInfo(SensorUtil sensorUtil) {
+    private DBLCBasicInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
+        this.fileHelper = fileHelper;
+        this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "DBLC", "sf_ky_dblc", false);
+        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "DBLC", "sf_ky_dblc");
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_DBLC_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = super.projectNum + ";" + super.projectName + ";顶板离层监测系统;KJ001;"
-                + DateFormatUtil.localDateTime2StringStyle3(now)+ ";"
+                + DateFormatUtil.localDateTime2StringStyle3(now) + ";"
                 + DateFormatUtil.localDateTime2StringStyle2(now)
                 + "~" +
                 // 文件体
                 bodyContent(parsedObject, now) +
                 END_FLAG;
-        log.info("生成文件：{}", fileName);
-        log.info("文件内容：{}", content);
+        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
+        fileHelper.generateFile(filePath, JSON.toJSONString(content), "顶板离层信息[" + fileName + "]");
+        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");
     }
 
     private String bodyContent(List<Row> parsedObject, LocalDateTime localDateTime) {

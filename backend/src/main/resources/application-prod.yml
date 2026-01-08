@@ -41,7 +41,7 @@ mybatis-flex:
       url: jdbc:mysql://${MASTER_DB_URL}:${MASTER_DB_PORT:3306}/${MASTER_DB_NAME}?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
       username: ${MASTER_DB_USERNAME:root}
       password: ${MASTER_DB_PASSWORD}
-    ds-slave1:
+    ds-slave150622004499:
       url: jdbc:mysql://${SLAVE1_DB_URL}:${SLAVE1_DB_PORT:3306}/${SLAVE1_DB_NAME}?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
       username: ${SLAVE1_DB_USERNAME:root}
       password: ${SLAVE1_DB_PASSWORD}
@@ -53,7 +53,7 @@ mybatis-flex:
       url: jdbc:mysql://${SLAVE3_DB_URL}:${SLAVE3_DB_PORT:3306}/${SLAVE3_DB_NAME}?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
       username: ${SLAVE3_DB_USERNAME:root}
       password: ${SLAVE3_DB_PASSWORD}
-
+    # 根据需要追加
 jwt:
   secret: K4lgrcqOP576NhrtYJhuQD8DdMYfZtb58hWdJaTjPbk=
   access-token-validity: 43200000 #2h

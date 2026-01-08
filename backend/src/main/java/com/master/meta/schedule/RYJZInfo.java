@@ -2,10 +2,10 @@ package com.master.meta.schedule;
 
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.JSON;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -21,12 +21,11 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/27
  */
 public class RYJZInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileHelper fileHelper;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
 
-    public RYJZInfo(SensorUtil sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    public RYJZInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorUtil = sensorUtil;
         this.fileHelper = fileHelper;
         this.fileTransferConfiguration = fileTransferConfiguration;
@@ -38,7 +37,7 @@ public class RYJZInfo extends BaseScheduleJob {
         List<Row> unDeleteSensorList = sfAqjkSensor.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_RYJZ_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";" +"300;"+
+        String content = super.projectNum + ";" + super.projectName + ";" + "300;" +
                 "KJXXx;中矿安华;01x;" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(unDeleteSensorList, now) +
@@ -72,7 +71,7 @@ public class RYJZInfo extends BaseScheduleJob {
     }
 
     private List<Row> getStationInfo() {
-        return sensorUtil.getCDSSList("sf_jxzy_substation", false);
+        return sensorUtil.getSensorFromRedis(projectNum, "RYJZ", "sf_jxzy_substation");
     }
 
     public static JobKey getJobKey(String resourceId) {

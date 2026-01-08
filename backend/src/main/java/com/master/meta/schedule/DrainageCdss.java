@@ -3,10 +3,10 @@ package com.master.meta.schedule;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorKGType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,12 +19,11 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class DrainageCdss extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
+    private final SensorService sensorUtil;
     private final FileTransferConfiguration fileTransferConfiguration;
-    private final static String END_FLAG = "||";
     private final FileHelper fileHelper;
 
-    private DrainageCdss(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+    private DrainageCdss(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.sensorUtil = sensorUtil;
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
@@ -34,14 +33,15 @@ public class DrainageCdss extends BaseScheduleJob {
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_SBCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        List<Row> sensorInRedis = sensorUtil.getCDSSSensorFromRedis(projectNum, SensorKGType.SENSOR_SB_0608, false);
+        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorKGType.SENSOR_SB_0608.getKey(), SensorKGType.SENSOR_SB_0608.getTableName());
+        List<Row> unDeleted = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
         StringBuilder content = new StringBuilder();
         // String filePath = "/app/files/shfz/" + fileName;
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
-        content.append(bodyContent(sensorInRedis, now));
+        content.append(bodyContent(unDeleted, now));
         content.append(END_FLAG);
         fileHelper.generateFile(filePath, content.toString(), "水泵开停实时信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "shfz");

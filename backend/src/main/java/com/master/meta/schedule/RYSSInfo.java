@@ -5,7 +5,6 @@ import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.SensorUtil;
 import com.mybatisflex.core.datasource.DataSourceKey;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
@@ -20,13 +19,10 @@ import java.time.ZoneOffset;
 import java.util.*;
 
 public class RYSSInfo extends BaseScheduleJob {
-    private final SensorUtil sensorUtil;
-    private final static String END_FLAG = "||";
     private final FileTransferConfiguration fileTransferConfiguration;
     private final FileHelper fileHelper;
 
-    private RYSSInfo(SensorUtil sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
+    private RYSSInfo(FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
         this.fileTransferConfiguration = fileTransferConfiguration;
         this.fileHelper = fileHelper;
     }

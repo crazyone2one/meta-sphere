@@ -27,7 +27,6 @@ import java.util.List;
 @Slf4j
 public class YSLRealTimeInfo extends BaseScheduleJob {
     private final SensorService sensorService;
-    private final static String END_FLAG = "||";
     private final FileTransferConfiguration fileTransferConfiguration;
     private final FileHelper fileHelper;
 
@@ -46,7 +45,7 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorService.getShfzSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_YSL, false);
+        List<Row> sensorInRedis = sensorService.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_YSL.getKey(), SensorMNType.SENSOR_SHFZ_YSL.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         content.append(cdssBodyContent(sensorList, now));
         content.append(END_FLAG);
