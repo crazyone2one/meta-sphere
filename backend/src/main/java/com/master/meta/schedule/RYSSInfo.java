@@ -6,6 +6,7 @@ import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
+import com.master.meta.utils.ShiftUtils;
 import com.mybatisflex.core.datasource.DataSourceKey;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
@@ -33,11 +34,15 @@ public class RYSSInfo extends BaseScheduleJob {
         val areaList = getAreaList();
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = "150622B0012000200092_RYSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-//        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+        if (config.isFmFlag()) {
+            fileName = projectNum + "_NRYSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        }
+        String headerContent = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "^";
         String content =
-                // 文件体
-                bodyContent(personList, substationList, areaList, now) +
-                        END_FLAG;
+                (config.isFmFlag() ? headerContent : "") +
+                        // 文件体
+                        bodyContent(personList, substationList, areaList, now) +
+                        (config.isFmFlag() ? "]]]" : END_FLAG);
         // String filePath = "/app/files/rydw/" + fileName;
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "rydw", fileName);
         fileHelper.generateFile(filePath, content, "实时数据[" + fileName + "]");
@@ -46,22 +51,43 @@ public class RYSSInfo extends BaseScheduleJob {
 
     private String bodyContent(List<Row> personList, List<Row> substationList, List<Row> areaList, LocalDateTime now) {
         StringBuilder content = new StringBuilder();
-        content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";309;150622B001200020009201307/高洪方;~");
+        if (!config.isFmFlag()) {
+            content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";309;150622B001200020009201307/高洪方;~");
+        }
 //        personList = personList.subList(0, 10);
-        val inDateTmp = super.config.getAdditionalFields().get("inDate");
-        val inDate = DateFormatUtil.string2LocalDateTimeStyle2((String) inDateTmp);
+        List<ShiftUtils.ShiftPeriod> shifts = ShiftUtils.createStandardThreeShifts();
+        // 当前所在班次
+        ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
+        // val inDateTmp = config.getField("inDate", String.class);
+        val inDate = DateFormatUtil.localTime2LocalDateTime(currentShift.getStartTime());
+        LocalDateTime shiftEndTime = DateFormatUtil.localTime2LocalDateTime(currentShift.getEndTime());
         personList.forEach(person -> {
             val substation = RandomUtil.getRandomSubList(substationList, 1).getFirst();
             val area = RandomUtil.getRandomSubList(areaList, 1).getFirst();
 
             content.append(person.getString("person_code")).append(";");
             content.append(person.getString("person_name")).append(";");
-            content.append("1").append(";").append(DateFormatUtil.localDateTime2StringStyle2(inDate)).append(";").append("xxxx-xx-xx xx:xx:xx;");
-            content.append(area.getString("area_code")).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
-            content.append(substation.getString("station_code")).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
-//            content.append("默认班制;16.21;正常;0;0;");
-            content.append(behavior(substationList, now));
-            content.append("~");
+            content.append(now.isEqual(shiftEndTime) ? "2" : "1").append(";").append(DateFormatUtil.localDateTime2StringStyle2(inDate)).append(";");
+            String outTime = config.isFmFlag() ? "" : "xxxx-xx-xx xx:xx:xx";
+            if (now.isEqual(shiftEndTime)) {
+                outTime = DateFormatUtil.localDateTime2StringStyle2(shiftEndTime);
+            }
+            content.append(outTime).append(";");
+            content.append(area.getString(config.isFmFlag() ? "area_type" : "area_code")).append(";");
+            content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
+            content.append(substation.getString("station_code")).append(";");
+            content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
+            if (!config.isFmFlag()) {
+                // content.append("默认班制;16.21;正常;0;0;");
+                content.append(behavior(substationList, now));
+            } else {
+                content.append("1;1;10;1;");
+                content.append(";;;");
+                content.append("0;0;1;");
+                content.append(";;");
+            }
+
+            content.append(config.isFmFlag() ? "^" : "~");
         });
         return content.toString();
     }
@@ -99,7 +125,7 @@ public class RYSSInfo extends BaseScheduleJob {
     public List<Row> getPersonList() {
         List<Row> rows;
         try {
-            DataSourceKey.use("ds-slave150622004499");
+            DataSourceKey.use("ds-slave" + projectNum);
             QueryWrapper condition = new QueryWrapper()
                     .select("id", "person_code", "person_name")
 
@@ -118,7 +144,7 @@ public class RYSSInfo extends BaseScheduleJob {
     public List<Row> getSubstationList() {
         List<Row> rows;
         try {
-            DataSourceKey.use("ds-slave150622004499");
+            DataSourceKey.use("ds-slave" + projectNum);
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("is_delete", "0");
             rows = Db.selectListByMap("sf_jxzy_substation", map);
@@ -131,7 +157,7 @@ public class RYSSInfo extends BaseScheduleJob {
     public List<Row> getAreaList() {
         List<Row> rows;
         try {
-            DataSourceKey.use("ds-slave150622004499");
+            DataSourceKey.use("ds-slave" + projectNum);
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("is_delete", "0");
             rows = Db.selectListByMap("sf_jxzy_area", map);

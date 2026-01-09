@@ -3,6 +3,7 @@ package com.master.meta.utils;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -96,6 +97,33 @@ public class DateFormatUtil {
     public static Date getTime(String timeString) throws Exception {
         SimpleDateFormat dateFormat = new SimpleDateFormat(TIME_PATTERN);
         return dateFormat.parse(timeString);
+    }
+
+    /**
+     * 将LocalTime转换为LocalDateTime，默认日期为当前日期
+     *
+     * @param localTime 需要转换的时间
+     * @return java.time.LocalDateTime
+     */
+    public static LocalDateTime localTime2LocalDateTime(LocalTime localTime) {
+        if (localTime == null) {
+            return null;
+        }
+        return LocalDateTime.of(LocalDate.now(), localTime);
+    }
+
+    /**
+     * 将LocalTime转换为LocalDateTime，使用指定日期
+     *
+     * @param localTime 需要转换的时间
+     * @param localDate 指定的日期
+     * @return java.time.LocalDateTime
+     */
+    public static LocalDateTime localTime2LocalDateTimeWithDate(LocalTime localTime, LocalDate localDate) {
+        if (localTime == null || localDate == null) {
+            return null;
+        }
+        return LocalDateTime.of(localDate, localTime);
     }
 
     /**

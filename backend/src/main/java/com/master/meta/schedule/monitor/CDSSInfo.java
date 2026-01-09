@@ -48,11 +48,12 @@ public class CDSSInfo extends BaseScheduleJob {
         LocalDateTime endTime = DateFormatUtil.string2LocalDateTimeStyle2(ycEndTimeStr);
         // 测点数据异常值
         String ycValue = Optional.ofNullable(config.getAdditionalFields().get("ycValue")).orElse("35").toString();
-        String fileName = projectNum + "_CDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
+        String fileName = projectNum + (config.isFmFlag() ? "_NCDSS_" : "_CDSS_") + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) +
+                (config.isFmFlag() ? "^" : "~") +
                 // 文件体
-                bodyContent(sensorList, now, endTime, ycValue) +
-                END_FLAG;
+                (config.isFmFlag() ? NCDssBodyContent(sensorList, now) : bodyContent(sensorList, now, endTime, ycValue)) +
+                (config.isFmFlag() ? "]]]" : END_FLAG);
         // String filePath = "/app/files/aqjk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
@@ -63,6 +64,54 @@ public class CDSSInfo extends BaseScheduleJob {
         if (config.isYcFlag()) {
             generateYcFile(sensorList, now, ycEndTimeStr, ycValue, slaveConfig);
         }
+    }
+
+    private String NCDssBodyContent(List<Row> rows, LocalDateTime localDateTime) {
+        StringBuilder content = new StringBuilder();
+        Map<String, Row> sensorMap = rows.stream()
+                .collect(Collectors.toMap(row -> row.getString("sensor_code"), row -> row));
+        for (Row row : rows) {
+            String sensorInfoCode = row.getString("sensor_code");
+            Row sensor = sensorMap.get(sensorInfoCode);
+            String sensorType = sensor.getString("sensor_type");
+            // 排除对 主通风机(1010) 风筒(1003) 烟雾(1008)
+            if ("1010".equals(sensorType) || "1008".equals(sensorType)) {
+                continue;
+            }
+            ScheduleConfigDTO configDTO = config;
+            CustomConfig customConfig = configDTO.getCustomConfig();
+            assert customConfig != null;
+            AtomicReference<String> sensorValue = new AtomicReference<>("");
+            AtomicReference<String> sensorState = new AtomicReference<>("0");
+            // 开关量
+            if ("KG".equals(row.getString("sensor_value_type"))) {
+                sensorValue.set("1");
+            } else {
+                sensorValue.set(switch (sensorType) {
+                    case "0043" -> // SENSOR_CH4
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_CH4.getMinValue(), SensorMNType.SENSOR_CH4.getMaxValue());
+                    case "0004" -> // SENSOR_CO
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_AQJK_CO.getMinValue(), SensorMNType.SENSOR_AQJK_CO.getMaxValue());
+                    case "0001" -> // SENSOR_0001
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0001.getMinValue(), SensorMNType.SENSOR_0001.getMaxValue());
+                    case "0012" -> // SENSOR_0012
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0012.getMinValue(), SensorMNType.SENSOR_0012.getMaxValue());
+                    case "0013" -> // SENSOR_0012
+                            RandomUtil.generateRandomDoubleString(SensorMNType.SENSOR_0013.getMinValue(), SensorMNType.SENSOR_0013.getMaxValue());
+                    default -> RandomUtil.generateRandomDoubleString(configDTO.getMinValue(), configDTO.getMaxValue());
+                });
+            }
+
+            String sensorContent = sensorInfoCode + ";"
+                    + sensor.getString("sensor_type") + ";"
+                    + sensor.getString("sensor_location") + ";"
+                    + sensorValue + ";"
+                    + sensor.getString("sensor_value_unit") + ";"
+                    + sensorState + ";"
+                    + DateFormatUtil.localDateTime2StringStyle2(localDateTime.plusSeconds(5)) + "^";
+            content.append(sensorContent);
+        }
+        return content.toString();
     }
 
     private void generateYcFile(List<Row> sensorList, LocalDateTime now, String ycEndTime, String ycValue, FileTransferConfiguration.SlaveConfig slaveConfig) {
