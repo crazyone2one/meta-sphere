@@ -79,15 +79,7 @@ const Setting: RouteRecordRaw = {
                         title: '组织与项目', roles: ['SYSTEM_USER_ROLE:READ'], isTopMenu: true,
                     },
                 },
-                {
-                    path: 'taskCenter', name: SettingRouteEnum.SETTING_SYSTEM_TASK_CENTER,
-                    component: () => import('/@/views/schedule/index.vue'),
-                    meta: {
-                        title: '任务中心',
-                        roles: ['SYSTEM_CASE_TASK_CENTER:READ', 'SYSTEM_SCHEDULE_TASK_CENTER:READ'],
-                        isTopMenu: true,
-                    },
-                },
+
             ]
         },
         {

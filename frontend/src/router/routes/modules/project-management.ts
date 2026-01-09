@@ -1,7 +1,7 @@
 import type {RouteRecordRaw} from "vue-router";
 import {ProjectManagementRouteEnum} from "../../../enums/common-enum.ts";
 
-const ProjectManagement:RouteRecordRaw={
+const ProjectManagement: RouteRecordRaw = {
     path: '/project-management',
     name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT,
     redirect: '/project-management/permission',
@@ -30,7 +30,16 @@ const ProjectManagement:RouteRecordRaw={
             'PROJECT_GROUP:READ',
         ],
     },
-    children:[
+    children: [
+        {
+            path: 'taskCenter', name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_TASK_CENTER,
+            component: () => import('/@/views/schedule/index.vue'),
+            meta: {
+                title: '任务中心',
+                roles: ['PROJECT_MANAGEMENT_TASK_CENTER:READ'],
+                isTopMenu: true,
+            },
+        },
         {
             path: 'permission',
             name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_PERMISSION,
@@ -53,7 +62,7 @@ const ProjectManagement:RouteRecordRaw={
                     'PROJECT_GROUP:READ',
                 ],
             },
-            children:[
+            children: [
                 {
                     path: 'basicInfo',
                     name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_PERMISSION_BASIC_INFO,
@@ -74,12 +83,12 @@ const ProjectManagement:RouteRecordRaw={
                             'PROJECT_APPLICATION_PERFORMANCE_TEST:READ',]
                     }
                 },
-                {
-                    path: 'projectVersion',
-                    name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_PERMISSION_VERSION,
-                    component: () => import('/@/views/project-management/project-permission/project-version/index.vue'),
-                    meta: {title: "项目版本", roles: ['PROJECT_VERSION:READ']}
-                },
+                // {
+                //     path: 'projectVersion',
+                //     name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_PERMISSION_VERSION,
+                //     component: () => import('/@/views/project-management/project-permission/project-version/index.vue'),
+                //     meta: {title: "项目版本", roles: ['PROJECT_VERSION:READ']}
+                // },
                 {
                     path: 'member',
                     name: ProjectManagementRouteEnum.PROJECT_MANAGEMENT_PERMISSION_MEMBER,
