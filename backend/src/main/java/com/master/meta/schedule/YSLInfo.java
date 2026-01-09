@@ -1,9 +1,11 @@
 package com.master.meta.schedule;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +23,14 @@ import java.util.List;
  */
 @Slf4j
 public class YSLInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
 
-    private YSLInfo(SensorService sensorUtil) {
-        this.sensorUtil = sensorUtil;
+    private YSLInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_YSL.getKey(), SensorMNType.SENSOR_SHFZ_YSL.getTableName());
+        List<Row> parsedObject = sourceRows(SensorMNType.SENSOR_SHFZ_YSL.getKey(), SensorMNType.SENSOR_SHFZ_YSL.getTableName());
         List<Row> unDeleteSensorList = parsedObject.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_YSLCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";

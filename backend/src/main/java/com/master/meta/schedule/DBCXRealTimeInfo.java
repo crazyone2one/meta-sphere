@@ -23,19 +23,14 @@ import java.util.List;
  */
 @Slf4j
 public class DBCXRealTimeInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private DBCXRealTimeInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private DBCXRealTimeInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, "DBCX", "sf_shfz_dbcx_cddy");
+        List<Row> parsedObject = sourceRows("DBCX", "sf_shfz_dbcx_cddy");
         List<Row> unDeleted = parsedObject.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_DBCXCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
@@ -45,7 +40,7 @@ public class DBCXRealTimeInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/shfz/" + fileName;
         // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "DBCX实时信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");

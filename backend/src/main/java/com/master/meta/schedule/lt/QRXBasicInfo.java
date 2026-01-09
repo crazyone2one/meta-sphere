@@ -23,22 +23,17 @@ import java.util.List;
  * @since : 2026/1/8, 星期四
  **/
 public class QRXBasicInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private QRXBasicInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private QRXBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = projectNum + "_QRXDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName());
+        List<Row> sourceRows = sourceRows(WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName());
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体
                 bodyContent(sourceRows, now) +

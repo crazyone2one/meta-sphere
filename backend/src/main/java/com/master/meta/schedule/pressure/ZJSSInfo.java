@@ -27,19 +27,13 @@ import java.util.List;
  */
 @Slf4j
 public class ZJSSInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
-
-    private ZJSSInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private ZJSSInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, "ZJZL", "sf_ky_zjzl");
+        List<Row> sensorInRedis = sourceRows("ZJZL", "sf_ky_zjzl");
         // 获取为删除的数据
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         if (CollectionUtils.isNotEmpty(sensorList)) {
@@ -51,7 +45,7 @@ public class ZJSSInfo extends BaseScheduleJob {
                     END_FLAG;
             // String filePath = "/app/files/ky/" + fileName;
             // sensorUtil.generateFile(filePath, content, "支架阻力测点实时数据[" + fileName + "]");
-            FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+            FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
             String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
             fileHelper.generateFile(filePath, JSON.toJSONString(content), "支架阻力测点实时数据[" + fileName + "]");
             fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");

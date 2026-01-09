@@ -19,23 +19,18 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class DrainageCdss extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private DrainageCdss(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private DrainageCdss(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_SBCDSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorKGType.SENSOR_SB_0608.getKey(), SensorKGType.SENSOR_SB_0608.getTableName());
+        List<Row> sensorInRedis = sourceRows(SensorKGType.SENSOR_SB_0608.getKey(), SensorKGType.SENSOR_SB_0608.getTableName());
         List<Row> unDeleted = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         StringBuilder content = new StringBuilder();
         // String filePath = "/app/files/shfz/" + fileName;
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);

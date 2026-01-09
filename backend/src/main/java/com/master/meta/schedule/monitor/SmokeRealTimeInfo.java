@@ -24,19 +24,14 @@ import java.util.stream.Collectors;
  * @author Created by 11's papa on 2025/10/22
  */
 public class SmokeRealTimeInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private SmokeRealTimeInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private SmokeRealTimeInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorKGType.SENSOR_AQJK_1008.getKey(), SensorKGType.SENSOR_AQJK_1008.getTableName());
+        List<Row> sensorInRedis = sourceRows(SensorKGType.SENSOR_AQJK_1008.getKey(), SensorKGType.SENSOR_AQJK_1008.getTableName());
         List<Row> sensorList = sensorInRedis.stream()
                 .filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete")))
                 .filter(row -> {
@@ -52,7 +47,7 @@ public class SmokeRealTimeInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/aqjk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "实时信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");

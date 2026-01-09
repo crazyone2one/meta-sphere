@@ -25,20 +25,13 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/15
  */
 public class BWYBasicInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
-
-    private BWYBasicInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private BWYBasicInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.BWYDY.getKey(), WkkSensorEnum.BWYDY.getTableName());
+        List<Row> sensorInRedis = sourceRows(WkkSensorEnum.BWYDY.getKey(), WkkSensorEnum.BWYDY.getTableName());
         // 获取为删除的数据
 //        List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
@@ -47,12 +40,9 @@ public class BWYBasicInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorInRedis, now) +
                 END_FLAG;
-        // String filePath = "/app/files/GNSS/" + fileName;
-        // sensorUtil.generateFile(filePath, content, "表面位移设备信息[" + fileName + "]");
-        // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        String filePath = fileHelper.filePath(slaveConfig().getLocalPath(), projectNum, "gnss", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "表面位移设备信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
+        fileHelper.uploadFile(slaveConfig(), filePath, slaveConfig().getRemotePath() + File.separator + "GNSS");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

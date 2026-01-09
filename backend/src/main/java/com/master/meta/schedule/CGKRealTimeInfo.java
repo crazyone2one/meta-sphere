@@ -22,14 +22,9 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/21
  */
 public class CGKRealTimeInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private CGKRealTimeInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private CGKRealTimeInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
@@ -41,12 +36,12 @@ public class CGKRealTimeInfo extends BaseScheduleJob {
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum,SensorMNType.SENSOR_SHFZ_0502.getKey(), SensorMNType.SENSOR_SHFZ_0502.getTableName());
+        List<Row> sensorInRedis = sourceRows( SensorMNType.SENSOR_SHFZ_0502.getKey(), SensorMNType.SENSOR_SHFZ_0502.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         content.append(bodyContent(sensorList, now));
         content.append(END_FLAG);
         // sensorUtil.generateFile(filePath, content.toString(), "实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         fileHelper.generateFile(filePath, String.valueOf(content), "CGK实时信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");

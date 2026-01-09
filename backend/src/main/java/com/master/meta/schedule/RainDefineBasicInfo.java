@@ -1,8 +1,10 @@
 package com.master.meta.schedule;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -23,16 +25,15 @@ import java.util.List;
  */
 @Slf4j
 public class RainDefineBasicInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
 
-    private RainDefineBasicInfo(SensorService sensorUtil) {
-        this.sensorUtil = sensorUtil;
+    private RainDefineBasicInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, "rainDefine", "sf_shfz_jsl_cddy");
+        List<Row> parsedObject = sourceRows("rainDefine", "sf_shfz_jsl_cddy");
         List<Row> sensorList = parsedObject.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_JSLCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";

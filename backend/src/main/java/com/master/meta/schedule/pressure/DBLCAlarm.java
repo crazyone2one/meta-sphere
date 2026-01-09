@@ -20,20 +20,14 @@ import java.util.List;
  * @author Created by 11's papa on 2025/11/11
  */
 public class DBLCAlarm extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private static final String END_FLAG = "||";
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private DBLCAlarm(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private DBLCAlarm(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, "DBLC", "sf_ky_dblc");
+        List<Row> sensorInRedis = sourceRows("DBLC", "sf_ky_dblc");
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         // 生成异常文件
@@ -44,7 +38,7 @@ public class DBLCAlarm extends BaseScheduleJob {
         String ycFileName = projectNum + "_LCYC_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         // String filePath = "/app/files/ky/" + ycFileName;
         // sensorUtil.generateFile(filePath, content, "顶板离层异常数据[" + ycFileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", ycFileName);
         fileHelper.generateFile(filePath, content, "信息[" + ycFileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");

@@ -3,6 +3,7 @@ package com.master.meta.schedule.lt;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
@@ -14,18 +15,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 public class LtPersonBasicInfo extends BaseScheduleJob {
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
-
-    private LtPersonBasicInfo(FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private LtPersonBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = projectNum + "_" + WkkSensorEnum.LTPERSON.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = "DW;人员定位系统;江苏中矿安华;" + DateFormatUtil.localDateTime2StringStyle2(now) + ";10~" +
                 // 文件体

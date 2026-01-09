@@ -18,20 +18,15 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class GTRealTimeInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private GTRealTimeInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private GTRealTimeInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.GTXDY.getKey(), WkkSensorEnum.GTXDY.getTableName());
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
+        List<Row> sensorInRedis = sourceRows(WkkSensorEnum.GTXDY.getKey(), WkkSensorEnum.GTXDY.getTableName());
         // 获取为删除的数据
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));

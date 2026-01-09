@@ -21,14 +21,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class JYLBasicInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private JYLBasicInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private JYLBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -41,9 +36,9 @@ public class JYLBasicInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.JYLDY.getKey(), WkkSensorEnum.JYLDY.getTableName());
+        List<Row> sensorInRedis = sourceRows(WkkSensorEnum.JYLDY.getKey(), WkkSensorEnum.JYLDY.getTableName());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = projectNum + "_" + WkkSensorEnum.JYLDY.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体

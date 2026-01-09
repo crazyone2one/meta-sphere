@@ -22,20 +22,15 @@ import java.util.List;
 import java.util.Map;
 
 public class GNSSBasicInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private GNSSBasicInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private GNSSBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
-        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.GNSSBASEINFO.getKey(), WkkSensorEnum.GNSSBASEINFO.getTableName());
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
+        List<Row> sourceRows = sourceRows(WkkSensorEnum.GNSSBASEINFO.getKey(), WkkSensorEnum.GNSSBASEINFO.getTableName());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_" + WkkSensorEnum.GNSSBASEINFO.getCdssKey() + "_"
                 + DateFormatUtil.localDateTimeToString(now) + "_"

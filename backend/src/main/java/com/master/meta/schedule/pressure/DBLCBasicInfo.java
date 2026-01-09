@@ -25,29 +25,24 @@ import java.util.List;
  */
 @Slf4j
 public class DBLCBasicInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private DBLCBasicInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private DBLCBasicInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "DBLC", "sf_ky_dblc");
+        List<Row> parsedObject = sourceRows("DBLC", "sf_ky_dblc");
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        String fileName = super.projectNum + "_DBLC_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
-        String content = super.projectNum + ";" + super.projectName + ";顶板离层监测系统;KJ001;"
+        String fileName = projectNum + "_DBLC_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
+        String content = projectNum + ";" + projectName + ";顶板离层监测系统;KJ001;"
                 + DateFormatUtil.localDateTime2StringStyle3(now) + ";"
                 + DateFormatUtil.localDateTime2StringStyle2(now)
                 + "~" +
                 // 文件体
                 bodyContent(parsedObject, now) +
                 END_FLAG;
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "顶板离层信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");

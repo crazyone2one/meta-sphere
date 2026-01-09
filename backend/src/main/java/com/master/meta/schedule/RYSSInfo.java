@@ -2,6 +2,7 @@ package com.master.meta.schedule;
 
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
 import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
@@ -19,12 +20,9 @@ import java.time.ZoneOffset;
 import java.util.*;
 
 public class RYSSInfo extends BaseScheduleJob {
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private RYSSInfo(FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private RYSSInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
@@ -33,7 +31,7 @@ public class RYSSInfo extends BaseScheduleJob {
         val personList = getPersonList();
         val substationList = getSubstationList();
         val areaList = getAreaList();
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = "150622B0012000200092_RYSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
 //        String content = super.projectNum + ";" + super.projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
         String content =
@@ -101,7 +99,7 @@ public class RYSSInfo extends BaseScheduleJob {
     public List<Row> getPersonList() {
         List<Row> rows;
         try {
-            DataSourceKey.use("ds-slave1");
+            DataSourceKey.use("ds-slave150622004499");
             QueryWrapper condition = new QueryWrapper()
                     .select("id", "person_code", "person_name")
 
@@ -120,7 +118,7 @@ public class RYSSInfo extends BaseScheduleJob {
     public List<Row> getSubstationList() {
         List<Row> rows;
         try {
-            DataSourceKey.use("ds-slave1");
+            DataSourceKey.use("ds-slave150622004499");
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("is_delete", "0");
             rows = Db.selectListByMap("sf_jxzy_substation", map);
@@ -133,7 +131,7 @@ public class RYSSInfo extends BaseScheduleJob {
     public List<Row> getAreaList() {
         List<Row> rows;
         try {
-            DataSourceKey.use("ds-slave1");
+            DataSourceKey.use("ds-slave150622004499");
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("is_delete", "0");
             rows = Db.selectListByMap("sf_jxzy_area", map);

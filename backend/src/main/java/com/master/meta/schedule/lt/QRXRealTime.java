@@ -22,14 +22,9 @@ import java.util.List;
  * QRX实时信息
  */
 public class QRXRealTime extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private QRXRealTime(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private QRXRealTime(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -43,13 +38,13 @@ public class QRXRealTime extends BaseScheduleJob {
     @Override
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName());
+        List<Row> sourceRows = sourceRows(WkkSensorEnum.QRX.getKey(), WkkSensorEnum.QRX.getTableName());
         List<Row> effectiveSensor = sourceRows.stream()
                 .filter(s -> BooleanUtils.isFalse(s.getBoolean("deleted"))).toList();
         if (CollectionUtils.isEmpty(effectiveSensor)) {
             return;
         }
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = projectNum + "_" + WkkSensorEnum.QRX.getCdssKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体

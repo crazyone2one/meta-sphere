@@ -23,14 +23,8 @@ import static com.master.meta.constants.SensorMNType.SENSOR_AQJK_CO;
  * @author Created by 11's papa on 2025/10/27
  */
 public class CDDYInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
-
-    private CDDYInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private CDDYInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
@@ -46,7 +40,7 @@ public class CDDYInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(unDeleteSensorList, now) +
                 END_FLAG;
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "基础数据[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
@@ -91,7 +85,7 @@ public class CDDYInfo extends BaseScheduleJob {
     }
 
     private List<Row> getCDDYInfo() {
-        return sensorUtil.getSensorFromRedis(projectNum, SENSOR_AQJK_CO.getKey(), SENSOR_AQJK_CO.getTableName());
+        return sourceRows(SENSOR_AQJK_CO.getKey(), SENSOR_AQJK_CO.getTableName());
     }
 
     public static JobKey getJobKey(String resourceId) {

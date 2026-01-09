@@ -8,7 +8,6 @@ import com.master.meta.utils.RedisService;
 import com.mybatisflex.core.datasource.DataSourceKey;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -24,8 +23,6 @@ import java.util.*;
  */
 @Service
 public class SensorService {
-    @Value("${spring.profiles.active:default}")
-    private String activeProfile;
     private final RedisService redisService;
     private final InfluxDbUtils influxDbUtils;
     private static final DateTimeFormatter UTC_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -50,29 +47,14 @@ public class SensorService {
     }
 
     public List<Row> getSensorFromRedis(String projectNum, String key, String tableName) {
-        String rainDefineInRedis = redisService.getSensor(projectNum, key);
-        if (rainDefineInRedis != null) {
-            return JSON.parseArray(rainDefineInRedis, Row.class);
+        String dataInRedis = redisService.getSensor(projectNum, key);
+        if (dataInRedis != null) {
+            return JSON.parseArray(dataInRedis, Row.class);
         } else {
             List<Row> sensorList = getAllDataFromSlaveDatabase(projectNum, tableName);
             redisService.storeSensor(projectNum, key, sensorList, TIMEOUT);
             return sensorList;
         }
-    }
-
-    public List<Row> getShfzSensorList(String tableName, Boolean deleted) {
-        List<Row> rows;
-        try {
-            DataSourceKey.use("ds-slave1");
-            Map<String, Object> map = new LinkedHashMap<>();
-            if (deleted) {
-                map.put("deleted", "0");
-            }
-            rows = Db.selectListByMap(tableName, map);
-        } finally {
-            DataSourceKey.clear();
-        }
-        return rows;
     }
 
     /**

@@ -26,14 +26,9 @@ import java.util.List;
  */
 @Slf4j
 public class YSLRealTimeInfo extends BaseScheduleJob {
-    private final SensorService sensorService;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
     private YSLRealTimeInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorService = sensorService;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
@@ -45,12 +40,12 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorService.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_YSL.getKey(), SensorMNType.SENSOR_SHFZ_YSL.getTableName());
+        List<Row> sensorInRedis = sourceRows(SensorMNType.SENSOR_SHFZ_YSL.getKey(), SensorMNType.SENSOR_SHFZ_YSL.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         content.append(cdssBodyContent(sensorList, now));
         content.append(END_FLAG);
         // sensorUtil.generateFile(filePath, content.toString(), "实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         fileHelper.generateFile(filePath, String.valueOf(content), "YSL实时信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");

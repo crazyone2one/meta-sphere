@@ -1,8 +1,10 @@
 package com.master.meta.schedule;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -19,15 +21,14 @@ import java.util.List;
  */
 @Slf4j
 public class SurfaceBaseInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
 
-    public SurfaceBaseInfo(SensorService sensorUtil) {
-        this.sensorUtil = sensorUtil;
+    public SurfaceBaseInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(projectNum, "dbs", "sf_shfz_dbs_cddy");
+        List<Row> parsedObject = sourceRows("dbs", "sf_shfz_dbs_cddy");
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_DBSCDDY_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +

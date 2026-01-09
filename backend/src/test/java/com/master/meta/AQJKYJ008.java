@@ -53,7 +53,7 @@ public class AQJKYJ008 {
 
     @Test
     void testRed() {
-        List<Row> parsedObject = sensorService.getShfzSensorList(SensorMNType.SENSOR_SHFZ_YSL.getTableName(), false);
+        List<Row> parsedObject = sensorService.getSensorFromRedis("",SensorMNType.SENSOR_SHFZ_YSL.getKey(), SensorMNType.SENSOR_SHFZ_YSL.getTableName());
         List<Row> sensorList = parsedObject.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         List<Row> deleted = parsedObject.stream().filter(row -> BooleanUtils.isTrue(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));

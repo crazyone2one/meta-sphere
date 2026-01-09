@@ -23,19 +23,14 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/16
  */
 public class DYSSInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private DYSSInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private DYSSInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, "dy", "sf_ky_dy");
+        List<Row> sensorInRedis = sourceRows("dy", "sf_ky_dy");
         // 获取为删除的数据
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
@@ -46,7 +41,7 @@ public class DYSSInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/ky/" + fileName;
         // sensorUtil.generateFile(filePath, content, "地音测点实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "地音测点实时数据[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");

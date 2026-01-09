@@ -4,7 +4,10 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
-import com.master.meta.utils.*;
+import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
+import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.BooleanUtils;
@@ -19,14 +22,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GNSSWarningInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
-
-    private GNSSWarningInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private GNSSWarningInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -39,7 +36,7 @@ public class GNSSWarningInfo extends BaseScheduleJob {
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.GNSSREALRIME.getKey(), WkkSensorEnum.GNSSREALRIME.getTableName());
+        List<Row> sourceRows = sourceRows(WkkSensorEnum.GNSSREALRIME.getKey(), WkkSensorEnum.GNSSREALRIME.getTableName());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         List<Row> effectiveSensor = sourceRows.stream()
                 .filter(s -> BooleanUtils.isFalse(s.getBoolean("deleted")))

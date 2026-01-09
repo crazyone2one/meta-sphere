@@ -24,20 +24,15 @@ import java.util.Random;
  */
 @Slf4j
 public class DBLCSSInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
     Random random = new Random();
 
-    private DBLCSSInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private DBLCSSInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, "DBLC", "sf_ky_dblc");
+        List<Row> sensorInRedis = sourceRows("DBLC", "sf_ky_dblc");
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_LCSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
@@ -47,7 +42,7 @@ public class DBLCSSInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/ky/" + fileName;
         // sensorUtil.generateFile(filePath, content, "顶板离层实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "顶板离层信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");

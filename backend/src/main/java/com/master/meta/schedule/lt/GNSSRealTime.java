@@ -23,22 +23,17 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GNSSRealTime extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
     private final InfluxDbUtils influxDbUtils;
-    private final FileHelper fileHelper;
 
-    private GNSSRealTime(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, InfluxDbUtils influxDbUtils, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private GNSSRealTime(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, InfluxDbUtils influxDbUtils, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
         this.influxDbUtils = influxDbUtils;
-        this.fileHelper = fileHelper;
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
-        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.GNSSREALRIME.getKey(), WkkSensorEnum.GNSSREALRIME.getTableName());
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
+        List<Row> sourceRows = sourceRows(WkkSensorEnum.GNSSREALRIME.getKey(), WkkSensorEnum.GNSSREALRIME.getTableName());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         List<Row> effectiveSensor = sourceRows.stream()
                 .filter(s -> BooleanUtils.isFalse(s.getBoolean("deleted")))

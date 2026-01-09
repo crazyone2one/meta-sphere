@@ -26,19 +26,13 @@ import java.util.List;
  */
 @Slf4j
 public class HDWYSSInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
-
-    private HDWYSSInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private HDWYSSInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, "HDWY", "sf_ky_xdbm");
+        List<Row> sensorInRedis = sourceRows("HDWY", "sf_ky_xdbm");
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = projectNum + "_WYSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
@@ -49,7 +43,7 @@ public class HDWYSSInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/ky/" + fileName;
         // sensorUtil.generateFile(filePath, content, "巷道位移测点实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "巷道位移测点实时数据[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");

@@ -26,19 +26,15 @@ import java.util.List;
  */
 @Slf4j
 public class MGYLInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private MGYLInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+
+    private MGYLInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(super.projectNum, "MGYL", "sf_ky_mgsyl");
+        List<Row> sensorInRedis = sourceRows("MGYL", "sf_ky_mgsyl");
         // 获取为删除的数据
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
@@ -49,7 +45,7 @@ public class MGYLInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/ky/" + fileName;
         // sensorUtil.generateFile(filePath, content, "锚杆应力测点实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "锚杆应力测点实时数据[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");

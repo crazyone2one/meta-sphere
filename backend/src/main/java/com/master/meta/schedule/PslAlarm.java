@@ -4,7 +4,10 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
-import com.master.meta.utils.*;
+import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
+import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -21,15 +24,11 @@ import java.util.Random;
  * @author Created by 11's papa on 2025/11/11
  */
 public class PslAlarm extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
+
     Random random = new Random();
 
-    private PslAlarm(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private PslAlarm(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
@@ -41,13 +40,13 @@ public class PslAlarm extends BaseScheduleJob {
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         // 文件体
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, SensorMNType.SENSOR_SHFZ_PSL.getKey(), SensorMNType.SENSOR_SHFZ_PSL.getTableName());
+        List<Row> sensorInRedis = sourceRows(SensorMNType.SENSOR_SHFZ_PSL.getKey(), SensorMNType.SENSOR_SHFZ_PSL.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("deleted"))).toList();
         List<Row> rows = sensorList.stream().filter(row -> row.getString("sensor_id").equals(config.getCustomConfig().getSensorIds())).toList();
         content.append(ycBodyContent(rows.getFirst(), now));
         content.append(END_FLAG);
         // sensorUtil.generateFile(filePath, content.toString(), "排水量异常数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "排水量异常[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");

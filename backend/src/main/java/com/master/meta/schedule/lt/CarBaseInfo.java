@@ -18,21 +18,15 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class CarBaseInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
-
-    public CarBaseInfo(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private CarBaseInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.CARBASEINFO.getKey(), WkkSensorEnum.CARBASEINFO.getTableName());
+        List<Row> sensorInRedis = sourceRows(WkkSensorEnum.CARBASEINFO.getKey(), WkkSensorEnum.CARBASEINFO.getTableName());
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = projectNum + "_" + WkkSensorEnum.CARBASEINFO.getKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = "CN;卡车系统;江苏中矿安华;" + DateFormatUtil.localDateTime2StringStyle2(now) + ";5~" +
                 // 文件体

@@ -2,10 +2,12 @@ package com.master.meta.schedule;
 
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
+import com.master.meta.service.SensorService;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.JSON;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.TriggerKey;
@@ -21,6 +23,10 @@ import java.util.List;
  */
 @Slf4j
 public class DemoJob extends BaseScheduleJob {
+    public DemoJob(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
+    }
+
     @Override
     protected void businessExecute(JobExecutionContext context) {
         List<LocalDateTime> dateTimeList = JSON.objectToType(new TypeReference<List<Long>>() {

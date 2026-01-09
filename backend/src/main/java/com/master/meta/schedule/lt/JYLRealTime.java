@@ -20,14 +20,9 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 public class JYLRealTime extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileTransferConfiguration fileTransferConfiguration;
-    private final FileHelper fileHelper;
 
-    private JYLRealTime(SensorService sensorUtil, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        this.sensorUtil = sensorUtil;
-        this.fileTransferConfiguration = fileTransferConfiguration;
-        this.fileHelper = fileHelper;
+    private JYLRealTime(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -41,13 +36,13 @@ public class JYLRealTime extends BaseScheduleJob {
     @Override
     protected void businessExecute(JobExecutionContext context) {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
-        List<Row> sourceRows = sensorUtil.getSensorFromRedis(projectNum, WkkSensorEnum.JYLDY.getKey(), WkkSensorEnum.JYLDY.getTableName());
+        List<Row> sourceRows = sourceRows(WkkSensorEnum.JYLDY.getKey(), WkkSensorEnum.JYLDY.getTableName());
         List<Row> effectiveSensor = sourceRows.stream()
                 .filter(s -> BooleanUtils.isFalse(s.getBoolean("deleted"))).toList();
         if (CollectionUtils.isEmpty(effectiveSensor)) {
             return;
         }
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = projectNum + "_" + WkkSensorEnum.JYLDY.getCdssKey() + "_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = projectNum + ";" + projectName + ";" + DateFormatUtil.localDateTime2StringStyle2(now) + "~" +
                 // 文件体

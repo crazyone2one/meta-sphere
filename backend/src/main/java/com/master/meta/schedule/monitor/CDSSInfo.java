@@ -6,7 +6,10 @@ import com.master.meta.dto.CustomConfig;
 import com.master.meta.dto.ScheduleConfigDTO;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
-import com.master.meta.utils.*;
+import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.JSON;
+import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -30,19 +33,14 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class CDSSInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    private CDSSInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private CDSSInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> sensorInRedis = sensorUtil.getAllDataFromSlaveDatabase(projectNum, SensorMNType.SENSOR_AQJK_CO.getTableName());
+        List<Row> sensorInRedis = sourceRows(SensorMNType.SENSOR_AQJK_CO.getKey(), SensorMNType.SENSOR_AQJK_CO.getTableName());
         List<Row> sensorList = sensorInRedis.stream().filter(row -> BooleanUtils.isFalse(row.getBoolean("is_delete"))).toList();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         //        异常开始时间
@@ -57,7 +55,7 @@ public class CDSSInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/aqjk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "cdss实时信息[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");

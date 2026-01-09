@@ -1,8 +1,10 @@
 package com.master.meta.schedule.pressure;
 
+import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
+import com.master.meta.utils.FileHelper;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +23,14 @@ import java.util.List;
  */
 @Slf4j
 public class MGYLBasicInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
 
-    private MGYLBasicInfo(SensorService sensorUtil) {
-        this.sensorUtil = sensorUtil;
+    private MGYLBasicInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
-        List<Row> parsedObject = sensorUtil.getSensorFromRedis(super.projectNum, "MGYL", "sf_ky_mgsyl");
+        List<Row> parsedObject = sourceRows( "MGYL", "sf_ky_mgsyl");
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         String fileName = super.projectNum + "_MGYL_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         String content = super.projectNum + ";" + super.projectName + ";锚杆(索)应力监测系统;KJ001;"

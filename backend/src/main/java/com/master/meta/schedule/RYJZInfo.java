@@ -21,14 +21,9 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/27
  */
 public class RYJZInfo extends BaseScheduleJob {
-    private final SensorService sensorUtil;
-    private final FileHelper fileHelper;
-    private final FileTransferConfiguration fileTransferConfiguration;
 
-    public RYJZInfo(SensorService sensorUtil, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        this.sensorUtil = sensorUtil;
-        this.fileHelper = fileHelper;
-        this.fileTransferConfiguration = fileTransferConfiguration;
+    private RYJZInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileHelper, fileTransferConfiguration);
     }
 
     @Override
@@ -44,7 +39,7 @@ public class RYJZInfo extends BaseScheduleJob {
                 END_FLAG;
         // String filePath = "/app/files/aqjk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "基础数据[" + fileName + "]");
-        FileTransferConfiguration.SlaveConfig slaveConfig = fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
+        FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
         fileHelper.generateFile(filePath, JSON.toJSONString(content), "基础数据[" + fileName + "]");
         fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
@@ -71,7 +66,7 @@ public class RYJZInfo extends BaseScheduleJob {
     }
 
     private List<Row> getStationInfo() {
-        return sensorUtil.getSensorFromRedis(projectNum, "RYJZ", "sf_jxzy_substation");
+        return sourceRows("RYJZ", "sf_jxzy_substation");
     }
 
     public static JobKey getJobKey(String resourceId) {
