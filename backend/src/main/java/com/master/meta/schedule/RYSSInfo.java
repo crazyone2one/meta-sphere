@@ -59,8 +59,8 @@ public class RYSSInfo extends BaseScheduleJob {
         // 当前所在班次
         ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
         // val inDateTmp = config.getField("inDate", String.class);
-        val inDate = DateFormatUtil.localTime2LocalDateTime(currentShift.getStartTime());
-        LocalDateTime shiftEndTime = DateFormatUtil.localTime2LocalDateTime(currentShift.getEndTime());
+        val inDate = ShiftUtils.getShiftStartDateTime(currentShift, now);
+        LocalDateTime shiftEndTime = ShiftUtils.getShiftEndDateTime(currentShift, now);
         personList.forEach(person -> {
             val substation = RandomUtil.getRandomSubList(substationList, 1).getFirst();
             val area = RandomUtil.getRandomSubList(areaList, 1).getFirst();
