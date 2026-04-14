@@ -19,9 +19,11 @@ public class FileHelper {
     public FileHelper(ScpUtils scpUtils) {
         this.scpUtils = scpUtils;
     }
+
     public String filePath(String filePath, String projectNum, String directoryName, String fileName) {
         return filePath + projectNum + File.separator + directoryName + File.separator + fileName;
     }
+
     public void uploadFile(FileTransferConfiguration.SlaveConfig slaveConfig, String localPath, String targetPath) {
         if (activeProfile.equals("dev")) {
             return;
@@ -35,12 +37,19 @@ public class FileHelper {
             // 上传文件
             scpUtils.uploadFile(slaveConfig, localPath, targetPath);
             log.info("file transfer successfully");
+            // 等待2秒后删除本地文件
+            if (file.delete()) {
+                log.info("local file deleted: {}", localPath);
+            } else {
+                log.warn("failed to delete local file: {}", localPath);
+            }
         } catch (IOException e) {
             log.error(e.getMessage(), e);
         } finally {
             scpUtils.close();
         }
     }
+
     public void generateFile(String filePath, String content, String type) {
         if (activeProfile.equals("dev")) {
             log.info("{}", content);
