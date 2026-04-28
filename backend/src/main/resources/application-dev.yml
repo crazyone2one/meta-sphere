@@ -42,14 +42,18 @@ mybatis-flex:
       username: root
       password: 123456
     #      password: 3eCrAw8Ba6Tg
-    ds-slave1:
+    ds-slave150622004499:
       url: jdbc:mysql://172.16.2.10:3306/ruoyi-vue-pro?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
       username: root
       password: 3eCrAw8Ba6Tg
-    ds-slave2:
+    ds-slave150622020001:
       url: jdbc:mysql://172.16.2.15:3306/nmfm_lt?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
       username: root
       password: Zkah@83539595S
+    ds-slave150622007792:
+      url: jdbc:mysql://172.16.2.15:3306/nmfm_mine?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
+      username: ${SLAVE3_DB_USERNAME:root}
+      password: ${SLAVE3_DB_PASSWORD:Zkah@83539595S}
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 jwt:
@@ -59,6 +63,7 @@ jwt:
 influx:
   url: http://172.16.2.10:8086
   token: CgfdhyPnh-GIrYtLV37zLffC4mvP620xRXA6mu2BRThTrnWwNJp1b6Pl5dpGnykgYhg5EoI0WptScdKq7YKZ2g==
+#  url: http://172.16.2.15:8086
 #  token: FiNr-P0X3AsERKqL43nN3s9YjnjY8GaFPrRo--ohZm6uS95jJNFjjPz5LrQvv8TZfD6Jw52b2GMOsn2bGmTFNA==
   org: admin
   bucket: analyse

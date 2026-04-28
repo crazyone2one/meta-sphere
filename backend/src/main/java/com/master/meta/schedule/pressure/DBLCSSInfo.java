@@ -4,7 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +26,8 @@ import java.util.Random;
 public class DBLCSSInfo extends BaseScheduleJob {
     Random random = new Random();
 
-    private DBLCSSInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private DBLCSSInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -43,9 +43,9 @@ public class DBLCSSInfo extends BaseScheduleJob {
         // String filePath = "/app/files/ky/" + fileName;
         // sensorUtil.generateFile(filePath, content, "顶板离层实时数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "顶板离层信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "ky", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "顶板离层信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");
     }
 
 

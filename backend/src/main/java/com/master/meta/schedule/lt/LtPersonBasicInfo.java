@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.RandomUtil;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -15,8 +15,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 public class LtPersonBasicInfo extends BaseScheduleJob {
-    private LtPersonBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private LtPersonBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -28,10 +28,10 @@ public class LtPersonBasicInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent() +
                 END_FLAG;
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "clry", fileName);
-        fileHelper.generateFile(filePath, content, WkkSensorEnum.LTPERSON.getLabel() + "基础信息[" + fileName + "]");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "clry", fileName);
+        fileManager.writeToFile(filePath, content, WkkSensorEnum.LTPERSON.getLabel() + "基础信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "clry");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + "clry");
     }
 
     private String bodyContent() {

@@ -29,10 +29,10 @@ class AQJKYJ006 {
     @Test
     void testRemoveInfluxData() {
         String measurement = "sf_shfz_cgk_cdss";
-        String sensorId = "150622004499MNAEDKamaMj";
-        OffsetDateTime startTime = OffsetDateTime.parse("2025-10-21T00:00:00Z");
-        OffsetDateTime endTime = OffsetDateTime.parse("2025-11-01T00:00:00Z");
-        influxDbUtils.deleteDataByTimeRange(measurement, sensorId, startTime, endTime);
+        String sensorId = "14090101170705MN05020104";
+        OffsetDateTime startTime = OffsetDateTime.parse("2026-03-01T00:00:00Z");
+        OffsetDateTime endTime = OffsetDateTime.parse("2026-03-15T00:00:00Z");
+        influxDbUtils.deleteCdssByTimeRange(measurement, sensorId, startTime, endTime);
     }
 
     @Test

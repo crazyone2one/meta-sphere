@@ -53,6 +53,10 @@ mybatis-flex:
       url: jdbc:mysql://${SLAVE3_DB_URL}:${SLAVE3_DB_PORT:3306}/${SLAVE3_DB_NAME}?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
       username: ${SLAVE3_DB_USERNAME:root}
       password: ${SLAVE3_DB_PASSWORD}
+    ds-slave150622007118:
+      url: jdbc:mysql://${SLAVE4_DB_URL}:${SLAVE4_DB_PORT:3306}/${SLAVE4_DB_NAME}?allowPublicKeyRetrieval=true&allowMultiQueries=true&useUnicode=true&useSSL=false&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&autoReconnect=true&nullCatalogMeansCurrent=true # MySQL Connector/J 8.X 连接的示例
+      username: ${SLAVE4_DB_USERNAME:root}
+      password: ${SLAVE4_DB_PASSWORD}
     # 根据需要追加
 jwt:
   secret: K4lgrcqOP576NhrtYJhuQD8DdMYfZtb58hWdJaTjPbk=
@@ -98,3 +102,10 @@ transfer:
         password: zkah@123
         localPath: /app/files/
         remotePath: /home/app/jg-ftp/
+    - '150622007118':
+        host: ${SLAVE4_DB_URL}
+        port: 8841
+        username: root
+        password: zkah@123
+        localPath: /app/files/
+        remotePath: /home/app/files/ftp/

@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -25,8 +25,8 @@ import java.util.List;
  * @author Created by 11's papa on 2025/10/15
  */
 public class BWYBasicInfo extends BaseScheduleJob {
-    private BWYBasicInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private BWYBasicInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -40,9 +40,9 @@ public class BWYBasicInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorInRedis, now) +
                 END_FLAG;
-        String filePath = fileHelper.filePath(slaveConfig().getLocalPath(), projectNum, "gnss", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "表面位移设备信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig(), filePath, slaveConfig().getRemotePath() + File.separator + "GNSS");
+        String filePath = fileManager.buildFilePath(slaveConfig().getLocalPath(), projectNum, "gnss", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "表面位移设备信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig(), filePath, slaveConfig().getRemotePath() + File.separator + "GNSS");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

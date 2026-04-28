@@ -270,4 +270,16 @@ public class SensorService {
 
         return result;
     }
+
+    public void setPersonBehavior(String personCode, String behavior) {
+        redisService.setPersonBehavior(personCode, behavior);
+    }
+
+    public String getPersonBehavior(String personCode) {
+        return redisService.getPersonBehavior(personCode);
+    }
+
+    public void deletePersonBehavior(String personCode) {
+        redisService.deletePersonBehavior(personCode);
+    }
 }

@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,8 +21,8 @@ import java.util.List;
 
 public class JYLRealTime extends BaseScheduleJob {
 
-    private JYLRealTime(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private JYLRealTime(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -49,9 +49,9 @@ public class JYLRealTime extends BaseScheduleJob {
                 bodyContent(effectiveSensor, now) +
                 END_FLAG;
         // String filePath = "/app/files/" + projectNum + File.separator + "wkk" + File.separator + fileName;
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        fileHelper.generateFile(filePath, content, WkkSensorEnum.JYLDY.getLabel() + "实时信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileManager.writeToFile(filePath, content, WkkSensorEnum.JYLDY.getLabel() + "实时信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> effectiveSensor, LocalDateTime now) {

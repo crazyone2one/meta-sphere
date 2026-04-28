@@ -5,7 +5,7 @@ import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +24,8 @@ import java.util.List;
 @Slf4j
 public class YSLInfo extends BaseScheduleJob {
 
-    private YSLInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private YSLInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override

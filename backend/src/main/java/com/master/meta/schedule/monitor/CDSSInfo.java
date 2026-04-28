@@ -7,7 +7,7 @@ import com.master.meta.dto.ScheduleConfigDTO;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CDSSInfo extends BaseScheduleJob {
 
-    private CDSSInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private CDSSInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -57,9 +57,9 @@ public class CDSSInfo extends BaseScheduleJob {
         // String filePath = "/app/files/aqjk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "cdss实时信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "cdss实时信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
         // 异常报警文件
         if (config.isYcFlag()) {
             generateYcFile(sensorList, now, ycEndTimeStr, ycValue, slaveConfig);
@@ -143,13 +143,13 @@ public class CDSSInfo extends BaseScheduleJob {
                     content.append(";");
                     content.append(";");
 
-                    content.append(DateFormatUtil.localDateTime2StringStyle2(endTime)).append("~");
+                    content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
                     content.append(END_FLAG);
                     // String filePath = "/app/files/aqjk/" + fileName;
                     // sensorUtil.generateFile(filePath, content.toString(), "异常报警数据[" + fileName + "]");
-                    String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
-                    fileHelper.generateFile(filePath, JSON.toJSONString(content), "cdss异常报警数据[" + fileName + "]");
-                    fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
+                    String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+                    fileManager.writeToFile(filePath, JSON.toJSONString(content), "cdss异常报警数据[" + fileName + "]");
+                    fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
                 }
         );
 
@@ -170,6 +170,7 @@ public class CDSSInfo extends BaseScheduleJob {
         String ftStateValue = config.getField("ftState", String.class);
         String ycCode = config.getField("ycCode", String.class);
         String sensorStateValue = config.getField("sensorState", String.class);
+
         AtomicReference<String> sensorState = new AtomicReference<>("0");
         for (Row row : rows) {
             String sensorInfoCode = row.getString("sensor_code");
@@ -239,9 +240,11 @@ public class CDSSInfo extends BaseScheduleJob {
                     if (customConfig.getSensorIds().equals(sensorInfoCode) && "MN".equals(customConfig.getSensorValueType())) {
                         List<Double> thresholdInterval = customConfig.getThresholdInterval();
                         sensorValue.set(RandomUtil.generateRandomDoubleString(thresholdInterval.getFirst(), thresholdInterval.getLast()));
+                        sensorState.set(Optional.ofNullable(sensorStateValue).orElse("0"));
                     }
                 }
             }
+
             String sensorContent = sensorInfoCode + ";"
                     + sensor.getString("sensor_type_name") + ";"
                     + sensor.getString("sensor_location") + ";"

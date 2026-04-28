@@ -4,7 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -22,8 +22,8 @@ import java.util.List;
  */
 public class RYJZInfo extends BaseScheduleJob {
 
-    private RYJZInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private RYJZInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -40,9 +40,9 @@ public class RYJZInfo extends BaseScheduleJob {
         // String filePath = "/app/files/aqjk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "基础数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "基础数据[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "基础数据[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
     }
 
     private String bodyContent(List<Row> unDeleteSensorList, LocalDateTime now) {

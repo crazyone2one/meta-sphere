@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -28,8 +28,8 @@ import java.util.Optional;
  * @author Created by 11's papa on 2025/10/15
  */
 public class GTXBasicInfo extends BaseScheduleJob {
-    private GTXBasicInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService,fileHelper , fileTransferConfiguration);
+    private GTXBasicInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -47,9 +47,9 @@ public class GTXBasicInfo extends BaseScheduleJob {
         // String filePath = "/app/files/wkk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "干滩设备基础信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), WkkSensorEnum.GTXDY.getLabel() + "基础信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), WkkSensorEnum.GTXDY.getLabel() + "基础信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

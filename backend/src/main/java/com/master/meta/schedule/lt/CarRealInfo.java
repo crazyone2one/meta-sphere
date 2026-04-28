@@ -22,8 +22,8 @@ import java.util.Optional;
 public class CarRealInfo extends BaseScheduleJob {
     private final StringRedisTemplate redisTemplate;
 
-    private CarRealInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper, StringRedisTemplate redisTemplate) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private CarRealInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager, StringRedisTemplate redisTemplate) {
+        super(sensorService, fileManager, fileTransferConfiguration);
         this.redisTemplate = redisTemplate;
     }
 
@@ -39,10 +39,10 @@ public class CarRealInfo extends BaseScheduleJob {
                     // 文件体
                     bodyContent(list) +
                     END_FLAG;
-            String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "clry", fileName);
-            fileHelper.generateFile(filePath, content, "车辆设备实时数据[" + fileName + "]");
+            String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "clry", fileName);
+            fileManager.writeToFile(filePath, content, "车辆设备实时数据[" + fileName + "]");
             // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
-            fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "clry");
+            fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + "clry");
         }
     }
 

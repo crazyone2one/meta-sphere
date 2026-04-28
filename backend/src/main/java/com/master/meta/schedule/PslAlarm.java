@@ -5,7 +5,7 @@ import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -27,8 +27,8 @@ public class PslAlarm extends BaseScheduleJob {
 
     Random random = new Random();
 
-    private PslAlarm(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private PslAlarm(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -47,9 +47,9 @@ public class PslAlarm extends BaseScheduleJob {
         content.append(END_FLAG);
         // sensorUtil.generateFile(filePath, content.toString(), "排水量异常数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "排水量异常[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "排水量异常[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
     }
 
     private StringBuilder ycBodyContent(Row row, LocalDateTime now) {

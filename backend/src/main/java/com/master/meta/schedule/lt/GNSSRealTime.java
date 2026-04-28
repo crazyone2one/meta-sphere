@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GNSSRealTime extends BaseScheduleJob {
     private final InfluxDbUtils influxDbUtils;
 
-    private GNSSRealTime(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, InfluxDbUtils influxDbUtils, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private GNSSRealTime(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, InfluxDbUtils influxDbUtils, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
         this.influxDbUtils = influxDbUtils;
     }
 
@@ -52,10 +52,10 @@ public class GNSSRealTime extends BaseScheduleJob {
         content.put("open_pit_no", projectNum);
         content.put("data", contentData(effectiveSensor, now));
         // String filePath = "/app/files/gnss/" + fileName;
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
     }
 
     private List<Map<String, Object>> contentData(List<Row> sensorInRedis, LocalDateTime now) {

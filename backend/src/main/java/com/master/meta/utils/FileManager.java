@@ -11,20 +11,20 @@ import java.io.IOException;
 
 @Slf4j
 @Component
-public class FileHelper {
+public class FileManager {
     @Value("${spring.profiles.active:default}")
     private String activeProfile;
     private final ScpUtils scpUtils;
 
-    public FileHelper(ScpUtils scpUtils) {
+    public FileManager(ScpUtils scpUtils) {
         this.scpUtils = scpUtils;
     }
 
-    public String filePath(String filePath, String projectNum, String directoryName, String fileName) {
+    public String buildFilePath(String filePath, String projectNum, String directoryName, String fileName) {
         return filePath + projectNum + File.separator + directoryName + File.separator + fileName;
     }
 
-    public void uploadFile(FileTransferConfiguration.SlaveConfig slaveConfig, String localPath, String targetPath) {
+    public void uploadAndCleanup(FileTransferConfiguration.SlaveConfig slaveConfig, String localPath, String targetPath) {
         if (activeProfile.equals("dev")) {
             return;
         }
@@ -50,7 +50,7 @@ public class FileHelper {
         }
     }
 
-    public void generateFile(String filePath, String content, String type) {
+    public void writeToFile(String filePath, String content, String type) {
         if (activeProfile.equals("dev")) {
             log.info("{}", content);
             return;

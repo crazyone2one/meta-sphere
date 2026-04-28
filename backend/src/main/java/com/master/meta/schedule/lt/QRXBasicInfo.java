@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.collections4.CollectionUtils;
@@ -24,8 +24,8 @@ import java.util.List;
  **/
 public class QRXBasicInfo extends BaseScheduleJob {
 
-    private QRXBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private QRXBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -38,10 +38,10 @@ public class QRXBasicInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sourceRows, now) +
                 END_FLAG;
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        fileHelper.generateFile(filePath, content, WkkSensorEnum.QRX.getLabel() + "基础信息[" + fileName + "]");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileManager.writeToFile(filePath, content, WkkSensorEnum.QRX.getLabel() + "基础信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "wkk");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + "wkk");
     }
 
     private String bodyContent(List<Row> sourceRows, LocalDateTime now) {

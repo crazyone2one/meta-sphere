@@ -137,7 +137,7 @@ public class SystemScheduleServiceImpl extends ServiceImpl<SystemScheduleMapper,
                 .where(SYSTEM_SCHEDULE.NAME.like(request.getKeyword()).or(SYSTEM_SCHEDULE.NUM.like(request.getKeyword())))
                 .and(SYSTEM_SCHEDULE.PROJECT_ID.eq(request.getProjectId()))
                 .and(SYSTEM_SCHEDULE.RESOURCE_TYPE.eq(request.getResourceType()))
-                .orderBy(SYSTEM_SCHEDULE.ENABLE.desc())
+                .orderBy(SYSTEM_SCHEDULE.ENABLE.desc(), SYSTEM_SCHEDULE.CREATE_TIME.desc())
                 .pageAs(new Page<>(request.getPage(), request.getPageSize()), ScheduleDTO.class);
     }
 

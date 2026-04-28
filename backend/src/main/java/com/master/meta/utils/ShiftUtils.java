@@ -2,7 +2,6 @@ package com.master.meta.utils;
 
 import lombok.Getter;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -23,17 +22,20 @@ public class ShiftUtils {
         private final LocalTime startTime;
         private final LocalTime endTime;
         private final String shiftName;
+        private final String shiftType;
 
-        public ShiftPeriod(String startTime, String endTime, String shiftName) {
+        public ShiftPeriod(String startTime, String endTime, String shiftName, String shiftType) {
             this.startTime = LocalTime.parse(startTime);
             this.endTime = LocalTime.parse(endTime);
             this.shiftName = shiftName;
+            this.shiftType = shiftType;
         }
 
-        public ShiftPeriod(LocalTime startTime, LocalTime endTime, String shiftName) {
+        public ShiftPeriod(LocalTime startTime, LocalTime endTime, String shiftName, String shiftType) {
             this.startTime = startTime;
             this.endTime = endTime;
             this.shiftName = shiftName;
+            this.shiftType = shiftType;
         }
 
         @Override
@@ -59,10 +61,10 @@ public class ShiftUtils {
         if (shiftPeriod.getStartTime().isAfter(shiftPeriod.getEndTime())) {
             // 跨天的情况：开始时间晚于结束时间
             LocalTime currentTimeOfDay = currentTime.toLocalTime();
-            
+
             // 检查当前时间是否在班次内
             boolean isCurrentTimeInShift = isCurrentTimeInShift(currentTime, shiftPeriod);
-            
+
             if (isCurrentTimeInShift) {
                 // 如果当前时间在跨天班次内，且在结束时间段（即第二天的时间段），则开始时间应使用前一天
                 if (currentTimeOfDay.isBefore(shiftPeriod.getEndTime())) {
@@ -74,7 +76,7 @@ public class ShiftUtils {
                 }
             }
         }
-        
+
         // 不跨天的情况或当前时间不在班次内
         return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.getStartTime());
     }
@@ -96,10 +98,10 @@ public class ShiftUtils {
         if (shiftPeriod.getStartTime().isAfter(shiftPeriod.getEndTime())) {
             // 跨天的情况：开始时间晚于结束时间
             LocalTime currentTimeOfDay = currentTime.toLocalTime();
-            
+
             // 检查当前时间是否在班次内
             boolean isCurrentTimeInShift = isCurrentTimeInShift(currentTime, shiftPeriod);
-            
+
             if (isCurrentTimeInShift) {
                 // 如果当前时间在跨天班次内，且在结束时间段（即第二天的时间段），则结束时间应为当前天
                 if (currentTimeOfDay.isBefore(shiftPeriod.getEndTime())) {
@@ -111,7 +113,7 @@ public class ShiftUtils {
                 }
             }
         }
-        
+
         // 不跨天的情况或当前时间不在班次内
         return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.getEndTime());
     }
@@ -197,9 +199,9 @@ public class ShiftUtils {
      */
     public static List<ShiftPeriod> createStandardThreeShifts() {
         List<ShiftPeriod> shifts = new ArrayList<>();
-        shifts.add(new ShiftPeriod("08:00:00", "16:00:00", "早班"));
-        shifts.add(new ShiftPeriod("16:00:00", "01:00:00", "中班"));
-        shifts.add(new ShiftPeriod("01:00:00", "08:00:00", "夜班"));
+        shifts.add(new ShiftPeriod("05:00:00", "16:00:00", "早班", "1"));
+        shifts.add(new ShiftPeriod("16:00:00", "17:20:00", "中班", "2"));
+        shifts.add(new ShiftPeriod("17:20:00", "05:00:00", "夜班", "3"));
         return shifts;
     }
 
@@ -212,8 +214,8 @@ public class ShiftUtils {
      */
     public static List<ShiftPeriod> createStandardTwoShifts() {
         List<ShiftPeriod> shifts = new ArrayList<>();
-        shifts.add(new ShiftPeriod("08:00:00", "20:00:00", "白班"));
-        shifts.add(new ShiftPeriod("20:00:00", "08:00:00", "夜班"));
+        shifts.add(new ShiftPeriod("08:00:00", "20:00:00", "白班", "1"));
+        shifts.add(new ShiftPeriod("20:00:00", "08:00:00", "夜班", "2"));
         return shifts;
     }
 
@@ -225,12 +227,20 @@ public class ShiftUtils {
      * @param shiftName 班次名称
      * @return 自定义班次对象
      */
-    public static ShiftPeriod createCustomShift(String startTime, String endTime, String shiftName) {
+    public static ShiftPeriod createCustomShift(String startTime, String endTime, String shiftName, String shiftType) {
         // 如果时间格式是 HH:mm，则自动补全为 HH:mm:ss
         String formattedStartTime = formatTimeToSeconds(startTime);
         String formattedEndTime = formatTimeToSeconds(endTime);
 
-        return new ShiftPeriod(formattedStartTime, formattedEndTime, shiftName);
+        return new ShiftPeriod(formattedStartTime, formattedEndTime, shiftName, shiftType);
+    }
+
+    public static boolean isCurrentTimeEqualShiftEndTime(LocalDateTime currentTime, ShiftPeriod shiftPeriod) {
+        return LocalDateTime.of(currentTime.getYear(),
+                currentTime.getMonth(),
+                currentTime.getDayOfMonth(),
+                currentTime.getHour(),
+                currentTime.getMinute()).equals(getShiftEndDateTime(shiftPeriod, currentTime));
     }
 
     /**
@@ -267,54 +277,58 @@ public class ShiftUtils {
         if (currentShift != null) {
             System.out.println("当前所在班次: " + currentShift.getShiftName() +
                     " (" + currentShift.getStartTime() + " - " + currentShift.getEndTime() + ")");
+            System.out.println("===============================");
+            System.out.println(getShiftEndDateTime(currentShift, now));
+            System.out.println("当前时间与班次结束日期比对结果: " + isCurrentTimeEqualShiftEndTime(now, currentShift));
+            System.out.println("===============================");
         } else {
             System.out.println("当前不在任何班次内");
         }
 
         // 测试自定义班次
-        ShiftPeriod customShift = createCustomShift("09:00", "17:30", "工作日班");
+        ShiftPeriod customShift = createCustomShift("09:00", "17:30", "工作日班", "1");
         System.out.println("自定义班次: " + customShift);
         System.out.println("当前时间是否在自定义班次内: " + isCurrentTimeInShift(now, customShift));
-        
+
         // 测试跨天班次计算
         System.out.println("\n=== 跨天班次测试 ===");
-        
+
         // 找到中班
         ShiftPeriod middleShift = shifts.stream()
                 .filter(shift -> "中班".equals(shift.getShiftName()))
                 .findFirst()
                 .orElse(null);
-                
+
         if (middleShift != null) {
             System.out.println("中班: " + middleShift);
-            
+
             // 测试跨天情况：2026年1月10日的00:30（在0点到1点之间，应该使用2026年1月9日作为开始日期）
             LocalDateTime crossDayTime = LocalDateTime.of(2026, 1, 10, 0, 30, 0);
             System.out.println("测试时间（跨天）: " + crossDayTime);
-            
+
             LocalDateTime shiftStart = getShiftStartDateTime(middleShift, crossDayTime);
             LocalDateTime shiftEnd = getShiftEndDateTime(middleShift, crossDayTime);
-            
+
             System.out.println("班次开始时间（跨天）: " + shiftStart);
             System.out.println("班次结束时间（跨天）: " + shiftEnd);
-            
+
             // 验证开始时间是否是前一天
             if (shiftStart != null && shiftStart.toLocalDate().equals(crossDayTime.toLocalDate().minusDays(1))) {
                 System.out.println("✓ 跨天测试通过：开始时间使用了前一天");
             } else {
                 System.out.println("✗ 跨天测试失败：开始时间未正确使用前一天");
             }
-            
+
             // 测试非跨天情况：2026年1月10日的18:30（在16:00到23:59之间，应该使用同一天）
             LocalDateTime normalTime = LocalDateTime.of(2026, 1, 10, 18, 30, 0);
             System.out.println("\n测试时间（非跨天）: " + normalTime);
-            
+
             LocalDateTime shiftStartNormal = getShiftStartDateTime(middleShift, normalTime);
             LocalDateTime shiftEndNormal = getShiftEndDateTime(middleShift, normalTime);
-            
+
             System.out.println("班次开始时间（非跨天）: " + shiftStartNormal);
             System.out.println("班次结束时间（非跨天）: " + shiftEndNormal);
-            
+
             // 验证开始时间是否是同一天
             if (shiftStartNormal != null && shiftStartNormal.toLocalDate().equals(normalTime.toLocalDate())) {
                 System.out.println("✓ 非跨天测试通过：开始时间使用了同一天");

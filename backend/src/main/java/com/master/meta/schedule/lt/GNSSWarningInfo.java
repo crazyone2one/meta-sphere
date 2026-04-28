@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -22,8 +22,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class GNSSWarningInfo extends BaseScheduleJob {
-    private GNSSWarningInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private GNSSWarningInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     public static JobKey getJobKey(String resourceId) {
@@ -81,10 +81,10 @@ public class GNSSWarningInfo extends BaseScheduleJob {
                 // String filePath = "/app/files/gnss/" + fileName;
                 // sensorUtil.generateFile(filePath, JSON.toJSONString(content), "gnss预警信息[" + fileName + "]");
                 // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
-                String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
-                fileHelper.generateFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
+                String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+                fileManager.writeToFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
                 // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
-                fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
+                fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
             }
             // 1分钟后生成预警处置文件
             if (DateFormatUtil.isSameByType("min", warningTime.plusMinutes(1), now)) {
@@ -151,10 +151,10 @@ public class GNSSWarningInfo extends BaseScheduleJob {
         // String filePath = "/app/files/gnss/" + fileName;
         // sensorUtil.generateFile(filePath, JSON.toJSONString(content), "gnss预警解除信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "gnss实时信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/GNSS");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
     }
 
     private List<Map<String, Object>> disposalInformation(Map<String, Row> sensorMap, LocalDateTime now, LocalDateTime warningTime) {

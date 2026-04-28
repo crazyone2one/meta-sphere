@@ -145,6 +145,7 @@ public class CommonProjectServiceImpl extends ServiceImpl<SystemProjectMapper, S
     public boolean update(UpdateProjectRequest updateProjectDto, String updateUser, String path, String module) {
         SystemProject project = new SystemProject();
         project.setId(updateProjectDto.getId());
+        project.setNum(updateProjectDto.getNum());
         project.setName(updateProjectDto.getName());
         project.setDescription(updateProjectDto.getDescription());
         project.setOrganizationId(updateProjectDto.getOrganizationId());

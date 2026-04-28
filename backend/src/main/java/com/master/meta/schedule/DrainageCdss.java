@@ -5,7 +5,7 @@ import com.master.meta.constants.SensorKGType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -20,8 +20,8 @@ import java.util.List;
 
 public class DrainageCdss extends BaseScheduleJob {
 
-    private DrainageCdss(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private DrainageCdss(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -33,13 +33,13 @@ public class DrainageCdss extends BaseScheduleJob {
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         StringBuilder content = new StringBuilder();
         // String filePath = "/app/files/shfz/" + fileName;
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
         // 文件头
         content.append(projectNum).append(";").append(projectName).append(";").append(DateFormatUtil.localDateTime2StringStyle2(now)).append("~");
         content.append(bodyContent(unDeleted, now));
         content.append(END_FLAG);
-        fileHelper.generateFile(filePath, content.toString(), "水泵开停实时信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + "shfz");
+        fileManager.writeToFile(filePath, content.toString(), "水泵开停实时信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + "shfz");
     }
 
     private StringBuilder bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

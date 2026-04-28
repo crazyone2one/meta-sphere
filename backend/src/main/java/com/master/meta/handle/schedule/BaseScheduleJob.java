@@ -4,7 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.dto.ScheduleConfigDTO;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +30,12 @@ public abstract class BaseScheduleJob implements Job {
     protected String END_FLAG = "||";
     protected ScheduleConfigDTO config;
     protected final SensorService sensorService;
-    protected final FileHelper fileHelper;
+    protected final FileManager fileManager;
     protected final FileTransferConfiguration fileTransferConfiguration;
 
-    protected BaseScheduleJob(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
+    protected BaseScheduleJob(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
         this.sensorService = sensorService;
-        this.fileHelper = fileHelper;
+        this.fileManager = fileManager;
         this.fileTransferConfiguration = fileTransferConfiguration;
     }
 
@@ -61,8 +61,6 @@ public abstract class BaseScheduleJob implements Job {
     protected FileTransferConfiguration.SlaveConfig slaveConfig() {
         return fileTransferConfiguration.getSlaveConfigByResourceId(projectNum);
     }
-
-    ;
 
     public String fileName(String fileCode, LocalDateTime localDateTime) {
         return projectNum + fileCode + DateFormatUtil.localDateTimeToString(localDateTime) + ".txt";

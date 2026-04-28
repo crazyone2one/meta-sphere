@@ -5,7 +5,7 @@ import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -23,8 +23,8 @@ import java.util.List;
  */
 public class CGKRealTimeInfo extends BaseScheduleJob {
 
-    private CGKRealTimeInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private CGKRealTimeInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -42,9 +42,9 @@ public class CGKRealTimeInfo extends BaseScheduleJob {
         content.append(END_FLAG);
         // sensorUtil.generateFile(filePath, content.toString(), "实时数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
-        fileHelper.generateFile(filePath, String.valueOf(content), "CGK实时信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
+        fileManager.writeToFile(filePath, String.valueOf(content), "CGK实时信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
     }
 
     private StringBuilder bodyContent(List<Row> sensorList, LocalDateTime now) {

@@ -5,7 +5,7 @@ import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +27,8 @@ import java.util.List;
 @Slf4j
 public class YSLRealTimeInfo extends BaseScheduleJob {
 
-    private YSLRealTimeInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private YSLRealTimeInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -46,9 +46,9 @@ public class YSLRealTimeInfo extends BaseScheduleJob {
         content.append(END_FLAG);
         // sensorUtil.generateFile(filePath, content.toString(), "实时数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
-        fileHelper.generateFile(filePath, String.valueOf(content), "YSL实时信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
+        fileManager.writeToFile(filePath, String.valueOf(content), "YSL实时信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
     }
 
     private StringBuilder cdssBodyContent(List<Row> sensorList, LocalDateTime now) {

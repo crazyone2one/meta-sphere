@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -28,8 +28,8 @@ import java.util.List;
  */
 public class KSWBasicInfo extends BaseScheduleJob {
 
-    private KSWBasicInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private KSWBasicInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -47,9 +47,9 @@ public class KSWBasicInfo extends BaseScheduleJob {
         // String filePath = "/app/files/wkk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "库水位设备信息[" + fileName + "]");
         // sensorUtil.uploadFile(filePath, "/home/app/ftp/wkk");
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), WkkSensorEnum.KSWDY.getLabel() + "基础信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), WkkSensorEnum.KSWDY.getLabel() + "基础信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> sensorInRedis, LocalDateTime now) {

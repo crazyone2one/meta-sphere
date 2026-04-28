@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -23,8 +23,8 @@ import java.util.Map;
 
 public class GNSSBasicInfo extends BaseScheduleJob {
 
-    private GNSSBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private GNSSBasicInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -38,9 +38,9 @@ public class GNSSBasicInfo extends BaseScheduleJob {
         Map<String, Object> content = new LinkedHashMap<>();
         content.put("send_time", DateFormatUtil.localDateTime2StringStyle2(now));
         content.put("data", contentData(sourceRows, now));
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "GNSS设备信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "gnss", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "GNSS设备信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "GNSS");
     }
 
     private List<Map<String, Object>> contentData(List<Row> sourceRows, LocalDateTime now) {

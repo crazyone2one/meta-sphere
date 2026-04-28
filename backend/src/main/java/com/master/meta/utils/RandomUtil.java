@@ -43,7 +43,7 @@ public class RandomUtil {
      * @return 格式化后的随机双精度浮点数字符串，保留两位小数并换行
      */
     public static String doubleTypeString(int min, int max) {
-        return String.format("%.2f%n", min + ((max - min) * random.nextDouble()));
+        return String.format("%.2f", min + ((max - min) * random.nextDouble()));
     }
 
     /**

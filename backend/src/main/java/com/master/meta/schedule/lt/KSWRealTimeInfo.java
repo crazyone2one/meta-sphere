@@ -5,7 +5,7 @@ import com.master.meta.constants.WkkSensorEnum;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -22,8 +22,8 @@ import java.util.List;
  */
 public class KSWRealTimeInfo extends BaseScheduleJob {
 
-    private KSWRealTimeInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileHelper fileHelper) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private KSWRealTimeInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -38,9 +38,9 @@ public class KSWRealTimeInfo extends BaseScheduleJob {
                 // 文件体
                 bodyContent(sensorList, now) +
                 END_FLAG;
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
-        fileHelper.generateFile(filePath, content, "库水位实时数据[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "wkk", fileName);
+        fileManager.writeToFile(filePath, content, "库水位实时数据[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "wkk");
     }
 
     private String bodyContent(List<Row> sensorList, LocalDateTime now) {

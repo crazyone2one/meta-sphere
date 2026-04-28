@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Created by 11's papa on 2025/10/23
  */
 @Configuration
-public class InfluxdbConfiguration {
+public class InfluxdbConfig {
     @Value("${influx.url}")
     private String url;
 

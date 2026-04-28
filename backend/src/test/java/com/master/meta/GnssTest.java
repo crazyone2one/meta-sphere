@@ -1,5 +1,6 @@
 package com.master.meta;
 
+import com.influxdb.client.InfluxDBClient;
 import com.influxdb.query.FluxRecord;
 import com.influxdb.query.FluxTable;
 import com.master.meta.utils.DateFormatUtil;
@@ -8,7 +9,10 @@ import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -17,14 +21,18 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GnssTest {
     @Resource
     InfluxDbUtils influxDbUtils;
+    @Resource
+    InfluxDBClient influxDBClient;
 
     @Test
     void removeGnssData() {
-        String measurement = "aqjk_gnss_monitor";
+        String measurement = "jxzy_person_monitor";
         String sensorId = "15062202000102I8hjwK";
-        OffsetDateTime startTime = OffsetDateTime.parse("2025-11-30T00:00:00Z");
-        OffsetDateTime endTime = OffsetDateTime.parse("2025-12-27T00:00:00Z");
-        influxDbUtils.deleteGnssDataByTimeRange(measurement, null, startTime, endTime);
+        OffsetDateTime startTime = OffsetDateTime.parse("2026-01-10T01:00:00Z");
+        OffsetDateTime endTime = OffsetDateTime.parse("2026-01-10T23:00:00Z");
+        String predicate = "_measurement=\"jxzy_person_monitor\"";
+        // influxDbUtils.deleteGnssDataByTimeRange(measurement, null, startTime, endTime);
+        influxDBClient.getDeleteApi().delete(startTime, endTime, predicate , "analyse", "admin");
     }
 
     @Test

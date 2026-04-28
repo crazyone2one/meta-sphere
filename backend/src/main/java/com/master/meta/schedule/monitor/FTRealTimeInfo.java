@@ -5,7 +5,7 @@ import com.master.meta.constants.SensorKGType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
@@ -29,8 +29,8 @@ public class FTRealTimeInfo extends BaseScheduleJob {
 
     LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
 
-    private FTRealTimeInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private FTRealTimeInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -52,9 +52,9 @@ public class FTRealTimeInfo extends BaseScheduleJob {
         // String filePath = "/app/files/aqjk/" + fileName;
         // sensorUtil.generateFile(filePath, content, "实时数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "实时信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "aqjk", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "实时信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "aqjk");
     }
 
     private String bodyContent(List<Row> rows, LocalDateTime now) {

@@ -5,7 +5,7 @@ import com.master.meta.constants.SensorMNType;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.master.meta.utils.JSON;
 import com.master.meta.utils.RandomUtil;
 import com.mybatisflex.core.row.Row;
@@ -24,8 +24,8 @@ import java.util.List;
  */
 public class PSLRealTimeInfo extends BaseScheduleJob {
 
-    private PSLRealTimeInfo(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private PSLRealTimeInfo(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -45,9 +45,9 @@ public class PSLRealTimeInfo extends BaseScheduleJob {
         // String filePath = "/app/files/shfz/" + fileName;
         // sensorUtil.generateFile(filePath, content.toString(), "实时数据[" + fileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
-        fileHelper.generateFile(filePath, JSON.toJSONString(content), "PSL实时信息[" + fileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "shfz", fileName);
+        fileManager.writeToFile(filePath, JSON.toJSONString(content), "PSL实时信息[" + fileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "shfz");
     }
 
     private StringBuilder bodyContent(List<Row> sensorList, LocalDateTime now) {

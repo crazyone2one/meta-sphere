@@ -4,7 +4,7 @@ import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
 import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import com.mybatisflex.core.row.Row;
 import org.apache.commons.lang3.BooleanUtils;
 import org.quartz.JobExecutionContext;
@@ -21,8 +21,8 @@ import java.util.List;
  */
 public class DBLCAlarm extends BaseScheduleJob {
 
-    private DBLCAlarm(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    private DBLCAlarm(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override
@@ -39,9 +39,9 @@ public class DBLCAlarm extends BaseScheduleJob {
         // String filePath = "/app/files/ky/" + ycFileName;
         // sensorUtil.generateFile(filePath, content, "顶板离层异常数据[" + ycFileName + "]");
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
-        String filePath = fileHelper.filePath(slaveConfig.getLocalPath(), projectNum, "ky", ycFileName);
-        fileHelper.generateFile(filePath, content, "信息[" + ycFileName + "]");
-        fileHelper.uploadFile(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");
+        String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "ky", ycFileName);
+        fileManager.writeToFile(filePath, content, "信息[" + ycFileName + "]");
+        fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + File.separator + "ky");
     }
 
     private String alarmContent(List<Row> sensorList, LocalDateTime now) {

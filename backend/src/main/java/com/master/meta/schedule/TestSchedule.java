@@ -3,7 +3,7 @@ package com.master.meta.schedule;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
-import com.master.meta.utils.FileHelper;
+import com.master.meta.utils.FileManager;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
@@ -15,8 +15,8 @@ import org.quartz.TriggerKey;
  */
 @Slf4j
 public class TestSchedule extends BaseScheduleJob {
-    public TestSchedule(SensorService sensorService, FileHelper fileHelper, FileTransferConfiguration fileTransferConfiguration) {
-        super(sensorService, fileHelper, fileTransferConfiguration);
+    public TestSchedule(SensorService sensorService, FileManager fileManager, FileTransferConfiguration fileTransferConfiguration) {
+        super(sensorService, fileManager, fileTransferConfiguration);
     }
 
     @Override

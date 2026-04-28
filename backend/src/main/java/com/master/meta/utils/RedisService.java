@@ -39,4 +39,17 @@ public class RedisService {
     public void deleteSensor(String projectNum, String name) {
         redisTemplate.delete("sensor:" + projectNum + ":" + name);
     }
+
+    public void setPersonBehavior(String personCode, String behavior) {
+        redisTemplate.opsForValue().set("behavior:" + personCode, behavior);
+    }
+
+    public String getPersonBehavior(String personCode) {
+        return redisTemplate.opsForValue().get("behavior:" + personCode);
+    }
+
+    public void deletePersonBehavior(String personCode) {
+        redisTemplate.delete("behavior:" + personCode);
+    }
+
 }
