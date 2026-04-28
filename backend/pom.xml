@@ -9,7 +9,6 @@
     </parent>
 
     <artifactId>backend</artifactId>
-    <version>${revision}</version>
 
     <description>meta-sphere-backend</description>
     <url/>
