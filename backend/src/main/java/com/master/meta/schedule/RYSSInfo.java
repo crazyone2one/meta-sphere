@@ -32,6 +32,10 @@ public class RYSSInfo extends BaseScheduleJob {
         LocalDateTime now = LocalDateTime.now(ZoneOffset.of("+8"));
         val substationList = getSubstationList();
         val areaList = getAreaList();
+        List<ShiftUtils.ShiftPeriod> shifts = ShiftUtils.createStandardThreeShifts();
+        // 当前所在班次
+        ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
+        List<Row> personList = getPersonList(currentShift);
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String fileName = "150622B0012000200092_RYSS_" + DateFormatUtil.localDateTimeToString(now) + ".txt";
         if (config.isFmFlag()) {
@@ -41,24 +45,48 @@ public class RYSSInfo extends BaseScheduleJob {
         String content =
                 (config.isFmFlag() ? headerContent : "") +
                         // 文件体
-                        bodyContent(substationList, areaList, now) +
+                        bodyContent(substationList, areaList, now, personList, currentShift) +
                         (config.isFmFlag() ? "]]]" : END_FLAG);
         // String filePath = "/app/files/rydw/" + fileName;
         String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "rydw", fileName);
         fileManager.writeToFile(filePath, content, "实时数据[" + fileName + "]");
         fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + "rydw");
+        // 在文件处理完成后执行删除操作
+        deletePersonBehaviorAtShiftEnd(now);
     }
 
-    private String bodyContent(List<Row> substationList, List<Row> areaList, LocalDateTime now) {
+    private void deletePersonBehaviorAtShiftEnd(LocalDateTime now) {
+        List<ShiftUtils.ShiftPeriod> shifts = ShiftUtils.createStandardThreeShifts();
+
+        // 首先尝试获取即将结束的班次（处理班次交接点的情况）
+        ShiftUtils.ShiftPeriod endingShift = ShiftUtils.getEndingShiftAtTime(now, shifts);
+
+        if (endingShift != null) {
+            // 在班次交接点，删除即将结束班次的人员数据
+            List<Row> personList = getPersonList(endingShift);
+            for (Row person : personList) {
+                String personCode = person.getString("person_code");
+                sensorService.deletePersonBehavior(personCode);
+            }
+        } else {
+            // 非交接点，使用原有逻辑
+            ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
+            if (currentShift != null && ShiftUtils.isCurrentTimeEqualShiftEndTime(now, currentShift)) {
+                List<Row> personList = getPersonList(currentShift);
+                for (Row person : personList) {
+                    String personCode = person.getString("person_code");
+                    sensorService.deletePersonBehavior(personCode);
+                }
+            }
+        }
+    }
+
+    private String bodyContent(List<Row> substationList, List<Row> areaList, LocalDateTime now
+            , List<Row> personList, ShiftUtils.ShiftPeriod currentShift) {
         StringBuilder content = new StringBuilder();
         if (!config.isFmFlag()) {
             content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";309;150622B001200020009201307/高洪方;~");
         }
-//        personList = personList.subList(0, 10);
-        List<ShiftUtils.ShiftPeriod> shifts = ShiftUtils.createStandardThreeShifts();
-        // 当前所在班次
-        ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
-        // val inDateTmp = config.getField("inDate", String.class);
         LocalDateTime inDate = ShiftUtils.getShiftStartDateTime(currentShift, now);
         LocalDateTime shiftEndTime = ShiftUtils.getShiftEndDateTime(currentShift, now);
         String excludePersonCode = config.getField("excludePersonCode", String.class);
@@ -66,7 +94,7 @@ public class RYSSInfo extends BaseScheduleJob {
         if (excludePersonCode.isBlank()) {
             excludePersonCodeList = Arrays.stream(excludePersonCode.split(",")).toList();
         }
-        List<Row> personList = getPersonList(currentShift);
+
         for (Row person : personList) {
             String personCode = person.getString("person_code");
             if (excludePersonCodeList.contains(personCode)) {
@@ -98,9 +126,9 @@ public class RYSSInfo extends BaseScheduleJob {
                 content.append(";;");
             }
             content.append(config.isFmFlag() ? "^" : "~");
-            if (shiftEndFlag) {
-                sensorService.deletePersonBehavior(personCode);
-            }
+            // if (shiftEndFlag) {
+            //     sensorService.deletePersonBehavior(personCode);
+            // }
         }
         return content.toString();
     }
@@ -153,7 +181,7 @@ public class RYSSInfo extends BaseScheduleJob {
                     .select("id", "person_code", "person_name")
                     .ne("id_number", "")
                     .ne("is_delete", "1")
-                    .likeLeft("person_code", personCode + currentShift.getShiftType())
+                    .likeLeft("person_code", personCode + currentShift.shiftType())
                     .notLike("person_name", "厂家")
                     .notLike("person_name", "贵宾")
                     .notLike("person_name", "华电")
