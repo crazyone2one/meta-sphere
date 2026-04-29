@@ -1,6 +1,6 @@
 package com.master.meta.utils;
 
-import lombok.Getter;
+import org.jspecify.annotations.NonNull;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,31 +15,16 @@ public class ShiftUtils {
 
     /**
      * 班次时间段类
+     *
+     * @param startTime Getters
      */
-    @Getter
-    public static class ShiftPeriod {
-        // Getters
-        private final LocalTime startTime;
-        private final LocalTime endTime;
-        private final String shiftName;
-        private final String shiftType;
-
+    public record ShiftPeriod(LocalTime startTime, LocalTime endTime, String shiftName, String shiftType) {
         public ShiftPeriod(String startTime, String endTime, String shiftName, String shiftType) {
-            this.startTime = LocalTime.parse(startTime);
-            this.endTime = LocalTime.parse(endTime);
-            this.shiftName = shiftName;
-            this.shiftType = shiftType;
-        }
-
-        public ShiftPeriod(LocalTime startTime, LocalTime endTime, String shiftName, String shiftType) {
-            this.startTime = startTime;
-            this.endTime = endTime;
-            this.shiftName = shiftName;
-            this.shiftType = shiftType;
+            this(LocalTime.parse(startTime), LocalTime.parse(endTime), shiftName, shiftType);
         }
 
         @Override
-        public String toString() {
+        public @NonNull String toString() {
             return shiftName + ": " + startTime + " - " + endTime;
         }
     }
@@ -58,7 +43,7 @@ public class ShiftUtils {
         }
 
         // 检查班次是否跨天（例如：22:00 - 06:00）
-        if (shiftPeriod.getStartTime().isAfter(shiftPeriod.getEndTime())) {
+        if (shiftPeriod.startTime().isAfter(shiftPeriod.endTime())) {
             // 跨天的情况：开始时间晚于结束时间
             LocalTime currentTimeOfDay = currentTime.toLocalTime();
 
@@ -67,18 +52,18 @@ public class ShiftUtils {
 
             if (isCurrentTimeInShift) {
                 // 如果当前时间在跨天班次内，且在结束时间段（即第二天的时间段），则开始时间应使用前一天
-                if (currentTimeOfDay.isBefore(shiftPeriod.getEndTime())) {
+                if (currentTimeOfDay.isBefore(shiftPeriod.endTime())) {
                     // 当前时间在跨天后的结束时间段，开始时间应为前一天
-                    return LocalDateTime.of(currentTime.toLocalDate().minusDays(1), shiftPeriod.getStartTime());
+                    return LocalDateTime.of(currentTime.toLocalDate().minusDays(1), shiftPeriod.startTime());
                 } else {
                     // 当前时间在正常的开始时间段
-                    return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.getStartTime());
+                    return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.startTime());
                 }
             }
         }
 
         // 不跨天的情况或当前时间不在班次内
-        return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.getStartTime());
+        return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.startTime());
     }
 
     /**
@@ -95,7 +80,7 @@ public class ShiftUtils {
         }
 
         // 检查班次是否跨天（例如：22:00 - 06:00）
-        if (shiftPeriod.getStartTime().isAfter(shiftPeriod.getEndTime())) {
+        if (shiftPeriod.startTime().isAfter(shiftPeriod.endTime())) {
             // 跨天的情况：开始时间晚于结束时间
             LocalTime currentTimeOfDay = currentTime.toLocalTime();
 
@@ -104,18 +89,18 @@ public class ShiftUtils {
 
             if (isCurrentTimeInShift) {
                 // 如果当前时间在跨天班次内，且在结束时间段（即第二天的时间段），则结束时间应为当前天
-                if (currentTimeOfDay.isBefore(shiftPeriod.getEndTime())) {
+                if (currentTimeOfDay.isBefore(shiftPeriod.endTime())) {
                     // 当前时间在跨天后的结束时间段，结束时间应为当前天
-                    return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.getEndTime());
+                    return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.endTime());
                 } else {
                     // 当前时间在正常的开始时间段，结束时间应为第二天
-                    return LocalDateTime.of(currentTime.toLocalDate().plusDays(1), shiftPeriod.getEndTime());
+                    return LocalDateTime.of(currentTime.toLocalDate().plusDays(1), shiftPeriod.endTime());
                 }
             }
         }
 
         // 不跨天的情况或当前时间不在班次内
-        return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.getEndTime());
+        return LocalDateTime.of(currentTime.toLocalDate(), shiftPeriod.endTime());
     }
 
     /**
@@ -133,17 +118,17 @@ public class ShiftUtils {
         LocalTime currentTimeOfDay = currentTime.toLocalTime();
 
         // 检查班次是否跨天（例如：22:00 - 06:00）
-        if (shiftPeriod.getStartTime().isAfter(shiftPeriod.getEndTime())) {
+        if (shiftPeriod.startTime().isAfter(shiftPeriod.endTime())) {
             // 跨天的情况：开始时间晚于结束时间
-            return currentTimeOfDay.isAfter(shiftPeriod.getStartTime()) ||
-                    currentTimeOfDay.isBefore(shiftPeriod.getEndTime()) ||
-                    currentTimeOfDay.equals(shiftPeriod.getStartTime());
+            return currentTimeOfDay.isAfter(shiftPeriod.startTime()) ||
+                    currentTimeOfDay.isBefore(shiftPeriod.endTime()) ||
+                    currentTimeOfDay.equals(shiftPeriod.startTime());
         } else {
             // 不跨天的情况：开始时间早于结束时间
-            return (currentTimeOfDay.isAfter(shiftPeriod.getStartTime()) &&
-                    currentTimeOfDay.isBefore(shiftPeriod.getEndTime())) ||
-                    currentTimeOfDay.equals(shiftPeriod.getStartTime()) ||
-                    currentTimeOfDay.equals(shiftPeriod.getEndTime());
+            return (currentTimeOfDay.isAfter(shiftPeriod.startTime()) &&
+                    currentTimeOfDay.isBefore(shiftPeriod.endTime())) ||
+                    currentTimeOfDay.equals(shiftPeriod.startTime()) ||
+                    currentTimeOfDay.equals(shiftPeriod.endTime());
         }
     }
 
@@ -199,9 +184,9 @@ public class ShiftUtils {
      */
     public static List<ShiftPeriod> createStandardThreeShifts() {
         List<ShiftPeriod> shifts = new ArrayList<>();
-        shifts.add(new ShiftPeriod("05:00:00", "16:00:00", "早班", "1"));
-        shifts.add(new ShiftPeriod("16:00:00", "17:20:00", "中班", "2"));
-        shifts.add(new ShiftPeriod("17:20:00", "05:00:00", "夜班", "3"));
+        shifts.add(new ShiftPeriod("05:00:00", "13:00:00", "早班", "1"));
+        shifts.add(new ShiftPeriod("13:00:00", "17:00:00", "中班", "2"));
+        shifts.add(new ShiftPeriod("17:00:00", "05:00:00", "夜班", "3"));
         return shifts;
     }
 
@@ -243,6 +228,31 @@ public class ShiftUtils {
                 currentTime.getMinute()).equals(getShiftEndDateTime(shiftPeriod, currentTime));
     }
 
+    public static ShiftPeriod getEndingShiftAtTime(LocalDateTime currentTime, List<ShiftPeriod> shifts) {
+        if (currentTime == null || shifts == null || shifts.isEmpty()) {
+            return null;
+        }
+
+        // LocalTime currentTimeOfDay = currentTime.toLocalTime();
+
+        for (ShiftPeriod shift : shifts) {
+            LocalDateTime shiftEndTime = getShiftEndDateTime(shift, currentTime);
+            LocalDateTime checkTime = LocalDateTime.of(
+                    currentTime.getYear(),
+                    currentTime.getMonth(),
+                    currentTime.getDayOfMonth(),
+                    currentTime.getHour(),
+                    currentTime.getMinute()
+            );
+
+            if (checkTime.equals(shiftEndTime)) {
+                return shift;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * 将时间格式统一为 HH:mm:ss 格式
      */
@@ -275,8 +285,8 @@ public class ShiftUtils {
 
         ShiftPeriod currentShift = getCurrentShift(now, shifts);
         if (currentShift != null) {
-            System.out.println("当前所在班次: " + currentShift.getShiftName() +
-                    " (" + currentShift.getStartTime() + " - " + currentShift.getEndTime() + ")");
+            System.out.println("当前所在班次: " + currentShift.shiftName() +
+                    " (" + currentShift.startTime() + " - " + currentShift.endTime() + ")");
             System.out.println("===============================");
             System.out.println(getShiftEndDateTime(currentShift, now));
             System.out.println("当前时间与班次结束日期比对结果: " + isCurrentTimeEqualShiftEndTime(now, currentShift));
@@ -295,7 +305,7 @@ public class ShiftUtils {
 
         // 找到中班
         ShiftPeriod middleShift = shifts.stream()
-                .filter(shift -> "中班".equals(shift.getShiftName()))
+                .filter(shift -> "中班".equals(shift.shiftName()))
                 .findFirst()
                 .orElse(null);
 

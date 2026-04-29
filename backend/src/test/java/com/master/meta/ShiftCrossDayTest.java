@@ -16,13 +16,13 @@ public class ShiftCrossDayTest {
 
         // 查找中班（16:00:00 - 01:00:00）
         var middleShift = shifts.stream()
-                .filter(shift -> "中班".equals(shift.getShiftName()))
+                .filter(shift -> "中班".equals(shift.shiftName()))
                 .findFirst()
                 .orElse(null);
 
         assertNotNull(middleShift);
-        assertEquals("16:00:00", middleShift.getStartTime().toString());
-        assertEquals("01:00:00", middleShift.getEndTime().toString());
+        assertEquals("16:00:00", middleShift.startTime().toString());
+        assertEquals("01:00:00", middleShift.endTime().toString());
 
         // 测试跨天情况：当前日期是2026年1月10日，在0点到1点之间应该使用2026年1月9日
         LocalDateTime currentTime = LocalDateTime.of(2026, 1, 10, 0, 30, 0); // 2026-01-10 00:30:00
