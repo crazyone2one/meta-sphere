@@ -3,15 +3,14 @@ package com.master.meta.schedule;
 import com.master.meta.config.FileTransferConfiguration;
 import com.master.meta.handle.schedule.BaseScheduleJob;
 import com.master.meta.service.SensorService;
-import com.master.meta.utils.DateFormatUtil;
-import com.master.meta.utils.FileManager;
-import com.master.meta.utils.RandomUtil;
-import com.master.meta.utils.ShiftUtils;
+import com.master.meta.utils.*;
 import com.mybatisflex.core.datasource.DataSourceKey;
 import com.mybatisflex.core.query.QueryWrapper;
 import com.mybatisflex.core.row.Db;
 import com.mybatisflex.core.row.Row;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
@@ -21,11 +20,19 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
+@Slf4j
 public class RYSSInfo extends BaseScheduleJob {
+    private final RedisService redisService;
 
-    private RYSSInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager) {
+    private RYSSInfo(SensorService sensorService, FileTransferConfiguration fileTransferConfiguration, FileManager fileManager, RedisService redisService) {
         super(sensorService, fileManager, fileTransferConfiguration);
+        this.redisService = redisService;
     }
+
+    private static final String SUBSTATION_CACHE_KEY = "substation_list";
+    private static final String SUBSTATION_IN_USE_CACHE_KEY = "substation_in_use_list";
+    private static final long CACHE_TIMEOUT = 60 * 60 * 24L;
+    private static final List<String> ignorePersonPost = Arrays.asList("石家庄墨隆", "鲁新煤矿", "奥瑞森特");
 
     @Override
     protected void businessExecute(JobExecutionContext context) {
@@ -41,14 +48,13 @@ public class RYSSInfo extends BaseScheduleJob {
         // 0表示空内容-没有人员信息
         boolean emptyContentFlag = "0".equals(Optional.ofNullable(config.getField("emptyContent", String.class)).orElse("1"));
         String bodyContent = "";
-
+        List<ShiftUtils.ShiftPeriod> shifts = ShiftUtils.createStandardThreeShifts();
+        // 当前所在班次
+        ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
+        List<Row> personList = getPersonList(currentShift);
         if (!emptyContentFlag) {
             val substationList = getSubstationList();
             val areaList = getAreaList();
-            List<ShiftUtils.ShiftPeriod> shifts = ShiftUtils.createStandardThreeShifts();
-            // 当前所在班次
-            ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
-            List<Row> personList = getPersonList(currentShift);
             bodyContent = bodyContent(substationList, areaList, now, personList, currentShift);
         }
 
@@ -56,18 +62,15 @@ public class RYSSInfo extends BaseScheduleJob {
         content.append(headerContent);
         content.append(emptyContentFlag ? "" : bodyContent);
         content.append(config.isFmFlag() ? "]]]" : END_FLAG);
-        // if (emptyContentFlag) {
-        //     System.out.println(content);
-        // }
         FileTransferConfiguration.SlaveConfig slaveConfig = slaveConfig();
         String filePath = fileManager.buildFilePath(slaveConfig.getLocalPath(), projectNum, "rydw", fileName);
         fileManager.writeToFile(filePath, content.toString(), "实时数据[" + fileName + "]");
         fileManager.uploadAndCleanup(slaveConfig, filePath, slaveConfig.getRemotePath() + "rydw");
         // 在文件处理完成后执行删除操作
-        deletePersonBehaviorAtShiftEnd(now);
+        deletePersonBehaviorAtShiftEnd(now, personList);
     }
 
-    private void deletePersonBehaviorAtShiftEnd(LocalDateTime now) {
+    private void deletePersonBehaviorAtShiftEnd(LocalDateTime now, List<Row> personList) {
         List<ShiftUtils.ShiftPeriod> shifts = ShiftUtils.createStandardThreeShifts();
 
         // 首先尝试获取即将结束的班次（处理班次交接点的情况）
@@ -75,26 +78,28 @@ public class RYSSInfo extends BaseScheduleJob {
 
         if (endingShift != null) {
             // 在班次交接点，删除即将结束班次的人员数据
-            List<Row> personList = getPersonList(endingShift);
             for (Row person : personList) {
                 String personCode = person.getString("person_code");
                 sensorService.deletePersonBehavior(personCode);
+                redisService.delete(projectNum + ":" + SUBSTATION_IN_USE_CACHE_KEY + ":" + personCode);
             }
         } else {
             // 非交接点，使用原有逻辑
             ShiftUtils.ShiftPeriod currentShift = ShiftUtils.getCurrentShift(now, shifts);
             if (currentShift != null && ShiftUtils.isCurrentTimeEqualShiftEndTime(now, currentShift)) {
-                List<Row> personList = getPersonList(currentShift);
                 for (Row person : personList) {
                     String personCode = person.getString("person_code");
                     sensorService.deletePersonBehavior(personCode);
+                    redisService.delete(projectNum + ":" + SUBSTATION_IN_USE_CACHE_KEY + ":" + personCode);
                 }
             }
         }
     }
 
-    private String bodyContent(List<Row> substationList, List<Row> areaList, LocalDateTime now
-            , List<Row> personList, ShiftUtils.ShiftPeriod currentShift) {
+    private String bodyContent(List<Row> substationList, List<Row> areaList,
+                               LocalDateTime now,
+                               List<Row> personList,
+                               ShiftUtils.ShiftPeriod currentShift) {
         StringBuilder content = new StringBuilder();
 
         LocalDateTime inDate = ShiftUtils.getShiftStartDateTime(currentShift, now);
@@ -110,7 +115,10 @@ public class RYSSInfo extends BaseScheduleJob {
             if (excludePersonCodeList.contains(personCode)) {
                 continue;
             }
-            Row substation = RandomUtil.getRandomSubList(substationList, 1).getFirst();
+            // 从缓存获取该人员的可用基站列表
+            List<Row> availableStations = getAvailableStationsForPerson(personCode, substationList);
+            // List<String> substationCode = availableStations.stream().map(station -> station.getString("station_num")).toList();
+            Row substation = availableStations.getFirst();
             Row area = RandomUtil.getRandomSubList(areaList, 1).getFirst();
             // 班次结束标记
             boolean shiftEndFlag = ShiftUtils.isCurrentTimeEqualShiftEndTime(now, currentShift);
@@ -128,7 +136,7 @@ public class RYSSInfo extends BaseScheduleJob {
             content.append(DateFormatUtil.localDateTime2StringStyle2(now)).append(";");
             if (!config.isFmFlag()) {
                 // content.append("默认班制;16.21;正常;0;0;");
-                content.append(behavior(substationList, now, personCode));
+                content.append(behavior(substation, now, personCode));
             } else {
                 content.append("1;1;10;1;");
                 content.append(";;;");
@@ -139,38 +147,43 @@ public class RYSSInfo extends BaseScheduleJob {
             // if (shiftEndFlag) {
             //     sensorService.deletePersonBehavior(personCode);
             // }
+            availableStations.remove(substation);
+            updatePersonStationCache(personCode, availableStations);
         }
         return content.toString();
     }
 
-    private String behavior(List<Row> substationList, LocalDateTime now, String personCode) {
+    private void updatePersonStationCache(String personCode, List<Row> remainingStations) {
+        String cacheKey = projectNum + ":" + SUBSTATION_IN_USE_CACHE_KEY + ":" + personCode;
+        redisService.setObj(cacheKey, JSON.toJSONString(remainingStations), CACHE_TIMEOUT);
+    }
+
+    private List<Row> getAvailableStationsForPerson(String personCode, List<Row> fullStationList) {
+        String cacheKey = projectNum + ":" + SUBSTATION_IN_USE_CACHE_KEY + ":" + personCode;
+        String stationInUse = redisService.getObj(cacheKey);
+        if (StringUtils.isNotEmpty(stationInUse)) {
+            try {
+                List<Row> cachedStations = JSON.parseArray(stationInUse, Row.class);
+                if (CollectionUtils.isNotEmpty(cachedStations)) {
+                    return cachedStations;
+                }
+            } catch (Exception e) {
+                log.warn("解析Redis缓存的分站列表失败,使用完整列表: {}", e.getMessage());
+            }
+        }
+        // 缓存不存在、为空或解析失败时,返回完整基站列表的副本
+        return new ArrayList<>(fullStationList);
+    }
+
+    private String behavior(Row substation, LocalDateTime now, String personCode) {
         StringBuilder content = new StringBuilder();
         String personBehavior = sensorService.getPersonBehavior(personCode);
         if (StringUtils.isNotEmpty(personBehavior)) {
             content.append(personBehavior).append(",");
         }
-        // Create a mutable copy of substationList for this execution
-        List<Row> availableSubstations = new ArrayList<>(substationList);
-        Random random = new Random();
-        val nextInt = random.nextInt(1, 3);
-        // int nextInt = now.getMinute() - shiftBeginTime.getMinute();
-        for (int i = 0; i < nextInt; i++) {
-            Row substation;
-            if (!availableSubstations.isEmpty()) {
-                // Get random index and remove the item
-                // 生成随机索引（范围：0 ~ 列表长度-1）
-                int randomIndex = random.nextInt(substationList.size());
-                substation = availableSubstations.get(randomIndex);
-            } else {
-                // Reset list if all items have been used
-                availableSubstations = new ArrayList<>(substationList);
-                int randomIndex = random.nextInt(substationList.size());
-                substation = availableSubstations.get(randomIndex);
-            }
-            content.append(substation.getString("station_code")).append("&")
-                    .append(DateFormatUtil.localDateTime2StringStyle2(now.minusMinutes(nextInt - (i + 1L))))
-                    .append(",");
-        }
+        content.append(substation.getString("station_code")).append("&")
+                .append(DateFormatUtil.localDateTime2StringStyle2(now))
+                .append(",");
         if (!content.isEmpty()) {
             content.deleteCharAt(content.length() - 1);
         }
@@ -212,22 +225,73 @@ public class RYSSInfo extends BaseScheduleJob {
                     .notLike("person_post", "四长")
                     .notLike("person_post", "枣矿")
                     .notLike("person_post", "厂家")
-                    .notLike("person_post", "兖矿")
-                    .limit(personCount + nextInt);
+                    .notLike("person_post", "兖矿");
+            ignorePersonPost.forEach(p -> condition.notLike("person_post", p));
+            condition.limit(personCount + nextInt);
             rows = Db.selectListByQuery("sf_jxzy_person_new", condition);
+            if (currentShift.shiftType().equals("1")) {
+                rows.add(getPerson("150622B001200020009202433"));
+            }
+            if (currentShift.shiftType().equals("2")) {
+                rows.add(getPerson("150622B001200020009201312"));
+            }
+            if (currentShift.shiftType().equals("3")) {
+                rows.add(getPerson("150622B001200020009201305"));
+            }
         } finally {
             DataSourceKey.clear();
         }
         return rows;
     }
 
+    private Row getPerson(String personCode) {
+        Row row;
+        try {
+            DataSourceKey.use("ds-slave" + projectNum);
+            QueryWrapper condition = new QueryWrapper()
+                    .select("id", "person_code", "person_name")
+                    .eq("person_code", personCode);
+            row = Db.selectOneByQuery("sf_jxzy_person_new", condition);
+        } finally {
+            DataSourceKey.clear();
+        }
+        return row;
+    }
+
     public List<Row> getSubstationList() {
+        String cachedData = redisService.getSensor(projectNum, SUBSTATION_CACHE_KEY);
+        if (StringUtils.isNotEmpty(cachedData)) {
+            try {
+                List<Row> rows = JSON.parseArray(cachedData, Row.class);
+                log.debug("从Redis缓存获取分站列表，项目: {}", projectNum);
+                return rows;
+            } catch (Exception e) {
+                log.warn("解析Redis缓存的分站列表失败: {}", e.getMessage());
+            }
+        }
         List<Row> rows;
         try {
             DataSourceKey.use("ds-slave" + projectNum);
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("is_delete", "0");
-            rows = Db.selectListByMap("sf_jxzy_substation", map);
+            // rows = Db.selectListByMap("sf_jxzy_substation", map);
+            QueryWrapper queryWrapper = new QueryWrapper()
+                    .select("id", "station_num", "station_code", "station_name", "area_desc")
+                    .where(map);
+            queryWrapper.orderByUnSafely("CAST(station_num AS UNSIGNED) ASC");
+            rows = Db.selectListByQuery("sf_jxzy_substation", queryWrapper);
+
+            rows.sort((r1, r2) -> {
+                try {
+                    int num1 = Integer.parseInt(r1.getString("station_num"));
+                    int num2 = Integer.parseInt(r2.getString("station_num"));
+                    return Integer.compare(num1, num2);
+                } catch (NumberFormatException e) {
+                    return r1.getString("station_num").compareTo(r2.getString("station_num"));
+                }
+            });
+            redisService.storeSensor(projectNum, SUBSTATION_CACHE_KEY, rows, CACHE_TIMEOUT);
+            log.debug("从数据库查询分站列表并缓存到Redis，项目: {}, 数量: {}", projectNum, rows.size());
         } finally {
             DataSourceKey.clear();
         }
