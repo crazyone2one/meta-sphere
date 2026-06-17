@@ -187,15 +187,16 @@ public class CDSSInfo extends BaseScheduleJob {
             AtomicReference<String> sensorValue = new AtomicReference<>("");
             // 开关量
             if ("KG".equals(row.getString("sensor_value_type"))) {
-                Optional.ofNullable(ftCode).ifPresent(code -> {
-                    if (code.equals(sensorInfoCode)) {
+                if (Optional.ofNullable(ftCode).isPresent()) {
+                    if (Optional.of(ftCode).get().equals(sensorInfoCode)) {
                         sensorValue.set("0");
                         sensorState.set(Optional.ofNullable(ftStateValue).orElse("1"));
                     } else {
                         sensorValue.set("1");
                     }
-                });
-
+                } else {
+                    sensorValue.set("1");
+                }
             } else {
                 // 指定测点与异常数据测点值一致
                 if (ycFlag) {
